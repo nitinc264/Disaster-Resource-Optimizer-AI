@@ -1,0 +1,19 @@
+{
+  "name": "disaster-response-resource-optimization-platform",
+  "version": "1.0.0",
+  "description": "Disaster Response Resource Optimization Platform",
+  "license": "ISC",
+  "author": "Omkar Kale",
+  "workspaces": [
+    "frontend",
+    "backend"
+  ],
+  "scripts": {
+    "frontend": "npm run dev --workspace=frontend",
+    "backend": "npm run dev --workspace=backend",
+    "dev": "concurrently \"npm run backend\" \"npm run frontend\""
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
