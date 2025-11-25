@@ -4,7 +4,7 @@ import {
   getUnverifiedTasks,
   getVerifiedTasks,
   verifyTask,
-} from "../controllers/taskController.js";
+} from "../controllers/volunteerTaskController.js";
 
 const router = express.Router();
 

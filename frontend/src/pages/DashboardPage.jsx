@@ -35,7 +35,7 @@ function DashboardPage() {
   const optimizeLabel =
     selectedNeedIds.size > 0
       ? `Optimize ${selectedNeedIds.size} Stops`
-      : "Select verified stops to optimize";
+      : "Select stops on map";
 
   useEffect(() => {
     setSelectedNeedIds((prev) => {
@@ -48,150 +48,144 @@ function DashboardPage() {
           next.add(id);
         }
       });
-      if (next.size === prev.size) {
-        let identical = true;
-        next.forEach((id) => {
-          if (!prev.has(id)) {
-            identical = false;
-          }
-        });
-        if (identical) {
-          return prev;
-        }
-      }
       return next;
     });
   }, [needs]);
 
-  // Handles clicking on a map pin
-  const handlePinClick = (needId) => {
-    const clickedNeed = needs.find((n) => n.id === needId);
+  const handleMarkerClick = (needId) => {
+    const need = needs.find((n) => n.id === needId);
+    if (!need || need.status !== "Verified") return;
 
-    // Only allow selecting 'Verified' needs for optimization
-    if (clickedNeed && clickedNeed.status !== "Verified") {
-      alert("This need is not verified yet. A volunteer must verify it first.");
-      return;
-    }
-
-    // Add or remove the ID from the Set of selected needs
-    setSelectedNeedIds((prevSelectedIds) => {
-      const newIds = new Set(prevSelectedIds);
-      if (newIds.has(needId)) {
-        newIds.delete(needId);
+    setSelectedNeedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(needId)) {
+        next.delete(needId);
       } else {
-        newIds.add(needId);
+        next.add(needId);
       }
-      return newIds;
+      return next;
     });
   };
 
-  // This function calls your backend API
-  const handleOptimizeRoute = async () => {
+  const handleOptimize = async () => {
+    if (selectedNeedIds.size === 0) return;
+
     setIsLoading(true);
     setError(null);
-    setOptimizedRoute([]); // Clear previous route
-
-    // 1. Get the full location objects for the selected IDs
-    const verifiedStops = needs
-      .filter((need) => selectedNeedIds.has(need.id))
-      .map((need) => ({ lat: need.lat, lon: need.lon }));
-
-    if (verifiedStops.length === 0) {
-      setError("Please select at least one verified stop to optimize.");
-      setIsLoading(false);
-      return;
-    }
-
-    // 2. Prepare the request payload
-    const requestPayload = {
-      depot: DEPOT_LOCATION,
-      stops: verifiedStops,
-    };
-
-    // 3. Call the API
     try {
-      const response = await optimizeRoute(requestPayload);
-      // The response.optimized_route is a list of {lat, lon} objects
-      // Convert it to [lat, lon] arrays for the Polyline component
-      const routeCoords = response.optimized_route.map((loc) => [
-        loc.lat,
-        loc.lon,
-      ]);
-      setOptimizedRoute(routeCoords);
+      const selectedNeeds = needs.filter((n) => selectedNeedIds.has(n.id));
+      const stops = selectedNeeds.map((n) => ({ lat: n.lat, lon: n.lon }));
+      const response = await optimizeRoute({ depot: DEPOT_LOCATION, stops });
+      setOptimizedRoute(response.data?.optimized_route || []);
     } catch (err) {
       console.error("Optimization failed:", err);
-      setError("Failed to calculate route. See console for details.");
+      setError("Failed to calculate optimal route. Please try again.");
     } finally {
       setIsLoading(false);
     }
   };
 
+  const handleClearSelection = () => {
+    setSelectedNeedIds(new Set());
+    setOptimizedRoute([]);
+    setError(null);
+  };
+
   return (
-    <div className="dashboard-container">
-      <div className="dashboard-sidebar">
-        <div className="dashboard-header">
-          <h2>Aegis AI Dashboard</h2>
-          <button onClick={() => refetch()} disabled={isFetching}>
-            {isFetching ? "Syncing..." : "Refresh"}
+    <div className="dashboard-page">
+      <div className="dashboard-header">
+        <div className="header-title">
+          <h1>Command Center</h1>
+          <p>Live resource tracking and route optimization.</p>
+        </div>
+        <div className="header-controls">
+          <button
+            className="btn-secondary"
+            onClick={refetch}
+            disabled={isFetching}
+          >
+            {isFetching ? "Syncing..." : "Refresh Data"}
           </button>
         </div>
-        <p className="dashboard-note">Live feed from Twilio + volunteers.</p>
-
-        <button
-          className="optimize-button"
-          onClick={handleOptimizeRoute}
-          disabled={isLoading || selectedNeedIds.size === 0}
-        >
-          {isLoading ? "Calculating..." : optimizeLabel}
-        </button>
-        {error && <p className="error-message">{error}</p>}
-        {needsError && <p className="error-message">Failed to load needs.</p>}
-        {isNeedsLoading && <p>Loading needs...</p>}
-
-        <hr />
-        <h3>Incoming Reports</h3>
-        <ul className="needs-list">
-          {needs.map((need) => {
-            const isSelected = selectedNeedIds.has(need.id);
-            const isVerified = need.status === "Verified";
-
-            return (
-              <li
-                key={need.id}
-                className={`need-item${isVerified ? " verified" : ""}${
-                  isSelected ? " selected" : ""
-                }`}
-              >
-                <div className="need-header">
-                  <strong>{need.needType || "Need"}</strong>
-                  <span className="need-timestamp">
-                    {new Date(need.createdAt).toLocaleTimeString()}
-                  </span>
-                </div>
-                <p className="need-description">{need.description}</p>
-                <p className="need-location">
-                  📍 {need.location || "Unknown location"}
-                </p>
-                <p className="need-urgency">
-                  Urgency: <strong>{need.urgency || "Medium"}</strong>
-                </p>
-                <p className="need-status">
-                  Status: <strong>{need.status}</strong>
-                </p>
-              </li>
-            );
-          })}
-        </ul>
       </div>
 
-      <div className="dashboard-map">
-        <Map
-          depot={DEPOT_LOCATION}
-          needs={needs}
-          selectedNeedIds={selectedNeedIds}
-          onPinClick={handlePinClick}
-          optimizedRoute={optimizedRoute}
-        />
+      <div className="dashboard-grid">
+        <aside className="control-panel">
+          <div className="panel-section">
+            <h3>Route Optimizer</h3>
+            <p className="panel-desc">
+              Select verified pins on the map to build a delivery route.
+            </p>
+
+            <div className="stats-grid">
+              <div className="stat-item">
+                <span className="stat-value">{needs.length}</span>
+                <span className="stat-label">Total Needs</span>
+              </div>
+              <div className="stat-item">
+                <span className="stat-value">{selectedNeedIds.size}</span>
+                <span className="stat-label">Selected</span>
+              </div>
+            </div>
+
+            <div className="action-group">
+              <button
+                className={`btn-primary ${
+                  selectedNeedIds.size === 0 ? "disabled" : ""
+                }`}
+                onClick={handleOptimize}
+                disabled={selectedNeedIds.size === 0 || isLoading}
+              >
+                {isLoading ? "Calculating..." : optimizeLabel}
+              </button>
+
+              {selectedNeedIds.size > 0 && (
+                <button className="btn-text" onClick={handleClearSelection}>
+                  Clear Selection
+                </button>
+              )}
+            </div>
+
+            {error && <div className="error-message">{error}</div>}
+          </div>
+
+          {optimizedRoute.length > 0 && (
+            <div className="panel-section route-results">
+              <h3>Optimized Route</h3>
+              <div className="route-timeline">
+                {optimizedRoute.map((stop, index) => (
+                  <div key={index} className="timeline-item">
+                    <div className="timeline-marker">{index + 1}</div>
+                    <div className="timeline-content">
+                      <span className="stop-name">
+                        {stop.category || "Depot"}
+                      </span>
+                      <span className="stop-details">
+                        {stop.lat.toFixed(4)}, {stop.lon.toFixed(4)}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </aside>
+
+        <main className="map-container">
+          <Map
+            needs={needs}
+            selectedNeedIds={selectedNeedIds}
+            onPinClick={handleMarkerClick}
+            optimizedRoute={optimizedRoute}
+            depot={DEPOT_LOCATION}
+          />
+          {isNeedsLoading && (
+            <div className="map-loading-overlay">
+              <div className="spinner"></div>
+              <span>Loading map data...</span>
+            </div>
+          )}
+        </main>
       </div>
     </div>
   );

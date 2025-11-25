@@ -5,6 +5,7 @@ import "./Map.css";
 
 import MapPin from "./MapPin";
 import RouteLine from "./RouteLine";
+import OfflineMapManager from "./OfflineMapManager";
 
 // --- FIX for default Leaflet icon ---
 // This prevents the default marker icon from being broken
@@ -53,6 +54,9 @@ function Map({ depot, needs, selectedNeedIds, onPinClick, optimizedRoute }) {
 
       {/* 3. Render the optimized route line if it exists */}
       {optimizedRoute.length > 0 && <RouteLine route={optimizedRoute} />}
+
+      {/* 4. Offline Map Manager for downloading tiles */}
+      <OfflineMapManager />
     </MapContainer>
   );
 }

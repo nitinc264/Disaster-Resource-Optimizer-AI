@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { AlertTriangle } from "lucide-react";
 import { getUnverifiedTasks, verifyTask } from "../services";
 import "./VolunteerTaskList.css";
 
@@ -29,9 +30,8 @@ export default function VolunteerTaskList() {
       const result = await verifyTask(task);
 
       if (result.status === "offline-pending") {
-        console.log(`Task ${task.id} queued for sync`);
+        // Task queued for sync
       } else {
-        console.log(`Task ${task.id} verified successfully`);
         // Refetch tasks to update the list
         refetch();
       }
@@ -82,7 +82,8 @@ export default function VolunteerTaskList() {
 
       {!isOnline && (
         <div className="task-list-offline-banner">
-          ⚠️ You are offline. Verifications will be synced when you reconnect.
+          <AlertTriangle size={16} className="icon-inline" /> You are offline.
+          Verifications will be synced when you reconnect.
         </div>
       )}
 

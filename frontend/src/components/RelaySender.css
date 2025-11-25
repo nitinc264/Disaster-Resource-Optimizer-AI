@@ -1,0 +1,343 @@
+/* RelaySender Component - Premium Minimal */
+
+.relay-sender-container {
+  width: 100%;
+}
+
+.relay-sender-card {
+  background: var(--surface);
+  border-radius: var(--radius-xl);
+  padding: var(--space-6);
+  border: 1px solid var(--neutral-200);
+}
+
+/* Header */
+.relay-sender-header {
+  margin-bottom: var(--space-6);
+  text-align: center;
+}
+
+.relay-sender-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--neutral-900);
+  margin-bottom: var(--space-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+}
+
+.relay-sender-icon {
+  font-size: 1.25rem;
+}
+
+.relay-sender-subtitle {
+  color: var(--neutral-500);
+  font-size: 0.875rem;
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* Error Display */
+.relay-sender-error {
+  background: var(--error-light);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  margin-bottom: var(--space-6);
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+
+.relay-sender-error-icon {
+  font-size: 1.125rem;
+  flex-shrink: 0;
+}
+
+.relay-sender-error p {
+  color: var(--error);
+  margin: 0;
+  font-size: 0.875rem;
+}
+
+/* QR Code Section */
+.qr-code-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-5);
+  margin-bottom: var(--space-6);
+  padding: var(--space-6);
+  background: var(--neutral-50);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--neutral-200);
+}
+
+.qr-code-wrapper {
+  padding: var(--space-4);
+  background: white;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--neutral-200);
+}
+
+.qr-code-wrapper svg {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+.qr-code-info {
+  text-align: center;
+}
+
+.qr-code-info p {
+  color: var(--neutral-900);
+  font-weight: 500;
+  margin-bottom: var(--space-2);
+  font-size: 0.875rem;
+}
+
+.qr-code-info span {
+  color: var(--neutral-500);
+  font-size: 0.8125rem;
+}
+
+/* Progress Bar */
+.relay-progress-container {
+  margin-bottom: var(--space-6);
+}
+
+.relay-progress-bar {
+  height: 6px;
+  background: var(--neutral-200);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  margin-bottom: var(--space-2);
+}
+
+.relay-progress-fill {
+  height: 100%;
+  background: var(--neutral-900);
+  transition: width var(--transition-base);
+}
+
+.relay-progress-text {
+  text-align: center;
+  color: var(--neutral-500);
+  font-size: 0.75rem;
+}
+
+/* Actions */
+.relay-sender-actions {
+  display: flex;
+  justify-content: center;
+}
+
+.btn-cancel {
+  background: transparent;
+  border: 1px solid var(--neutral-200);
+  color: var(--neutral-600);
+  padding: var(--space-3) var(--space-5);
+  border-radius: var(--radius-lg);
+  font-weight: 500;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.btn-cancel:hover {
+  background: var(--neutral-50);
+  border-color: var(--neutral-300);
+}
+
+/* QR Container */
+.relay-sender-qr-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-6);
+  padding: var(--space-8) 0;
+}
+
+.relay-sender-qr-wrapper {
+  background: white;
+  padding: var(--space-5);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-lg);
+  border: 2px solid var(--neutral-200);
+}
+
+.relay-sender-qr-code {
+  display: block;
+  width: 240px;
+  height: 240px;
+}
+
+/* Instructions */
+.relay-sender-instructions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  background: var(--neutral-50);
+  border: 1px solid var(--neutral-200);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4) var(--space-5);
+}
+
+.relay-sender-pulse-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--accent);
+  animation: pulse-dot 2s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+@keyframes pulse-dot {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.5;
+    transform: scale(1.2);
+  }
+}
+
+.relay-sender-instructions-text {
+  color: var(--neutral-600);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+/* Loading State */
+.relay-sender-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-12) 0;
+}
+
+.relay-sender-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--neutral-200);
+  border-top-color: var(--neutral-900);
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+.relay-sender-loading p {
+  color: var(--neutral-500);
+  font-size: 0.875rem;
+  margin: 0;
+}
+
+/* Report Info */
+.relay-sender-info {
+  margin-top: var(--space-6);
+  padding: var(--space-5);
+  background: var(--neutral-50);
+  border: 1px solid var(--neutral-200);
+  border-radius: var(--radius-lg);
+}
+
+.relay-sender-info-title {
+  color: var(--neutral-900);
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin: 0 0 var(--space-4) 0;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.relay-sender-info-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-3);
+}
+
+.relay-sender-info-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-2) 0;
+  border-bottom: 1px solid var(--neutral-100);
+}
+
+.relay-sender-info-item:last-child {
+  border-bottom: none;
+}
+
+.relay-sender-info-label {
+  color: var(--neutral-500);
+  font-size: 0.8125rem;
+  font-weight: 500;
+}
+
+.relay-sender-info-value {
+  color: var(--neutral-900);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  font-family: var(--font-mono);
+}
+
+/* Tips */
+.relay-sender-tips {
+  margin-top: var(--space-6);
+  padding: var(--space-4);
+  background: var(--accent-light);
+  border: 1px solid rgba(37, 99, 235, 0.15);
+  border-radius: var(--radius-lg);
+}
+
+.relay-sender-tips-title {
+  color: var(--accent);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  margin: 0 0 var(--space-3) 0;
+}
+
+.relay-sender-tips-list {
+  margin: 0;
+  padding-left: var(--space-5);
+  color: var(--neutral-600);
+  font-size: 0.8125rem;
+  line-height: 1.6;
+}
+
+.relay-sender-tips-list li {
+  margin-bottom: var(--space-1);
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .relay-sender-card {
+    padding: var(--space-5);
+  }
+
+  .relay-sender-qr-wrapper {
+    padding: var(--space-4);
+  }
+
+  .relay-sender-qr-code {
+    width: 200px;
+    height: 200px;
+  }
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  .relay-sender-pulse-dot,
+  .relay-sender-spinner {
+    animation: none;
+  }
+}

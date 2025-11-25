@@ -18,7 +18,6 @@ export function useSyncManager() {
    */
   const syncPendingTasks = useCallback(async () => {
     if (!pendingTasks || pendingTasks.length === 0) {
-      console.log("No pending tasks to sync");
       return;
     }
 

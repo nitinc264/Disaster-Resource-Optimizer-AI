@@ -1,4 +1,4 @@
-import axios from "axios";
+import { apiClient } from "./api";
 
 /**
  * Fetch all unverified tasks from the backend
@@ -6,8 +6,8 @@ import axios from "axios";
  */
 export async function getUnverifiedTasks() {
   try {
-    const response = await axios.get("/api/tasks/unverified");
-    return response.data;
+    const response = await apiClient.get("/tasks/unverified");
+    return response.data.data || [];
   } catch (error) {
     console.error("Error fetching unverified tasks:", error);
     throw error;
@@ -22,7 +22,7 @@ export async function getUnverifiedTasks() {
  */
 export async function postVerification(taskId, volunteerNotes) {
   try {
-    const response = await axios.post("/api/tasks/verify", {
+    const response = await apiClient.post("/tasks/verify", {
       taskId,
       volunteerNotes,
     });
@@ -38,8 +38,8 @@ export async function postVerification(taskId, volunteerNotes) {
  */
 export async function getNeedsForMap() {
   try {
-    const response = await axios.get("/api/needs/map");
-    return response.data;
+    const response = await apiClient.get("/needs/map");
+    return response.data.data || [];
   } catch (error) {
     console.error("Error fetching needs for map:", error);
     throw error;

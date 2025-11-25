@@ -1,4 +1,5 @@
 import { useSyncManager } from "../hooks";
+import { Upload } from "lucide-react";
 import "./SyncStatus.css";
 
 /**
@@ -14,7 +15,8 @@ export default function SyncStatus() {
   return (
     <div className="sync-status-container">
       <span>
-        📤 {pendingTasks.length} verification
+        <Upload size={16} className="icon-inline" /> {pendingTasks.length}{" "}
+        verification
         {pendingTasks.length !== 1 ? "s" : ""} pending sync
       </span>
       {navigator.onLine && (

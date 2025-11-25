@@ -1,7 +1,14 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  NavLink,
+  Link,
+  Navigate,
+} from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { SyncStatus } from "./components";
-import { VolunteerPage, DashboardPage } from "./pages";
+import { VolunteerPage, DashboardPage, DataRelayPage } from "./pages";
 import "./App.css";
 
 // Create a react-query client
@@ -15,19 +22,48 @@ const queryClient = new QueryClient({
 });
 
 function App() {
+  const navClass = ({ isActive }) => `nav-link${isActive ? " active" : ""}`;
+
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
-        <Routes>
-          {/* Route for the volunteer PWA */}
-          <Route path="/" element={<VolunteerPage />} />
+        <div className="app-shell">
+          <header className="app-header">
+            <div className="header-content">
+              <Link to="/dashboard" className="brand-mark">
+                <div className="brand-logo">
+                  <span className="brand-dot" />
+                </div>
+                <span className="brand-text">FieldPulse</span>
+              </Link>
 
-          {/* Route for your manager dashboard */}
-          <Route path="/dashboard" element={<DashboardPage />} />
-        </Routes>
+              <nav className="nav-links">
+                <NavLink to="/tasks" className={navClass}>
+                  Tasks
+                </NavLink>
+                <NavLink to="/dashboard" className={navClass}>
+                  Map
+                </NavLink>
+                <NavLink to="/relay" className={navClass}>
+                  Relay
+                </NavLink>
+              </nav>
 
-        {/* Global sync status indicator */}
-        <SyncStatus />
+              <div className="header-actions">
+                <SyncStatus />
+              </div>
+            </div>
+          </header>
+
+          <main className="app-main">
+            <Routes>
+              <Route path="/" element={<Navigate to="/dashboard" replace />} />
+              <Route path="/tasks" element={<VolunteerPage />} />
+              <Route path="/dashboard" element={<DashboardPage />} />
+              <Route path="/relay" element={<DataRelayPage />} />
+            </Routes>
+          </main>
+        </div>
       </BrowserRouter>
     </QueryClientProvider>
   );

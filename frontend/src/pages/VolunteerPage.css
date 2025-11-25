@@ -1,33 +1,103 @@
-/* VolunteerPage.css */
+/* Volunteer Page - Premium Minimal */
 .volunteer-page {
-  min-height: 100vh;
-  background-color: var(--background-light);
   display: flex;
   flex-direction: column;
+  gap: var(--space-8);
+  max-width: 720px;
+  margin: 0 auto;
 }
 
-.volunteer-header {
-  background-color: var(--primary-color);
-  color: white;
-  padding: 20px;
-  box-shadow: var(--shadow-sm);
-}
-
-.volunteer-header h1 {
-  margin: 0;
-  font-size: 24px;
-}
-
-.volunteer-subtitle {
-  margin: 5px 0 0 0;
-  opacity: 0.9;
-  font-size: 14px;
-}
-
-.volunteer-footer {
-  padding: 20px;
+/* Page Header */
+.page-header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  align-items: center;
   text-align: center;
-  color: var(--text-secondary);
-  font-size: 14px;
-  margin-top: auto;
+}
+
+.header-text h1 {
+  font-size: 1.75rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  margin-bottom: var(--space-2);
+  color: var(--neutral-900);
+}
+
+.header-text p {
+  color: var(--neutral-500);
+  font-size: 1rem;
+  max-width: 400px;
+}
+
+/* View Toggle */
+.view-toggle {
+  display: inline-flex;
+  background: var(--neutral-100);
+  padding: var(--space-1);
+  border-radius: var(--radius-full);
+  border: 1px solid var(--neutral-200);
+}
+
+.toggle-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-5);
+  border-radius: var(--radius-full);
+  border: none;
+  background: transparent;
+  color: var(--neutral-500);
+  font-weight: 500;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.toggle-btn:hover {
+  color: var(--neutral-700);
+}
+
+.toggle-btn.active {
+  background: var(--surface);
+  color: var(--neutral-900);
+  box-shadow: var(--shadow-sm);
+  font-weight: 500;
+}
+
+.toggle-btn .icon {
+  font-size: 1rem;
+}
+
+/* Content Card */
+.volunteer-content {
+  width: 100%;
+}
+
+.content-card {
+  background: var(--surface);
+  border-radius: var(--radius-xl);
+  padding: var(--space-8);
+  border: 1px solid var(--neutral-200);
+  min-height: 400px;
+}
+
+/* Mobile */
+@media (max-width: 600px) {
+  .volunteer-page {
+    gap: var(--space-6);
+  }
+
+  .content-card {
+    padding: var(--space-5);
+    border-radius: var(--radius-lg);
+  }
+
+  .header-text h1 {
+    font-size: 1.5rem;
+  }
+
+  .toggle-btn {
+    padding: var(--space-2) var(--space-4);
+  }
 }

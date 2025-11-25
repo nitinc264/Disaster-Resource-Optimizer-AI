@@ -1,0 +1,97 @@
+import { apiClient } from "./api";
+
+/**
+ * Upload audio file to backend for transcription and analysis
+ * @param {Blob} audioBlob - The audio blob to upload
+ * @param {Object} location - Location object with lat and lng properties
+ * @returns {Promise<Object>} Response from backend with transcription and analysis
+ */
+export async function uploadAudioReport(audioBlob, location) {
+  try {
+    // Create FormData for multipart upload
+    const formData = new FormData();
+
+    // Append audio file with proper filename
+    const audioFile = new File([audioBlob], `audio-report-${Date.now()}.webm`, {
+      type: audioBlob.type || "audio/webm",
+    });
+    formData.append("audio", audioFile);
+
+    // Append location data
+    formData.append("lat", location.lat.toString());
+    formData.append("lng", location.lng.toString());
+
+    // Send POST request to backend
+    const response = await apiClient.post("/reports/audio", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+      timeout: 60000, // 60 second timeout for transcription
+    });
+
+    return response.data;
+  } catch (error) {
+    console.error("Error uploading audio report:", error);
+
+    if (error.response) {
+      // Server responded with error
+      throw new Error(
+        error.response.data?.message || `Server error: ${error.response.status}`
+      );
+    } else if (error.request) {
+      // Request made but no response
+      throw new Error("No response from server. Please check your connection.");
+    } else {
+      // Other errors
+      throw new Error(error.message || "Failed to upload audio report");
+    }
+  }
+}
+
+/**
+ * Get current location using browser geolocation API
+ * @returns {Promise<Object>} Location object with lat and lng
+ */
+export async function getCurrentLocation() {
+  return new Promise((resolve, reject) => {
+    if (!navigator.geolocation) {
+      reject(new Error("Geolocation is not supported by your browser"));
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        resolve({
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+          accuracy: position.coords.accuracy,
+        });
+      },
+      (error) => {
+        let errorMessage = "Failed to get location";
+
+        switch (error.code) {
+          case error.PERMISSION_DENIED:
+            errorMessage =
+              "Location permission denied. Please enable location access.";
+            break;
+          case error.POSITION_UNAVAILABLE:
+            errorMessage = "Location information is unavailable.";
+            break;
+          case error.TIMEOUT:
+            errorMessage = "Location request timed out.";
+            break;
+          default:
+            errorMessage = "An unknown error occurred while getting location.";
+        }
+
+        reject(new Error(errorMessage));
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0,
+      }
+    );
+  });
+}

@@ -2,7 +2,7 @@ import express from "express";
 import {
   getTwilioWebhookValidator,
   handleIncomingSms,
-} from "../controllers/smsController.js";
+} from "../controllers/emergencySmsController.js";
 
 const router = express.Router();
 

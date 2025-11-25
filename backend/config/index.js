@@ -1,20 +1,62 @@
 import dotenv from "dotenv";
+import { getEnvironmentConfig } from "./envSettings.js";
+import { GEOCODE_DEFAULTS } from "../constants/index.js";
 
 // Load environment variables
 dotenv.config();
 
+// Get environment-specific configuration
+const envConfig = getEnvironmentConfig();
+
+/**
+ * Centralized application configuration
+ * Combines environment variables with environment-specific settings
+ */
 export const config = {
-  port: process.env.PORT || 3000,
-  mongoUri: process.env.MONGO_URI,
+  // Environment
+  nodeEnv: process.env.NODE_ENV || "development",
+
+  // Server
+  port: envConfig.port,
+
+  // Database
+  mongoUri: envConfig.mongoUri,
+
+  // CORS
+  cors: envConfig.cors,
+
+  // Logging
+  logging: envConfig.logging,
+
+  // API Keys
   geminiApiKey: process.env.GEMINI_API_KEY,
+  openaiApiKey: process.env.OPENAI_API_KEY,
+
+  // Twilio
   twilio: {
     accountSid: process.env.TWILIO_ACCOUNT_SID,
     authToken: process.env.TWILIO_AUTH_TOKEN,
+    validateWebhook: process.env.NODE_ENV === "production",
   },
+
+  // Geocoding
   geocode: {
-    defaultRegion: process.env.GEOCODE_DEFAULT_REGION || "Pune, India",
+    defaultRegion:
+      process.env.GEOCODE_DEFAULT_REGION || GEOCODE_DEFAULTS.REGION,
+    timeout: GEOCODE_DEFAULTS.TIMEOUT,
   },
-  nodeEnv: process.env.NODE_ENV || "development",
 };
+
+/**
+ * Validate required configuration
+ */
+export function validateConfig() {
+  const required = ["mongoUri", "geminiApiKey"];
+  const missing = required.filter((key) => !config[key]);
+
+  if (missing.length > 0) {
+    throw new Error(`Missing required configuration: ${missing.join(", ")}`);
+  }
+}
 
 export default config;

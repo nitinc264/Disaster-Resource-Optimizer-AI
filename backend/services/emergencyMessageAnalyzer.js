@@ -1,9 +1,11 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import config from "../config/index.js";
+import { logger } from "../utils/appLogger.js";
+import { AI_MODELS } from "../constants/index.js";
 
 // Initialize the Gemini client
 const genAI = new GoogleGenerativeAI(config.geminiApiKey);
-const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+const model = genAI.getGenerativeModel({ model: AI_MODELS.GEMINI });
 
 /**
  * This is the master prompt for the Gemini AI.
@@ -89,15 +91,20 @@ async function triageSMS(messageBody) {
     const validUrgency = ["Low", "Medium", "High"].includes(triageData.urgency);
 
     if (!validNeed || !validUrgency) {
-      console.warn("Gemini returned invalid enum values. Defaulting.");
+      logger.warn(
+        "Gemini returned invalid enum values. Defaulting to safe values."
+      );
       // Handle cases where Gemini might hallucinate a new category
       if (!validNeed) triageData.needType = "Other";
       if (!validUrgency) triageData.urgency = "Medium";
     }
 
+    logger.debug("SMS triage completed successfully", {
+      needType: triageData.needType,
+    });
     return triageData;
   } catch (error) {
-    console.error("Error in Gemini Triage Service:", error.message);
+    logger.error("Error in Gemini Triage Service:", error.message);
     // Throw error so webhook can use fallback parser
     throw error;
   }

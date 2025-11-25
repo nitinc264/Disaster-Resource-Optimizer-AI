@@ -1,5 +1,6 @@
 import { getDistance } from "geolib";
 import salesman from "salesman.js";
+import { logger } from "../utils/appLogger.js";
 
 /**
  * Solves the Traveling Salesman Problem (TSP) using simulated annealing.
@@ -19,9 +20,9 @@ export function solveTSP(locations) {
   };
 
   // Solve the TSP using Simulated Annealing algorithm
-  console.log("Solving optimization problem with salesman.js...");
+  logger.debug("Solving optimization problem with salesman.js...");
   const solution = salesman.solve(points, distanceFunction);
-  console.log("Node.js solution found!");
+  logger.debug("Optimization solution found!");
 
   // Map the solution indices back to original location objects
   const orderedRoute = solution.map((index) => locations[index]);
@@ -45,8 +46,8 @@ export function optimizeRoute({ depot, stops }) {
     throw new Error("Missing depot or stops");
   }
 
-  console.log(
-    `Received optimization request. Depot: ${depot.lat}, Stops: ${stops.length}`
+  logger.info(
+    `Optimizing route from depot (${depot.lat}, ${depot.lon}) with ${stops.length} stops`
   );
 
   // Combine depot and stops (Depot must be index 0)
