@@ -1,13 +1,19 @@
 .offline-map-manager {
   position: absolute;
-  top: 80px;
+  top: 10px;
   right: 10px;
   z-index: 1000;
   background: white;
   border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-  padding: 12px;
-  min-width: 200px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+  min-width: 180px;
+}
+
+.manager-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
 }
 
 .download-btn {
@@ -16,8 +22,7 @@
   background: #2196f3;
   color: white;
   border: none;
-  border-radius: 4px;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
   cursor: pointer;
   transition: background 0.2s;
@@ -32,33 +37,60 @@
   cursor: not-allowed;
 }
 
+.clear-btn {
+  width: 100%;
+  padding: 8px 16px;
+  background: #f5f5f5;
+  color: #666;
+  border: none;
+  border-top: 1px solid #e0e0e0;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.clear-btn:hover {
+  background: #eeeeee;
+  color: #333;
+}
+
 .download-progress {
-  margin-top: 12px;
+  padding: 12px;
+}
+
+.progress-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.progress-header span {
+  font-size: 13px;
+  font-weight: 600;
+  color: #333;
 }
 
 .cancel-btn {
-  width: 100%;
-  padding: 8px 12px;
+  width: 24px;
+  height: 24px;
+  padding: 0;
   background: #f44336;
   color: white;
   border: none;
   border-radius: 4px;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 600;
   cursor: pointer;
-  margin-bottom: 8px;
   transition: background 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .cancel-btn:hover {
   background: #d32f2f;
-}
-
-.progress-text {
-  font-size: 13px;
-  color: #666;
-  margin-bottom: 6px;
-  text-align: center;
 }
 
 .progress-bar {
@@ -67,10 +99,25 @@
   background: #e0e0e0;
   border-radius: 3px;
   overflow: hidden;
+  margin-bottom: 8px;
 }
 
 .progress-fill {
   height: 100%;
-  background: #4caf50;
+  background: linear-gradient(90deg, #4caf50, #8bc34a);
   transition: width 0.3s ease;
+}
+
+.progress-text {
+  font-size: 12px;
+  color: #666;
+  text-align: center;
+  font-weight: 500;
+}
+
+.progress-status {
+  font-size: 11px;
+  color: #888;
+  text-align: center;
+  margin-top: 4px;
 }

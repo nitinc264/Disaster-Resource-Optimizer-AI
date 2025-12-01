@@ -38,11 +38,18 @@ export function useSyncManager() {
     }
   }, [pendingTasks]);
 
+  /**
+   * Sync all pending data
+   */
+  const syncAll = useCallback(async () => {
+    await syncPendingTasks();
+  }, [syncPendingTasks]);
+
   // Listen for the 'online' event and sync when back online
   useEffect(() => {
     const handleOnline = () => {
-      console.log("Back online! Syncing pending tasks...");
-      syncPendingTasks();
+      console.log("Back online! Syncing pending data...");
+      syncAll();
     };
 
     window.addEventListener("online", handleOnline);
@@ -51,23 +58,26 @@ export function useSyncManager() {
     return () => {
       window.removeEventListener("online", handleOnline);
     };
-  }, [syncPendingTasks]);
+  }, [syncAll]);
 
-  // If we already have pending tasks and we're online, attempt an immediate sync
+  // If we already have pending data and we're online, attempt an immediate sync
   useEffect(() => {
     if (!navigator.onLine) {
       return;
     }
 
-    if (!pendingTasks || pendingTasks.length === 0) {
+    const hasPendingTasks = pendingTasks && pendingTasks.length > 0;
+
+    if (!hasPendingTasks) {
       return;
     }
 
-    syncPendingTasks();
-  }, [pendingTasks, syncPendingTasks]);
+    syncAll();
+  }, [pendingTasks, syncAll]);
 
   return {
     pendingTasks: pendingTasks || [],
     syncPendingTasks,
+    syncAll,
   };
 }

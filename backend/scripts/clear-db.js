@@ -1,9 +1,12 @@
 import mongoose from "mongoose";
 import dotenv from "dotenv";
-import { config } from "../config/index.js";
-import { connectDatabase } from "../config/dbConnection.js";
+import path from "path";
+import { fileURLToPath } from "url";
 
-dotenv.config();
+// Load environment variables from backend/.env
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+dotenv.config({ path: path.join(__dirname, "../.env") });
 
 const CONFIRM_FLAG = "--confirm";
 const shouldProceed =
@@ -18,7 +21,8 @@ async function clearDatabase() {
     process.exit(1);
   }
 
-  const mongoUri = config.mongoUri;
+  // Use the same MONGO_URI as the server
+  const mongoUri = process.env.MONGO_URI;
 
   if (!mongoUri) {
     console.error("Missing MONGO_URI. Cannot connect to database.");
@@ -26,7 +30,10 @@ async function clearDatabase() {
   }
 
   try {
-    await connectDatabase(mongoUri);
+    console.log(`Connecting to: ${mongoUri}`);
+    await mongoose.connect(mongoUri);
+    console.log("MongoDB Connected successfully");
+
     const db = mongoose.connection.db;
     const collections = await db.collections();
 

@@ -1,6 +1,6 @@
 import twilio from "twilio";
 import config from "../config/index.js";
-import { triageSMS } from "../services/emergencyMessageAnalyzer.js";
+import { triageSMS } from "../services/geminiService.js";
 import { geocodeLocation } from "../services/addressGeocodingService.js";
 import Need from "../models/NeedModel.js";
 import { fallbackTriage, extractLocationHint } from "../utils/textParser.js";

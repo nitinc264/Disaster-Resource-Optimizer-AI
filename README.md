@@ -353,3 +353,15 @@ This project is licensed under the MIT License.
 ## Environment Variables
 
 Backend uses `.env` file for configuration. See `backend/.env.example` for all available options.
+
+### Media Upload Configuration
+
+Add the following when enabling photo capture uploads:
+
+```
+CLOUDINARY_URL=cloudinary://<api_key>:<api_secret>@<cloud_name>
+# Optional overrides:
+# CLOUDINARY_FOLDER=disaster-response/reports/photos
+```
+
+The `CLOUDINARY_URL` value is provided by Cloudinary and contains the cloud name, key, and secret required for secure uploads.

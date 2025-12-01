@@ -1,21 +1,23 @@
-import React, { useState, useEffect, useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { Map } from "../components";
-import { optimizeRoute, getNeedsForMap } from "../services";
+import { useState, useMemo } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Map, ReportsList, MissionPanel } from "../components";
+import {
+  getNeedsForMap,
+  getReports,
+  getMissions,
+  completeMission,
+  rerouteMission,
+} from "../services";
 import "./DashboardPage.css";
 
-const DEPOT_LOCATION = { lat: 18.521, lon: 73.854 };
-
 function DashboardPage() {
-  const [selectedNeedIds, setSelectedNeedIds] = useState(new Set());
-  const [optimizedRoute, setOptimizedRoute] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [selectedReportId, setSelectedReportId] = useState(null);
+  const [reroutingMissionId, setReroutingMissionId] = useState(null);
+  const queryClient = useQueryClient();
 
   const {
     data: needsData = [],
     isLoading: isNeedsLoading,
-    error: needsError,
     refetch,
     isFetching,
   } = useQuery({
@@ -24,168 +26,279 @@ function DashboardPage() {
     refetchInterval: 10000,
   });
 
+  // Fetch reports
+  const {
+    data: reportsData = [],
+    isLoading: isReportsLoading,
+    refetch: refetchReports,
+  } = useQuery({
+    queryKey: ["reports"],
+    queryFn: () => getReports({ limit: 50 }),
+    refetchInterval: 5000,
+  });
+
+  // Fetch missions (auto-generated routes from logistics agent)
+  const { data: missionsData = [], refetch: refetchMissions } = useQuery({
+    queryKey: ["missions"],
+    queryFn: getMissions,
+    refetchInterval: 5000,
+  });
+
+  // Extract all routes from missions to display on map
+  const missionRoutes = useMemo(() => {
+    const allRoutes = [];
+    (missionsData || []).forEach((mission) => {
+      const stationType = mission.station?.type || "rescue";
+      (mission.routes || []).forEach((routeData) => {
+        if (routeData.route && routeData.route.length > 0) {
+          const formattedRoute = routeData.route.map((coord) => ({
+            lat: coord[0],
+            lon: coord[1],
+          }));
+          allRoutes.push({
+            vehicleId: routeData.vehicle_id,
+            route: formattedRoute,
+            distance: routeData.total_distance,
+            stationType: routeData.station_type || stationType,
+            stationName: routeData.station_name || mission.station?.name,
+          });
+        }
+      });
+    });
+    return allRoutes;
+  }, [missionsData]);
+
   const needs = useMemo(
     () =>
       (needsData || []).filter(
-        (need) => typeof need.lat === "number" && typeof need.lon === "number"
+        (need) =>
+          typeof need.lat === "number" &&
+          typeof need.lon === "number" &&
+          need.status !== "Completed"
       ),
     [needsData]
   );
 
-  const optimizeLabel =
-    selectedNeedIds.size > 0
-      ? `Optimize ${selectedNeedIds.size} Stops`
-      : "Select stops on map";
+  // Get analyzed reports with valid coordinates to show on map
+  const analyzedReports = useMemo(
+    () =>
+      (reportsData || []).filter(
+        (report) =>
+          (report.status === "Analyzed" ||
+            report.status === "Analyzed_Full" ||
+            report.status === "Clustered" ||
+            report.status === "InProgress") &&
+          typeof report.lat === "number" &&
+          typeof report.lon === "number"
+      ),
+    [reportsData]
+  );
 
-  useEffect(() => {
-    setSelectedNeedIds((prev) => {
-      const next = new Set();
-      prev.forEach((id) => {
-        const stillValid = needs.find(
-          (need) => need.id === id && need.status === "Verified"
-        );
-        if (stillValid) {
-          next.add(id);
-        }
-      });
-      return next;
-    });
-  }, [needs]);
+  // Combine needs and analyzed reports for the map
+  const allMapItems = useMemo(() => {
+    const reportItems = analyzedReports.map((report) => ({
+      id: `report-${report.id}`,
+      lat: report.lat,
+      lon: report.lon,
+      status: report.status === "InProgress" ? "InProgress" : "Report",
+      category: report.tag || "Report",
+      severity: report.severity,
+      needs: report.needs,
+      text: report.text || report.transcription,
+      isReport: true,
+    }));
+    return [...needs, ...reportItems];
+  }, [needs, analyzedReports]);
 
-  const handleMarkerClick = (needId) => {
-    const need = needs.find((n) => n.id === needId);
-    if (!need || need.status !== "Verified") return;
-
-    setSelectedNeedIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(needId)) {
-        next.delete(needId);
-      } else {
-        next.add(needId);
-      }
-      return next;
-    });
+  const handleReportClick = (report) => {
+    setSelectedReportId(report.id);
   };
 
-  const handleOptimize = async () => {
-    if (selectedNeedIds.size === 0) return;
-
-    setIsLoading(true);
-    setError(null);
+  const handleCompleteMission = async (missionId) => {
     try {
-      const selectedNeeds = needs.filter((n) => selectedNeedIds.has(n.id));
-      const stops = selectedNeeds.map((n) => ({ lat: n.lat, lon: n.lon }));
-      const response = await optimizeRoute({ depot: DEPOT_LOCATION, stops });
-      setOptimizedRoute(response.data?.optimized_route || []);
-    } catch (err) {
-      console.error("Optimization failed:", err);
-      setError("Failed to calculate optimal route. Please try again.");
-    } finally {
-      setIsLoading(false);
+      await completeMission(missionId);
+      // Invalidate queries to refresh data
+      queryClient.invalidateQueries({ queryKey: ["missions"] });
+      queryClient.invalidateQueries({ queryKey: ["map-needs"] });
+      queryClient.invalidateQueries({ queryKey: ["reports"] });
+    } catch (error) {
+      console.error("Failed to complete mission:", error);
     }
   };
 
-  const handleClearSelection = () => {
-    setSelectedNeedIds(new Set());
-    setOptimizedRoute([]);
-    setError(null);
+  // Re-routing handlers
+  const handleStartReroute = (missionId) => {
+    setReroutingMissionId(missionId);
   };
+
+  const handleCancelReroute = () => {
+    setReroutingMissionId(null);
+  };
+
+  const handleStationClick = async (station) => {
+    if (!reroutingMissionId) {
+      console.log("No mission selected for re-routing");
+      return;
+    }
+
+    console.log(
+      "Re-routing mission",
+      reroutingMissionId,
+      "to station",
+      station.name
+    );
+
+    try {
+      await rerouteMission(reroutingMissionId, station);
+      setReroutingMissionId(null);
+
+      // The logistics agent processes rerouted needs every 5 seconds
+      // Show user feedback and poll for new mission
+      alert(
+        `Mission re-routed to ${station.name}. The logistics agent will create a new route shortly.`
+      );
+
+      // Immediate refresh
+      queryClient.invalidateQueries({ queryKey: ["missions"] });
+      queryClient.invalidateQueries({ queryKey: ["map-needs"] });
+      queryClient.invalidateQueries({ queryKey: ["reports"] });
+
+      // Poll for new mission after logistics agent processes (5-10 seconds)
+      setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey: ["missions"] });
+        queryClient.invalidateQueries({ queryKey: ["map-needs"] });
+      }, 6000);
+    } catch (error) {
+      console.error("Failed to re-route mission:", error);
+      alert(
+        "Failed to re-route mission: " + (error.message || "Unknown error")
+      );
+    }
+  };
+
+  const handleRefreshAll = () => {
+    refetch();
+    refetchReports();
+    refetchMissions();
+  };
+
+  // Calculate stats
+  const pendingCount = allMapItems.filter(
+    (item) => item.status === "Verified" || item.status === "Report"
+  ).length;
+  const inProgressCount = allMapItems.filter(
+    (item) => item.status === "InProgress"
+  ).length;
 
   return (
     <div className="dashboard-page">
-      <div className="dashboard-header">
-        <div className="header-title">
+      {/* Top Header Bar */}
+      <header className="dashboard-header">
+        <div className="header-left">
           <h1>Command Center</h1>
-          <p>Live resource tracking and route optimization.</p>
+          <span className="header-subtitle">
+            Live resource tracking and mission monitoring
+          </span>
         </div>
-        <div className="header-controls">
+
+        {/* Stats Bar */}
+        <div className="stats-bar">
+          <div className="stat-chip">
+            <span className="stat-icon">📍</span>
+            <div className="stat-content">
+              <span className="stat-value">{allMapItems.length}</span>
+              <span className="stat-label">Total Incidents</span>
+            </div>
+          </div>
+          <div className="stat-chip stat-pending">
+            <span className="stat-icon">⏳</span>
+            <div className="stat-content">
+              <span className="stat-value">{pendingCount}</span>
+              <span className="stat-label">Pending</span>
+            </div>
+          </div>
+          <div className="stat-chip stat-active">
+            <span className="stat-icon">🚀</span>
+            <div className="stat-content">
+              <span className="stat-value">{inProgressCount}</span>
+              <span className="stat-label">In Progress</span>
+            </div>
+          </div>
+          <div className="stat-chip stat-missions">
+            <span className="stat-icon">🚒</span>
+            <div className="stat-content">
+              <span className="stat-value">{missionsData?.length || 0}</span>
+              <span className="stat-label">Active Missions</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="header-actions">
           <button
-            className="btn-secondary"
-            onClick={refetch}
-            disabled={isFetching}
+            className="btn-refresh"
+            onClick={handleRefreshAll}
+            disabled={isFetching || isReportsLoading}
           >
-            {isFetching ? "Syncing..." : "Refresh Data"}
+            <span className="refresh-icon">
+              {isFetching || isReportsLoading ? "⟳" : "↻"}
+            </span>
+            {isFetching || isReportsLoading ? "Syncing..." : "Refresh"}
           </button>
         </div>
-      </div>
+      </header>
 
-      <div className="dashboard-grid">
-        <aside className="control-panel">
-          <div className="panel-section">
-            <h3>Route Optimizer</h3>
-            <p className="panel-desc">
-              Select verified pins on the map to build a delivery route.
-            </p>
-
-            <div className="stats-grid">
-              <div className="stat-item">
-                <span className="stat-value">{needs.length}</span>
-                <span className="stat-label">Total Needs</span>
-              </div>
-              <div className="stat-item">
-                <span className="stat-value">{selectedNeedIds.size}</span>
-                <span className="stat-label">Selected</span>
-              </div>
-            </div>
-
-            <div className="action-group">
-              <button
-                className={`btn-primary ${
-                  selectedNeedIds.size === 0 ? "disabled" : ""
-                }`}
-                onClick={handleOptimize}
-                disabled={selectedNeedIds.size === 0 || isLoading}
-              >
-                {isLoading ? "Calculating..." : optimizeLabel}
-              </button>
-
-              {selectedNeedIds.size > 0 && (
-                <button className="btn-text" onClick={handleClearSelection}>
-                  Clear Selection
-                </button>
-              )}
-            </div>
-
-            {error && <div className="error-message">{error}</div>}
+      {/* Main Content - 3 Column Layout */}
+      <div className="dashboard-content">
+        {/* Left Panel - Missions */}
+        <aside className="panel panel-left">
+          <div className="panel-header">
+            <h2>Active Missions</h2>
+            <span className="panel-badge">{missionsData?.length || 0}</span>
           </div>
-
-          {optimizedRoute.length > 0 && (
-            <div className="panel-section route-results">
-              <h3>Optimized Route</h3>
-              <div className="route-timeline">
-                {optimizedRoute.map((stop, index) => (
-                  <div key={index} className="timeline-item">
-                    <div className="timeline-marker">{index + 1}</div>
-                    <div className="timeline-content">
-                      <span className="stop-name">
-                        {stop.category || "Depot"}
-                      </span>
-                      <span className="stop-details">
-                        {stop.lat.toFixed(4)}, {stop.lon.toFixed(4)}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
+          <div className="panel-body">
+            <MissionPanel
+              missions={missionsData || []}
+              missionRoutes={missionRoutes}
+              onCompleteMission={handleCompleteMission}
+              onStartReroute={handleStartReroute}
+              reroutingMissionId={reroutingMissionId}
+              onCancelReroute={handleCancelReroute}
+            />
+          </div>
         </aside>
 
+        {/* Center - Map */}
         <main className="map-container">
           <Map
-            needs={needs}
-            selectedNeedIds={selectedNeedIds}
-            onPinClick={handleMarkerClick}
-            optimizedRoute={optimizedRoute}
-            depot={DEPOT_LOCATION}
+            needs={allMapItems}
+            selectedNeedIds={new Set()}
+            onPinClick={() => {}}
+            missionRoutes={missionRoutes}
+            isRerouteMode={!!reroutingMissionId}
+            onStationClick={handleStationClick}
           />
-          {isNeedsLoading && (
+          {(isNeedsLoading || isReportsLoading) && (
             <div className="map-loading-overlay">
               <div className="spinner"></div>
               <span>Loading map data...</span>
             </div>
           )}
         </main>
+
+        {/* Right Panel - Reports */}
+        <aside className="panel panel-right">
+          <div className="panel-header">
+            <h2>Incoming Reports</h2>
+            <span className="panel-badge">{reportsData?.length || 0}</span>
+          </div>
+          <div className="panel-body">
+            <ReportsList
+              reports={reportsData}
+              onReportClick={handleReportClick}
+              selectedReportId={selectedReportId}
+            />
+          </div>
+        </aside>
       </div>
     </div>
   );

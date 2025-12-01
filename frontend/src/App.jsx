@@ -8,7 +8,7 @@ import {
 } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { SyncStatus } from "./components";
-import { VolunteerPage, DashboardPage, DataRelayPage } from "./pages";
+import { VolunteerPage, DashboardPage } from "./pages";
 import "./App.css";
 
 // Create a react-query client
@@ -44,9 +44,6 @@ function App() {
                 <NavLink to="/dashboard" className={navClass}>
                   Map
                 </NavLink>
-                <NavLink to="/relay" className={navClass}>
-                  Relay
-                </NavLink>
               </nav>
 
               <div className="header-actions">
@@ -60,7 +57,6 @@ function App() {
               <Route path="/" element={<Navigate to="/dashboard" replace />} />
               <Route path="/tasks" element={<VolunteerPage />} />
               <Route path="/dashboard" element={<DashboardPage />} />
-              <Route path="/relay" element={<DataRelayPage />} />
             </Routes>
           </main>
         </div>

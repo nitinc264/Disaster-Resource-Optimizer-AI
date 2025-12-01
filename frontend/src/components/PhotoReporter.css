@@ -1,0 +1,334 @@
+.photo-reporter {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.photo-reporter-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.photo-reporter-title {
+  display: flex;
+  gap: var(--space-3);
+  align-items: center;
+}
+
+.photo-reporter-title h2 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.photo-reporter-title p {
+  margin: 0;
+  color: var(--neutral-500);
+  font-size: 0.9rem;
+}
+
+.photo-reporter-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: var(--radius-lg);
+  background: var(--neutral-100);
+  display: grid;
+  place-items: center;
+  color: var(--neutral-700);
+}
+
+.photo-reporter-offline {
+  font-size: 0.75rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: var(--radius-full);
+  background: var(--neutral-200);
+  color: var(--neutral-600);
+}
+
+.photo-reporter-alert {
+  display: flex;
+  gap: var(--space-2);
+  align-items: flex-start;
+  padding: var(--space-3);
+  border-radius: var(--radius-lg);
+  font-size: 0.9rem;
+}
+
+.photo-reporter-alert.error {
+  background: #fff2f2;
+  color: #9f1d1d;
+}
+
+.photo-reporter-alert.warning {
+  background: #fffbeb;
+  color: #92400e;
+}
+
+.photo-reporter-alert.success {
+  background: #f0fff6;
+  color: #05603a;
+}
+
+.photo-reporter-alert a {
+  display: inline-block;
+  margin-top: 0.25rem;
+  color: inherit;
+  font-weight: 500;
+}
+
+.photo-preview {
+  width: 100%;
+  border-radius: var(--radius-xl);
+  border: 2px dashed var(--neutral-200);
+  min-height: 220px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: var(--neutral-50);
+  transition: border-color var(--transition-fast),
+    background var(--transition-fast), transform var(--transition-fast);
+  font: inherit;
+  color: inherit;
+  padding: 0;
+  line-height: normal;
+}
+
+.photo-preview.placeholder {
+  background: #fafafa;
+}
+
+.photo-preview.clickable {
+  cursor: pointer;
+}
+
+.photo-preview.clickable:hover {
+  border-color: var(--neutral-400);
+  background: var(--neutral-100);
+}
+
+.photo-preview.clickable:focus-visible {
+  outline: 2px solid var(--neutral-900);
+  outline-offset: 2px;
+}
+
+.photo-preview.clickable:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.photo-preview.has-preview {
+  border-style: solid;
+  background: var(--neutral-900);
+}
+
+.photo-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.photo-preview-placeholder {
+  text-align: center;
+  color: var(--neutral-400);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  padding: var(--space-6);
+}
+
+.photo-caption-label {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--neutral-600);
+}
+
+.photo-reporter textarea {
+  width: 100%;
+  border-radius: var(--radius-lg);
+  padding: var(--space-3);
+  border: 1px solid var(--neutral-200);
+  font-size: 0.95rem;
+  resize: none;
+}
+
+.photo-reporter textarea:focus {
+  outline: 2px solid var(--neutral-900);
+  outline-offset: 2px;
+}
+
+.photo-reporter-location {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+  font-size: 0.85rem;
+  color: var(--neutral-500);
+}
+
+.photo-reporter-actions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: var(--space-3);
+}
+
+.photo-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  border-radius: var(--radius-lg);
+  padding: var(--space-3);
+  font-weight: 500;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.photo-btn.primary {
+  background: var(--neutral-900);
+  color: white;
+}
+
+.photo-btn.primary:disabled {
+  background: var(--neutral-300);
+  cursor: not-allowed;
+}
+
+.photo-btn.secondary {
+  background: var(--neutral-100);
+  color: var(--neutral-800);
+}
+
+.photo-btn.ghost {
+  border-color: var(--neutral-200);
+  color: var(--neutral-600);
+  background: transparent;
+}
+
+.photo-btn.ghost:disabled {
+  color: var(--neutral-400);
+  cursor: not-allowed;
+}
+
+.photo-btn .spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 600px) {
+  .photo-reporter-actions {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Camera Modal */
+.camera-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.95);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.camera-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.camera-close-btn {
+  position: absolute;
+  top: var(--space-4);
+  right: var(--space-4);
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-full);
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: white;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  z-index: 10;
+  transition: background var(--transition-fast);
+}
+
+.camera-close-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.camera-video {
+  max-width: 100%;
+  max-height: calc(100vh - 120px);
+  border-radius: var(--radius-lg);
+  object-fit: cover;
+}
+
+.camera-controls {
+  position: absolute;
+  bottom: var(--space-6);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: var(--space-4);
+}
+
+.camera-capture-btn {
+  width: 72px;
+  height: 72px;
+  border-radius: var(--radius-full);
+  background: white;
+  border: 4px solid rgba(255, 255, 255, 0.5);
+  color: var(--neutral-900);
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  transition: transform var(--transition-fast),
+    background var(--transition-fast);
+}
+
+.camera-capture-btn:hover {
+  transform: scale(1.05);
+}
+
+.camera-capture-btn:active {
+  transform: scale(0.95);
+  background: var(--neutral-200);
+}
+
+/* Button link style for fallback */
+.photo-btn-link {
+  background: none;
+  border: none;
+  color: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+  font-size: inherit;
+  padding: 0;
+  margin-top: var(--space-1);
+}
+
+.photo-btn-link:hover {
+  opacity: 0.8;
+}

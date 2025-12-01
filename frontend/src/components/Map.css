@@ -2,4 +2,78 @@
 .map-container {
   height: 100%;
   width: 100%;
+  min-height: 400px;
+}
+
+/* Station icon styling */
+.station-icon {
+  background: transparent !important;
+  border: none !important;
+}
+
+.station-marker {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 3px solid white;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  font-size: 18px;
+  transition: all 0.2s ease;
+}
+
+.station-marker.highlighted {
+  width: 48px;
+  height: 48px;
+  border: 4px solid #f59e0b;
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.6);
+  font-size: 22px;
+  cursor: pointer;
+  animation: pulse-station 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-station {
+  0%,
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 12px rgba(245, 158, 11, 0.6);
+  }
+  50% {
+    transform: scale(1.1);
+    box-shadow: 0 0 20px rgba(245, 158, 11, 0.8);
+  }
+}
+
+.station-popup {
+  text-align: center;
+  min-width: 120px;
+}
+
+.station-popup strong {
+  font-size: 0.9rem;
+  color: #1f2937;
+}
+
+.station-popup .station-type {
+  display: inline-block;
+  margin-top: 4px;
+  padding: 2px 8px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  border-radius: 4px;
+  background: #e5e7eb;
+  color: #4b5563;
+}
+
+.station-popup .station-reroute-hint {
+  margin-top: 8px;
+  padding: 6px 10px;
+  background: #fef3c7;
+  border: 1px solid #f59e0b;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #b45309;
 }

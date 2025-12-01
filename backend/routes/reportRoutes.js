@@ -5,6 +5,8 @@ import fs from "fs";
 import {
   processAudioReport,
   createReport,
+  getAllReports,
+  getReportById,
 } from "../controllers/voiceReportController.js";
 
 const router = express.Router();
@@ -29,7 +31,7 @@ const storage = multer.diskStorage({
   },
 });
 
-// File filter to accept only audio files
+// File filter to accept audio and image files
 const fileFilter = (req, file, cb) => {
   const allowedMimeTypes = [
     "audio/webm",
@@ -89,6 +91,18 @@ router.post("/audio", upload.single("audio"), processAudioReport);
  * Create a new text-based report
  */
 router.post("/", createReport);
+
+/**
+ * GET /api/reports
+ * Get all reports (with optional status filter)
+ */
+router.get("/", getAllReports);
+
+/**
+ * GET /api/reports/:id
+ * Get a specific report by ID
+ */
+router.get("/:id", getReportById);
 
 // Error handling middleware for multer
 router.use((error, req, res, next) => {

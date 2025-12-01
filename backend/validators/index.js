@@ -1,4 +1,4 @@
 /**
  * Validators barrel export
  */
-export { validateOptimizationRequest } from "./routeInputValidator.js";
+// Validators can be added here as needed

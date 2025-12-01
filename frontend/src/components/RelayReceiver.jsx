@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Html5Qrcode } from "html5-qrcode";
 import LZString from "lz-string";
 import { v4 as uuidv4 } from "uuid";
@@ -8,6 +8,7 @@ import {
   AlertTriangle,
   CheckCircle,
   ClipboardList,
+  Image,
 } from "lucide-react";
 import { db } from "../services";
 import "./RelayReceiver.css";
@@ -23,8 +24,10 @@ const RelayReceiver = ({ onSuccess, onClose }) => {
   const [receivedReport, setReceivedReport] = useState(null);
   const [error, setError] = useState(null);
   const [cameraError, setCameraError] = useState(null);
+  const [chunkProgress, setChunkProgress] = useState(null); // { received: [], total: number }
   const html5QrCodeRef = useRef(null);
   const qrCodeRegionRef = useRef(null);
+  const chunksRef = useRef({}); // Store received chunks
 
   // Trigger haptic feedback on success (if supported)
   const triggerHaptic = () => {
@@ -35,65 +38,132 @@ const RelayReceiver = ({ onSuccess, onClose }) => {
   };
 
   // Handle successful QR code scan
-  const handleScan = async (decodedText, decodedResult) => {
-    if (!scanning) return;
+  const handleScan = useCallback(
+    async (decodedText) => {
+      if (!scanning) return;
 
-    try {
-      setScanning(false);
+      try {
+        let compressedData = decodedText;
 
-      const compressedData = decodedText;
+        // Check if this is a chunked QR code
+        if (decodedText.startsWith("RELAY_CHUNK|")) {
+          const parts = decodedText.split("|");
+          if (parts.length !== 4) {
+            throw new Error("Invalid chunk format");
+          }
 
-      // Decompress using LZ-String
-      const decompressed = LZString.decompressFromBase64(compressedData);
+          const chunkIndex = parseInt(parts[1], 10);
+          const totalParts = parseInt(parts[2], 10);
+          const chunkData = parts[3];
 
-      if (!decompressed) {
-        throw new Error("Failed to decompress data - invalid QR code format");
-      }
+          // Store chunk
+          chunksRef.current[chunkIndex] = chunkData;
 
-      // Parse JSON
-      const reportData = JSON.parse(decompressed);
+          // Update progress
+          const receivedChunks = Object.keys(chunksRef.current).map(Number);
+          setChunkProgress({ received: receivedChunks, total: totalParts });
 
-      // Generate a unique ID for this relayed report
-      const relayId = uuidv4();
+          // Trigger haptic for chunk received
+          if (navigator.vibrate) {
+            navigator.vibrate(100);
+          }
 
-      // Prepare report with relay metadata
-      const relayedReport = {
-        ...reportData,
-        relayId,
-        source: "RELAY",
-        synced: false,
-        relayedAt: Date.now(),
-        originalReportId: reportData.reportId,
-        timestamp: Date.now(),
-      };
+          // Check if all chunks received
+          if (receivedChunks.length < totalParts) {
+            // Still waiting for more chunks
+            return;
+          }
 
-      // Save to Dexie
-      await db.relayReports.add(relayedReport);
+          // Reassemble all chunks in order
+          let fullData = "";
+          for (let i = 0; i < totalParts; i++) {
+            if (!chunksRef.current[i]) {
+              throw new Error(`Missing chunk ${i + 1} of ${totalParts}`);
+            }
+            fullData += chunksRef.current[i];
+          }
+          compressedData = fullData;
 
-      // Trigger haptic feedback
-      triggerHaptic();
-
-      // Show success state
-      setReceivedReport(relayedReport);
-      setShowSuccess(true);
-
-      // Call success callback if provided
-      if (onSuccess) {
-        onSuccess(relayedReport);
-      }
-
-      // Auto-close after 3 seconds
-      setTimeout(() => {
-        if (onClose) {
-          onClose();
+          // Clear chunks
+          chunksRef.current = {};
         }
-      }, 3000);
-    } catch (err) {
-      console.error("Error processing QR code:", err);
-      setError(err.message || "Failed to process QR code");
-      setScanning(true); // Resume scanning on error
-    }
-  };
+
+        setScanning(false);
+
+        // Decompress using LZ-String
+        const decompressed = LZString.decompressFromBase64(compressedData);
+
+        if (!decompressed) {
+          throw new Error("Failed to decompress data - invalid QR code format");
+        }
+
+        // Parse JSON
+        const reportData = JSON.parse(decompressed);
+
+        // Generate a unique ID for this relayed report
+        const relayId = uuidv4();
+
+        // Prepare report with relay metadata
+        const relayedReport = {
+          ...reportData,
+          relayId,
+          source: "RELAY",
+          synced: 0, // Use 0 instead of false for Dexie indexing
+          relayedAt: Date.now(),
+          originalReportId: reportData.reportId,
+          timestamp: Date.now(),
+          hasImage: reportData.hasImage ? 1 : 0,
+        };
+
+        // If report has image data, convert base64 back to blob for storage
+        if (reportData.imageBase64) {
+          try {
+            const byteCharacters = atob(reportData.imageBase64);
+            const byteNumbers = new Array(byteCharacters.length);
+            for (let i = 0; i < byteCharacters.length; i++) {
+              byteNumbers[i] = byteCharacters.charCodeAt(i);
+            }
+            const byteArray = new Uint8Array(byteNumbers);
+            relayedReport.imageBlob = new Blob([byteArray], {
+              type: "image/jpeg",
+            });
+          } catch (imgErr) {
+            console.warn("Failed to decode image:", imgErr);
+          }
+          // Remove base64 from stored report to save space
+          delete relayedReport.imageBase64;
+        }
+
+        // Save to Dexie
+        await db.relayReports.add(relayedReport);
+
+        // Trigger haptic feedback
+        triggerHaptic();
+
+        // Show success state
+        setReceivedReport(relayedReport);
+        setShowSuccess(true);
+        setChunkProgress(null);
+
+        // Call success callback if provided
+        if (onSuccess) {
+          onSuccess(relayedReport);
+        }
+
+        // Auto-close after 3 seconds
+        setTimeout(() => {
+          if (onClose) {
+            onClose();
+          }
+        }, 3000);
+      } catch (err) {
+        console.error("Error processing QR code:", err);
+        setError(err.message || "Failed to process QR code");
+        setScanning(true); // Resume scanning on error
+      }
+    },
+    [scanning, onSuccess, onClose]
+  );
 
   // Initialize and start QR code scanner
   useEffect(() => {
@@ -157,13 +227,13 @@ const RelayReceiver = ({ onSuccess, onClose }) => {
               })
               .catch(() => {});
           }
-        } catch (e) {
+        } catch {
           // Ignore cleanup errors
         }
         html5QrCodeRef.current = null;
       }
     };
-  }, [scanning, cameraError, showSuccess]);
+  }, [scanning, cameraError, showSuccess, handleScan]);
 
   return (
     <div className="relay-receiver-container">
@@ -231,9 +301,32 @@ const RelayReceiver = ({ onSuccess, onClose }) => {
               {/* Scanning Indicator */}
               <div className="relay-receiver-scanning-indicator">
                 <div className="relay-receiver-scan-line"></div>
-                <p className="relay-receiver-scanning-text">Scanning...</p>
+                <p className="relay-receiver-scanning-text">
+                  {chunkProgress
+                    ? `Received ${chunkProgress.received.length} of ${chunkProgress.total} parts...`
+                    : "Scanning..."}
+                </p>
               </div>
             </div>
+
+            {/* Chunk Progress Bar */}
+            {chunkProgress && (
+              <div className="relay-receiver-chunk-progress">
+                <div className="chunk-progress-bar">
+                  {Array.from({ length: chunkProgress.total }).map((_, i) => (
+                    <div
+                      key={i}
+                      className={`chunk-segment ${
+                        chunkProgress.received.includes(i) ? "received" : ""
+                      }`}
+                    />
+                  ))}
+                </div>
+                <p className="chunk-progress-text">
+                  Scan remaining QR codes in sequence
+                </p>
+              </div>
+            )}
           </div>
         )}
 
@@ -279,6 +372,14 @@ const RelayReceiver = ({ onSuccess, onClose }) => {
                     </span>
                   </div>
                 )}
+                {receivedReport.hasImage ? (
+                  <div className="relay-receiver-info-item">
+                    <span className="relay-receiver-info-label">Image:</span>
+                    <span className="relay-receiver-info-value relay-receiver-has-image">
+                      <Image size={14} /> Included
+                    </span>
+                  </div>
+                ) : null}
                 <div className="relay-receiver-info-item">
                   <span className="relay-receiver-info-label">Status:</span>
                   <span className="relay-receiver-info-value relay-receiver-status-pending">

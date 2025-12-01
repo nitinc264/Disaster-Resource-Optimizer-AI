@@ -1,10 +1,8 @@
 import fs from "fs";
-import path from "path";
 import OpenAI from "openai";
 import Report from "../models/ReportModel.js";
 import config from "../config/index.js";
 import { geocodeLocation } from "../services/addressGeocodingService.js";
-import { asyncHandler, ApiError } from "../middleware/index.js";
 import { sendSuccess, sendError } from "../utils/apiResponse.js";
 import { logger } from "../utils/appLogger.js";
 import { AI_MODELS, HTTP_STATUS } from "../constants/index.js";
@@ -13,6 +11,98 @@ import { AI_MODELS, HTTP_STATUS } from "../constants/index.js";
 const openai = new OpenAI({
   apiKey: config.openaiApiKey,
 });
+
+/**
+ * GET /api/reports
+ * Get all reports with optional status filter
+ */
+export async function getAllReports(req, res) {
+  try {
+    const { status, limit = 50 } = req.query;
+
+    const query = {};
+    if (status) {
+      query.status = status;
+    }
+
+    const reports = await Report.find(query)
+      .sort({ createdAt: -1 })
+      .limit(parseInt(limit));
+
+    // Transform reports for frontend
+    const transformedReports = reports.map((report) => ({
+      id: report.reportId,
+      reportId: report.reportId,
+      source: report.source,
+      text: report.text,
+      status: report.status,
+      location: report.location,
+      lat: report.location?.lat,
+      lon: report.location?.lng,
+      tag: report.sentinelData?.tag,
+      severity: report.oracleData?.severity,
+      needs: report.oracleData?.needs || [],
+      confidence: report.sentinelData?.confidence,
+      transcription: report.audioData?.transcription,
+      createdAt: report.createdAt,
+      updatedAt: report.updatedAt,
+    }));
+
+    sendSuccess(res, transformedReports, "Reports fetched successfully");
+  } catch (error) {
+    logger.error("Error fetching reports:", error);
+    sendError(
+      res,
+      "Failed to fetch reports",
+      HTTP_STATUS.INTERNAL_SERVER_ERROR,
+      error.message
+    );
+  }
+}
+
+/**
+ * GET /api/reports/:id
+ * Get a specific report by ID
+ */
+export async function getReportById(req, res) {
+  try {
+    const { id } = req.params;
+
+    const report = await Report.findOne({ reportId: id });
+
+    if (!report) {
+      return sendError(res, "Report not found", HTTP_STATUS.NOT_FOUND);
+    }
+
+    const transformedReport = {
+      id: report.reportId,
+      reportId: report.reportId,
+      source: report.source,
+      text: report.text,
+      status: report.status,
+      location: report.location,
+      lat: report.location?.lat,
+      lon: report.location?.lng,
+      tag: report.sentinelData?.tag,
+      severity: report.oracleData?.severity,
+      needs: report.oracleData?.needs || [],
+      confidence: report.sentinelData?.confidence,
+      transcription: report.audioData?.transcription,
+      createdAt: report.createdAt,
+      updatedAt: report.updatedAt,
+    };
+
+    sendSuccess(res, transformedReport, "Report fetched successfully");
+  } catch (error) {
+    logger.error("Error fetching report:", error);
+    sendError(
+      res,
+      "Failed to fetch report",
+      HTTP_STATUS.INTERNAL_SERVER_ERROR,
+      error.message
+    );
+  }
+}
 
 /**
  * Mock function to analyze transcribed text using Gemini

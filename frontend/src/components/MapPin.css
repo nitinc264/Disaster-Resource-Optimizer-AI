@@ -24,8 +24,67 @@
   background-color: var(--success-color);
 }
 
+.map-pin-icon.in-progress .map-pin-inner {
+  background-color: #f59e0b;
+  border-color: #fff;
+  box-shadow: 0 0 8px rgba(245, 158, 11, 0.6);
+}
+
 .map-pin-icon.selected .map-pin-inner {
   background-color: #b2ff59;
   border-color: #000;
   box-shadow: 0 0 6px rgba(0, 0, 0, 0.6);
+}
+
+/* Report pins - purple/blue color scheme */
+.map-pin-icon.report .map-pin-inner {
+  background-color: #8b5cf6;
+  border-color: #fff;
+  box-shadow: 0 0 8px rgba(139, 92, 246, 0.6);
+}
+
+.map-pin-icon.report-selected .map-pin-inner {
+  background-color: #c4b5fd;
+  border-color: #000;
+  box-shadow: 0 0 10px rgba(139, 92, 246, 0.8);
+}
+
+.map-pin-icon.report-in-progress .map-pin-inner {
+  background-color: #fb923c;
+  border-color: #fff;
+  box-shadow: 0 0 8px rgba(251, 146, 60, 0.7);
+}
+
+/* Popup styling */
+.pin-popup {
+  min-width: 150px;
+}
+
+.pin-popup p {
+  margin: 0.25rem 0;
+  font-size: 0.85rem;
+}
+
+.pin-popup .pin-category {
+  color: #6b7280;
+}
+
+.pin-popup .pin-severity {
+  color: #ef4444;
+}
+
+.pin-popup .pin-needs {
+  color: #8b5cf6;
+}
+
+.pin-popup .pin-description {
+  margin-top: 0.5rem;
+  color: #374151;
+}
+
+.pin-popup small {
+  display: block;
+  margin-top: 0.5rem;
+  color: #9ca3af;
+  font-style: italic;
 }

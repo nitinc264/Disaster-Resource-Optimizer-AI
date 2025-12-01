@@ -1,3 +1,22 @@
 /* RouteLine.css */
+
+/* Hide the routing machine's default control panel */
+.leaflet-routing-container {
+  display: none !important;
+}
+
+/* Style the route line */
+.leaflet-routing-alt {
+  display: none;
+}
+
+/* Hide any routing machine UI elements */
+.leaflet-routing-geocoders {
+  display: none;
+}
+
+.leaflet-routing-error {
+  display: none;
+}
 /* RouteLine styling is mostly handled via Leaflet pathOptions */
 /* Add any additional route-specific styles here if needed */

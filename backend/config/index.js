@@ -47,16 +47,4 @@ export const config = {
   },
 };
 
-/**
- * Validate required configuration
- */
-export function validateConfig() {
-  const required = ["mongoUri", "geminiApiKey"];
-  const missing = required.filter((key) => !config[key]);
-
-  if (missing.length > 0) {
-    throw new Error(`Missing required configuration: ${missing.join(", ")}`);
-  }
-}
-
 export default config;

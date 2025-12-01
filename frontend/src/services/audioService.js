@@ -89,8 +89,9 @@ export async function getCurrentLocation() {
       },
       {
         enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 0,
+        timeout: 15000,
+        // Allow cached location up to 5 minutes old (helps when offline)
+        maximumAge: 300000,
       }
     );
   });

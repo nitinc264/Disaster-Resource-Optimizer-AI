@@ -1,10 +1,10 @@
-import React, { useState } from "react";
-import { ClipboardList, Mic } from "lucide-react";
-import { AudioReporter, VolunteerTaskList } from "../components";
+import { useState } from "react";
+import { ClipboardList, Mic, Camera } from "lucide-react";
+import { AudioReporter, PhotoReporter, VolunteerTaskList } from "../components";
 import "./VolunteerPage.css";
 
 function VolunteerPage() {
-  const [viewMode, setViewMode] = useState("tasks"); // 'tasks' | 'voice'
+  const [viewMode, setViewMode] = useState("tasks"); // 'tasks' | 'voice' | 'photo'
 
   return (
     <div className="volunteer-page">
@@ -33,15 +33,30 @@ function VolunteerPage() {
             </span>
             <span>Voice Report</span>
           </button>
+          <button
+            onClick={() => setViewMode("photo")}
+            className={`toggle-btn ${viewMode === "photo" ? "active" : ""}`}
+          >
+            <span className="icon">
+              <Camera size={18} />
+            </span>
+            <span>Photo Report</span>
+          </button>
         </div>
       </header>
 
       <div className="volunteer-content">
-        {viewMode === "voice" ? (
+        {viewMode === "voice" && (
           <div className="content-card">
             <AudioReporter />
           </div>
-        ) : (
+        )}
+        {viewMode === "photo" && (
+          <div className="content-card">
+            <PhotoReporter />
+          </div>
+        )}
+        {viewMode === "tasks" && (
           <div className="content-card">
             <VolunteerTaskList />
           </div>

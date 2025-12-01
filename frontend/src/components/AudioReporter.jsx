@@ -22,7 +22,6 @@ const AudioReporter = () => {
   const [permissionStatus, setPermissionStatus] = useState("prompt"); // 'granted', 'denied', 'prompt'
   const [isSaving, setIsSaving] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
-  const [location, setLocation] = useState(null);
   const [uploadSuccess, setUploadSuccess] = useState(null);
 
   const mediaRecorderRef = useRef(null);
@@ -167,7 +166,6 @@ const AudioReporter = () => {
 
       // Get current location
       const userLocation = await getCurrentLocation();
-      setLocation(userLocation);
 
       // Upload audio to backend
       const result = await uploadAudioReport(audioBlob, userLocation);
@@ -216,7 +214,6 @@ const AudioReporter = () => {
 
       // Get current location
       const userLocation = await getCurrentLocation();
-      setLocation(userLocation);
 
       const reportId = uuidv4();
 

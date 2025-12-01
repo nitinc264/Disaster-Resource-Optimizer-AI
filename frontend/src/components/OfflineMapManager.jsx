@@ -1,73 +1,24 @@
-import { useEffect, useState, useRef } from "react";
-import { useMap, TileLayer } from "react-leaflet";
-import L from "leaflet";
+import { useState, useRef } from "react";
+import { useMap } from "react-leaflet";
 import { db } from "../services";
 import "./OfflineMapManager.css";
 
-// Custom Offline TileLayer
-const OfflineTileLayer = ({ url }) => {
-  const map = useMap();
-
-  useEffect(() => {
-    // Create custom tile layer that checks IndexedDB first
-    const OfflineLayer = L.TileLayer.extend({
-      createTile: function (coords, done) {
-        const tile = document.createElement("img");
-        const key = `tile_${coords.z}_${coords.x}_${coords.y}`;
-
-        // Try to load from IndexedDB first
-        db.mapTiles
-          .get(key)
-          .then((record) => {
-            if (record && record.blob) {
-              // Tile found in cache
-              const url = URL.createObjectURL(record.blob);
-              tile.src = url;
-              tile.onload = () => {
-                URL.revokeObjectURL(url);
-                done(null, tile);
-              };
-            } else {
-              // Not in cache, fetch from network
-              const tileUrl = this.getTileUrl(coords);
-              tile.src = tileUrl;
-              tile.onload = () => done(null, tile);
-              tile.onerror = () => done(new Error("Tile load error"), tile);
-            }
-          })
-          .catch(() => {
-            // Fallback to network on error
-            const tileUrl = this.getTileUrl(coords);
-            tile.src = tileUrl;
-            tile.onload = () => done(null, tile);
-            tile.onerror = () => done(new Error("Tile load error"), tile);
-          });
-
-        return tile;
-      },
-    });
-
-    const offlineLayer = new OfflineLayer(url, {
-      attribution:
-        '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-      maxZoom: 19,
-    });
-
-    offlineLayer.addTo(map);
-
-    return () => {
-      map.removeLayer(offlineLayer);
-    };
-  }, [map, url]);
-
-  return null;
-};
+// Tile servers to try (some are more CORS-friendly)
+const TILE_SERVERS = [
+  "https://a.tile.openstreetmap.org",
+  "https://b.tile.openstreetmap.org",
+  "https://c.tile.openstreetmap.org",
+];
 
 // Main OfflineMapManager Component
 const OfflineMapManager = () => {
   const map = useMap();
   const [isDownloading, setIsDownloading] = useState(false);
-  const [progress, setProgress] = useState({ current: 0, total: 0 });
+  const [progress, setProgress] = useState({
+    current: 0,
+    total: 0,
+    status: "",
+  });
   const abortControllerRef = useRef(null);
 
   // Calculate tile coordinates for a given lat/lng at a zoom level
@@ -85,6 +36,11 @@ const OfflineMapManager = () => {
     return { x, y };
   };
 
+  // Get a random tile server to distribute load
+  const getRandomServer = () => {
+    return TILE_SERVERS[Math.floor(Math.random() * TILE_SERVERS.length)];
+  };
+
   // Download tiles for current map sector
   const downloadSector = async () => {
     if (isDownloading) {
@@ -99,10 +55,14 @@ const OfflineMapManager = () => {
       const bounds = map.getBounds();
       const northEast = bounds.getNorthEast();
       const southWest = bounds.getSouthWest();
+      const currentZoom = map.getZoom();
 
-      const minZoom = 13;
-      const maxZoom = 18;
+      // Download tiles for current zoom +/- 2 levels
+      const minZoom = Math.max(10, currentZoom - 2);
+      const maxZoom = Math.min(18, currentZoom + 2);
       const tiles = [];
+
+      setProgress({ current: 0, total: 0, status: "Calculating tiles..." });
 
       // Calculate all tiles needed
       for (let z = minZoom; z <= maxZoom; z++) {
@@ -121,14 +81,28 @@ const OfflineMapManager = () => {
         }
       }
 
-      setProgress({ current: 0, total: tiles.length });
+      // Limit total tiles to prevent excessive downloads
+      const maxTiles = 500;
+      if (tiles.length > maxTiles) {
+        alert(
+          `Too many tiles (${tiles.length}). Please zoom in to download a smaller area (max ${maxTiles} tiles).`
+        );
+        setIsDownloading(false);
+        return;
+      }
+
+      setProgress({
+        current: 0,
+        total: tiles.length,
+        status: "Downloading...",
+      });
 
       let downloaded = 0;
       let cached = 0;
       let failed = 0;
 
-      // Download tiles in batches to avoid overwhelming the browser
-      const batchSize = 10;
+      // Download tiles in batches
+      const batchSize = 6;
       for (let i = 0; i < tiles.length; i += batchSize) {
         if (abortControllerRef.current.signal.aborted) {
           break;
@@ -141,17 +115,23 @@ const OfflineMapManager = () => {
             try {
               const key = `tile_${z}_${x}_${y}`;
 
-              // Check if tile already exists
+              // Check if tile already exists in cache
               const existing = await db.mapTiles.get(key);
               if (existing) {
                 cached++;
                 return;
               }
 
-              // Fetch tile from OpenStreetMap
-              const url = `https://tile.openstreetmap.org/${z}/${x}/${y}.png`;
+              // Fetch tile from OpenStreetMap with random server
+              const server = getRandomServer();
+              const url = `${server}/${z}/${x}/${y}.png`;
+
               const response = await fetch(url, {
                 signal: abortControllerRef.current.signal,
+                mode: "cors",
+                headers: {
+                  Accept: "image/png,image/*",
+                },
               });
 
               if (!response.ok) {
@@ -159,36 +139,41 @@ const OfflineMapManager = () => {
               }
 
               const blob = await response.blob();
-              await db.mapTiles.add({ key, blob });
+
+              // Store tile in IndexedDB using put (upsert)
+              await db.mapTiles.put({ key, blob, timestamp: Date.now() });
               downloaded++;
 
-              // Small delay to be respectful to OSM servers
-              await new Promise((resolve) => setTimeout(resolve, 100));
+              // Respectful delay to OSM servers (they request 1 tile/sec for heavy use)
+              await new Promise((resolve) => setTimeout(resolve, 150));
             } catch (error) {
               if (error.name !== "AbortError") {
                 failed++;
-                console.error(
-                  `Failed to download tile ${z}/${x}/${y}:`,
-                  error.message
-                );
+                console.warn(`Tile ${z}/${x}/${y} failed:`, error.message);
               }
             }
           })
         );
 
-        setProgress({ current: i + batch.length, total: tiles.length });
+        setProgress({
+          current: Math.min(i + batch.length, tiles.length),
+          total: tiles.length,
+          status: `Downloaded ${downloaded}, Cached ${cached}, Failed ${failed}`,
+        });
       }
 
-      alert(
-        `Sector download complete!\nDownloaded: ${downloaded}\nCached: ${cached}\nFailed: ${failed}`
-      );
+      const message = abortControllerRef.current.signal.aborted
+        ? `Download cancelled.\nDownloaded: ${downloaded}\nCached: ${cached}`
+        : `Download complete!\nNew tiles: ${downloaded}\nAlready cached: ${cached}\nFailed: ${failed}`;
+
+      alert(message);
     } catch (error) {
       console.error("Error downloading tiles:", error);
-      alert("Error downloading tiles. Check console for details.");
+      alert("Error downloading tiles: " + error.message);
     } finally {
       setIsDownloading(false);
       abortControllerRef.current = null;
-      setProgress({ current: 0, total: 0 });
+      setProgress({ current: 0, total: 0, status: "" });
     }
   };
 
@@ -198,37 +183,59 @@ const OfflineMapManager = () => {
     }
   };
 
+  // Clear cached tiles
+  const clearCache = async () => {
+    if (confirm("Clear all cached map tiles?")) {
+      try {
+        await db.mapTiles.clear();
+        alert("Cache cleared!");
+      } catch (error) {
+        alert("Error clearing cache: " + error.message);
+      }
+    }
+  };
+
   return (
     <div className="offline-map-manager">
-      <button
-        onClick={downloadSector}
-        disabled={isDownloading}
-        className="download-btn"
-      >
-        {isDownloading ? "Downloading..." : "Download Sector"}
-      </button>
-
-      {isDownloading && (
-        <div className="download-progress">
-          <button onClick={cancelDownload} className="cancel-btn">
-            Cancel
+      {!isDownloading ? (
+        <div className="manager-buttons">
+          <button onClick={downloadSector} className="download-btn">
+            Download Sector
           </button>
-          <div className="progress-text">
-            {progress.current} / {progress.total} tiles
+          <button onClick={clearCache} className="clear-btn">
+            Clear Cache
+          </button>
+        </div>
+      ) : (
+        <div className="download-progress">
+          <div className="progress-header">
+            <span>Downloading tiles...</span>
+            <button onClick={cancelDownload} className="cancel-btn">
+              ✕
+            </button>
           </div>
           <div className="progress-bar">
             <div
               className="progress-fill"
               style={{
-                width: `${(progress.current / progress.total) * 100}%`,
+                width: `${
+                  progress.total > 0
+                    ? (progress.current / progress.total) * 100
+                    : 0
+                }%`,
               }}
             />
           </div>
+          <div className="progress-text">
+            {progress.current} / {progress.total} tiles
+          </div>
+          {progress.status && (
+            <div className="progress-status">{progress.status}</div>
+          )}
         </div>
       )}
     </div>
   );
 };
 
-export { OfflineMapManager, OfflineTileLayer };
 export default OfflineMapManager;
