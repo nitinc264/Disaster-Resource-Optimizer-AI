@@ -1,0 +1,246 @@
+/* Pin Login - Simple, accessible */
+.pin-login-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--background);
+  padding: var(--space-4);
+}
+
+.pin-login-card {
+  background: var(--surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-xl);
+  padding: var(--space-8);
+  max-width: 400px;
+  width: 100%;
+}
+
+.pin-login-header {
+  text-align: center;
+  margin-bottom: var(--space-8);
+}
+
+.pin-login-icon {
+  width: 72px;
+  height: 72px;
+  background: var(--primary);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto var(--space-4);
+  color: white;
+}
+
+.pin-login-header h1 {
+  color: var(--text-primary);
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0 0 var(--space-2);
+}
+
+.pin-login-header p {
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  margin: 0;
+}
+
+/* PIN Input */
+.pin-input-group {
+  display: flex;
+  gap: var(--space-3);
+  justify-content: center;
+  margin-bottom: var(--space-6);
+}
+
+.pin-input {
+  width: 56px;
+  height: 64px;
+  font-size: 1.75rem;
+  font-weight: 700;
+  text-align: center;
+  background: var(--background);
+  border: 2px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  color: var(--text-primary);
+}
+
+.pin-input:focus {
+  border-color: var(--primary);
+  outline: none;
+}
+
+.pin-input.error {
+  border-color: var(--error);
+  animation: shake 0.3s ease;
+}
+
+.pin-input:disabled {
+  opacity: 0.5;
+}
+
+@keyframes shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-4px);
+  }
+  75% {
+    transform: translateX(4px);
+  }
+}
+
+/* Error Message */
+.pin-error-message {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  color: var(--error);
+  font-size: 0.9rem;
+  margin-bottom: var(--space-4);
+}
+
+/* Login Button */
+.pin-login-button {
+  width: 100%;
+  padding: var(--space-4);
+  background: var(--primary);
+  color: white;
+  border: none;
+  border-radius: var(--radius-lg);
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  min-height: var(--touch-target-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+}
+
+.pin-login-button:hover:not(:disabled) {
+  background: var(--primary-hover);
+}
+
+.pin-login-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Demo Credentials */
+.pin-demo-section {
+  margin-top: var(--space-6);
+  padding-top: var(--space-6);
+  border-top: 1px solid var(--border-color);
+}
+
+.demo-title {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  text-align: center;
+  margin-bottom: var(--space-3);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.demo-credentials {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
+}
+
+.demo-item {
+  background: var(--background);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: var(--space-3);
+  text-align: center;
+  cursor: pointer;
+}
+
+.demo-item:hover {
+  border-color: var(--accent);
+}
+
+.demo-item-role {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  margin-bottom: var(--space-1);
+}
+
+.demo-item-pin {
+  font-size: 1.25rem;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  color: var(--text-primary);
+}
+
+/* Mobile */
+@media (max-width: 480px) {
+  .pin-login-card {
+    padding: var(--space-6);
+  }
+
+  .pin-input {
+    width: 48px;
+    height: 56px;
+    font-size: 1.5rem;
+  }
+
+  .pin-login-header h1 {
+    font-size: 1.25rem;
+  }
+
+  .pin-login-icon {
+    width: 60px;
+    height: 60px;
+  }
+
+  .demo-credentials {
+    grid-template-columns: 1fr;
+    gap: var(--space-2);
+  }
+
+  .demo-item {
+    padding: var(--space-2);
+  }
+
+  .demo-item-pin {
+    font-size: 1.1rem;
+  }
+}
+
+@media (max-width: 380px) {
+  .pin-login-container {
+    padding: var(--space-3);
+  }
+
+  .pin-login-card {
+    padding: var(--space-4);
+  }
+
+  .pin-input-group {
+    gap: var(--space-2);
+  }
+
+  .pin-input {
+    width: 42px;
+    height: 48px;
+    font-size: 1.25rem;
+  }
+
+  .pin-login-button {
+    padding: var(--space-3);
+    font-size: 0.9rem;
+  }
+
+  .pin-demo-section {
+    margin-top: var(--space-4);
+    padding-top: var(--space-4);
+  }
+}

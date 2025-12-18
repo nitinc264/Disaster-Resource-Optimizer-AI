@@ -1,14 +1,26 @@
+/* Photo Reporter - Emergency Simplified Design */
 .photo-reporter {
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
+  width: 100%;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.photo-reporter-card {
+  background: var(--surface);
+  border-radius: var(--radius-xl);
+  padding: var(--space-6);
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-md);
 }
 
 .photo-reporter-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: var(--space-3);
+  margin-bottom: var(--space-4);
 }
 
 .photo-reporter-title {
@@ -19,109 +31,257 @@
 
 .photo-reporter-title h2 {
   margin: 0;
-  font-size: 1.1rem;
-  font-weight: 600;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-primary);
 }
 
-.photo-reporter-title p {
-  margin: 0;
-  color: var(--neutral-500);
-  font-size: 0.9rem;
-}
-
-.photo-reporter-icon {
-  width: 42px;
-  height: 42px;
-  border-radius: var(--radius-lg);
-  background: var(--neutral-100);
+/* Input Selection Area */
+.photo-input-area {
   display: grid;
-  place-items: center;
-  color: var(--neutral-700);
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
 }
 
-.photo-reporter-offline {
-  font-size: 0.75rem;
-  padding: 0.2rem 0.6rem;
-  border-radius: var(--radius-full);
-  background: var(--neutral-200);
-  color: var(--neutral-600);
-}
-
-.photo-reporter-alert {
+.photo-input-btn {
   display: flex;
-  gap: var(--space-2);
-  align-items: flex-start;
-  padding: var(--space-3);
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  padding: var(--space-6) var(--space-4);
+  background: var(--surface-elevated);
+  border: 2px dashed var(--border-color);
   border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: var(--text-secondary);
+  min-height: 140px;
+}
+
+.photo-input-btn:hover {
+  background: var(--surface-hover);
+  border-color: var(--primary);
+  color: var(--primary);
+  transform: translateY(-2px);
+}
+
+.photo-input-btn.active {
+  background: var(--primary-light);
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.photo-input-icon {
+  width: 48px;
+  height: 48px;
+  color: inherit;
+}
+
+.photo-input-label {
+  font-weight: 600;
   font-size: 0.9rem;
 }
 
-.photo-reporter-alert.error {
-  background: #fff2f2;
-  color: #9f1d1d;
+/* Camera View - Full Screen Overlay */
+.camera-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: #000;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 
-.photo-reporter-alert.warning {
-  background: #fffbeb;
-  color: #92400e;
-}
-
-.photo-reporter-alert.success {
-  background: #f0fff6;
-  color: #05603a;
-}
-
-.photo-reporter-alert a {
-  display: inline-block;
-  margin-top: 0.25rem;
-  color: inherit;
-  font-weight: 500;
-}
-
-.photo-preview {
+.camera-video {
   width: 100%;
-  border-radius: var(--radius-xl);
-  border: 2px dashed var(--neutral-200);
-  min-height: 220px;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.camera-controls {
+  position: absolute;
+  bottom: var(--space-8);
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  gap: var(--space-4);
+  z-index: 10000;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.camera-snap-btn {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: white;
+  border: 4px solid rgba(255, 255, 255, 0.3);
+  cursor: pointer;
+  transition: transform 0.1s;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.camera-snap-btn:active {
+  transform: scale(0.9);
+}
+
+.camera-close-btn {
+  position: absolute;
+  top: var(--space-4);
+  right: var(--space-4);
+  background: rgba(0, 0, 0, 0.5);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 44px;
+  height: 44px;
   display: flex;
   align-items: center;
   justify-content: center;
+  cursor: pointer;
+  z-index: 10000;
+  padding-top: env(safe-area-inset-top);
+  backdrop-filter: blur(4px);
+}
+
+/* Preview Area */
+.photo-preview-container {
+  position: relative;
+  width: 100%;
+  border-radius: var(--radius-lg);
   overflow: hidden;
-  background: var(--neutral-50);
-  transition: border-color var(--transition-fast),
-    background var(--transition-fast), transform var(--transition-fast);
-  font: inherit;
-  color: inherit;
-  padding: 0;
-  line-height: normal;
+  margin-bottom: var(--space-4);
+  border: 1px solid var(--border-color);
 }
 
-.photo-preview.placeholder {
-  background: #fafafa;
+.photo-preview-img {
+  width: 100%;
+  height: auto;
+  display: block;
+  max-height: 400px;
+  object-fit: contain;
+  background: var(--background);
 }
 
-.photo-preview.clickable {
+.photo-remove-btn {
+  position: absolute;
+  top: var(--space-2);
+  right: var(--space-2);
+  background: rgba(0, 0, 0, 0.6);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
 }
 
-.photo-preview.clickable:hover {
-  border-color: var(--neutral-400);
-  background: var(--neutral-100);
+/* Caption Input */
+.photo-caption-container {
+  margin-bottom: var(--space-4);
 }
 
-.photo-preview.clickable:focus-visible {
-  outline: 2px solid var(--neutral-900);
-  outline-offset: 2px;
+.photo-caption-label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: var(--space-2);
+  color: var(--text-primary);
+  font-size: 0.95rem;
 }
 
-.photo-preview.clickable:disabled {
-  cursor: not-allowed;
+.photo-caption-input {
+  width: 100%;
+  padding: var(--space-3);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--background);
+  color: var(--text-primary);
+  font-family: inherit;
+  resize: vertical;
+  min-height: 80px;
+  margin-bottom: var(--space-4);
+}
+
+.photo-caption-input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px var(--primary-light);
+}
+
+/* Actions */
+.photo-actions {
+  display: flex;
+  gap: var(--space-3);
+}
+
+.btn-submit {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  background: var(--primary);
+  color: white;
+  border: none;
+  border-radius: var(--radius-full);
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-submit:hover:not(:disabled) {
+  background: var(--primary-hover);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.btn-submit:disabled {
   opacity: 0.7;
+  cursor: not-allowed;
 }
 
-.photo-preview.has-preview {
-  border-style: solid;
-  background: var(--neutral-900);
+/* Success State */
+.success-message {
+  text-align: center;
+  padding: var(--space-6) 0;
+  color: var(--success);
+}
+
+.success-icon {
+  width: 64px;
+  height: 64px;
+  margin-bottom: var(--space-3);
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  .photo-input-area {
+    grid-template-columns: 1fr;
+  }
+
+  .photo-input-btn {
+    min-height: 100px;
+    flex-direction: row;
+    justify-content: flex-start;
+    padding: var(--space-4);
+  }
+}
+
+.photo-preview.placeholder svg {
+  opacity: 0.5;
 }
 
 .photo-preview img {
@@ -130,205 +290,180 @@
   object-fit: cover;
 }
 
-.photo-preview-placeholder {
-  text-align: center;
-  color: var(--neutral-400);
+/* Capture Button */
+.capture-btn {
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: var(--space-3);
-  padding: var(--space-6);
-}
-
-.photo-caption-label {
-  font-size: 0.85rem;
-  font-weight: 500;
-  color: var(--neutral-600);
-}
-
-.photo-reporter textarea {
-  width: 100%;
-  border-radius: var(--radius-lg);
-  padding: var(--space-3);
-  border: 1px solid var(--neutral-200);
-  font-size: 0.95rem;
-  resize: none;
-}
-
-.photo-reporter textarea:focus {
-  outline: 2px solid var(--neutral-900);
-  outline-offset: 2px;
-}
-
-.photo-reporter-location {
-  display: flex;
   gap: var(--space-2);
-  align-items: center;
-  font-size: 0.85rem;
-  color: var(--neutral-500);
+  width: 100%;
+  padding: var(--space-4);
+  background: var(--primary);
+  color: white;
+  border: none;
+  border-radius: var(--radius-lg);
+  font-weight: 700;
+  font-size: 1rem;
+  cursor: pointer;
+  min-height: var(--touch-target-lg);
 }
 
-.photo-reporter-actions {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+.capture-btn:hover:not(:disabled) {
+  background: var(--primary-hover);
+}
+
+.capture-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Photo Actions */
+.photo-actions {
+  display: flex;
   gap: var(--space-3);
 }
 
 .photo-btn {
-  display: inline-flex;
+  flex: 1;
+  padding: var(--space-3);
+  border-radius: var(--radius-lg);
+  font-weight: 600;
+  cursor: pointer;
+  min-height: var(--touch-target-min);
+  display: flex;
   align-items: center;
   justify-content: center;
   gap: var(--space-2);
-  border-radius: var(--radius-lg);
-  padding: var(--space-3);
-  font-weight: 500;
-  border: 1px solid transparent;
-  cursor: pointer;
-  transition: background var(--transition-fast), color var(--transition-fast);
+  border: none;
 }
 
-.photo-btn.primary {
-  background: var(--neutral-900);
+.photo-btn-primary {
+  background: var(--primary);
   color: white;
 }
 
-.photo-btn.primary:disabled {
-  background: var(--neutral-300);
-  cursor: not-allowed;
+.photo-btn-primary:hover {
+  background: var(--primary-hover);
 }
 
-.photo-btn.secondary {
-  background: var(--neutral-100);
-  color: var(--neutral-800);
+.photo-btn-secondary {
+  background: var(--background);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
 }
 
-.photo-btn.ghost {
-  border-color: var(--neutral-200);
-  color: var(--neutral-600);
-  background: transparent;
+.photo-btn-secondary:hover {
+  background: var(--surface-elevated);
 }
 
-.photo-btn.ghost:disabled {
-  color: var(--neutral-400);
-  cursor: not-allowed;
-}
-
-.photo-btn .spin {
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-@media (max-width: 600px) {
-  .photo-reporter-actions {
-    grid-template-columns: 1fr;
-  }
-}
-
-/* Camera Modal */
-.camera-modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.95);
-  z-index: 1000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.camera-container {
-  position: relative;
-  width: 100%;
-  height: 100%;
+/* Processing */
+.photo-processing {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  gap: var(--space-3);
+  padding: var(--space-6);
+  text-align: center;
 }
 
-.camera-close-btn {
-  position: absolute;
-  top: var(--space-4);
-  right: var(--space-4);
-  width: 44px;
-  height: 44px;
-  border-radius: var(--radius-full);
-  background: rgba(255, 255, 255, 0.2);
-  border: none;
-  color: white;
-  cursor: pointer;
-  display: grid;
-  place-items: center;
-  z-index: 10;
-  transition: background var(--transition-fast);
-}
-
-.camera-close-btn:hover {
-  background: rgba(255, 255, 255, 0.3);
-}
-
-.camera-video {
-  max-width: 100%;
-  max-height: calc(100vh - 120px);
-  border-radius: var(--radius-lg);
-  object-fit: cover;
-}
-
-.camera-controls {
-  position: absolute;
-  bottom: var(--space-6);
-  left: 50%;
-  transform: translateX(-50%);
+/* Success */
+.photo-success {
   display: flex;
-  gap: var(--space-4);
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-6);
+  text-align: center;
+  color: var(--success);
 }
 
-.camera-capture-btn {
-  width: 72px;
-  height: 72px;
-  border-radius: var(--radius-full);
-  background: white;
-  border: 4px solid rgba(255, 255, 255, 0.5);
-  color: var(--neutral-900);
-  cursor: pointer;
-  display: grid;
-  place-items: center;
-  transition: transform var(--transition-fast),
-    background var(--transition-fast);
+/* Analysis Results */
+.photo-analysis {
+  margin-top: var(--space-4);
+  padding: var(--space-4);
+  background: var(--background);
+  border-radius: var(--radius-lg);
 }
 
-.camera-capture-btn:hover {
-  transform: scale(1.05);
+.photo-analysis-title {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  margin-bottom: var(--space-3);
 }
 
-.camera-capture-btn:active {
-  transform: scale(0.95);
-  background: var(--neutral-200);
+.photo-analysis-content {
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: var(--text-primary);
 }
 
-/* Button link style for fallback */
-.photo-btn-link {
-  background: none;
-  border: none;
-  color: inherit;
-  text-decoration: underline;
-  cursor: pointer;
-  font-size: inherit;
-  padding: 0;
-  margin-top: var(--space-1);
+.photo-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
 }
 
-.photo-btn-link:hover {
-  opacity: 0.8;
+.photo-tag {
+  font-size: 0.75rem;
+  padding: var(--space-1) var(--space-2);
+  background: var(--accent-contrast);
+  color: var(--accent);
+  border-radius: var(--radius-md);
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .photo-reporter {
+    gap: var(--space-3);
+  }
+
+  .photo-reporter-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-2);
+  }
+
+  .photo-preview {
+    min-height: 180px;
+  }
+}
+
+@media (max-width: 480px) {
+  .photo-reporter-title h2 {
+    font-size: 0.9rem;
+  }
+
+  .photo-reporter-title p {
+    font-size: 0.75rem;
+  }
+
+  .photo-reporter-icon {
+    width: 32px;
+    height: 32px;
+  }
+
+  .photo-preview {
+    min-height: 160px;
+    border-radius: var(--radius-lg);
+  }
+
+  .photo-analysis {
+    padding: var(--space-3);
+  }
+
+  .photo-analysis-content {
+    font-size: 0.85rem;
+  }
+
+  .photo-tags {
+    gap: var(--space-1);
+  }
+
+  .photo-tag {
+    font-size: 0.7rem;
+    padding: 2px var(--space-1);
+  }
 }

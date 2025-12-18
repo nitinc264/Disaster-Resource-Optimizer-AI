@@ -413,26 +413,6 @@ def save_need_mission(db, routes, need_ids, station_info=None):
     return mission_id
 
 
-def extract_locations(reports):
-    """
-    Extract location coordinates from report documents.
-    
-    Args:
-        reports: List of report documents
-    
-    Returns:
-        List of (lat, lng) tuples
-    """
-    locations = []
-    for report in reports:
-        if 'location' in report and 'lat' in report['location'] and 'lng' in report['location']:
-            locations.append((
-                report['location']['lat'],
-                report['location']['lng']
-            ))
-    return locations
-
-
 def get_nearest_station(report_lat, report_lng, station_type):
     """
     Find the nearest station of a given type to the report location.

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import "./MissionPanel.css";
 
 // Route colors matching Map.jsx
@@ -25,6 +26,7 @@ function MissionPanel({
   reroutingMissionId,
   onCancelReroute,
 }) {
+  const { t } = useTranslation();
   const [expandedMissionId, setExpandedMissionId] = useState(null);
 
   const toggleExpand = (missionId) => {
@@ -50,9 +52,9 @@ function MissionPanel({
       {/* Re-routing mode banner */}
       {reroutingMissionId && (
         <div className="reroute-banner">
-          <span>🎯 Click a station on the map to re-route</span>
+          <span>🎯 {t("mission.rerouteBanner")}</span>
           <button className="btn-cancel-reroute" onClick={onCancelReroute}>
-            Cancel
+            {t("common.cancel")}
           </button>
         </div>
       )}
@@ -61,11 +63,11 @@ function MissionPanel({
       <div className="mission-quick-stats">
         <div className="quick-stat">
           <span className="quick-stat-value">{totalVehicles}</span>
-          <span className="quick-stat-label">Vehicles</span>
+          <span className="quick-stat-label">{t("mission.vehicles")}</span>
         </div>
         <div className="quick-stat">
           <span className="quick-stat-value">{totalStops}</span>
-          <span className="quick-stat-label">Stops</span>
+          <span className="quick-stat-label">{t("mission.stops")}</span>
         </div>
       </div>
 
@@ -74,8 +76,8 @@ function MissionPanel({
         {missions.length === 0 ? (
           <div className="no-missions">
             <span className="no-missions-icon">📭</span>
-            <p>No active missions</p>
-            <small>Missions are auto-created when reports are verified</small>
+            <p>{t("mission.noMissions")}</p>
+            <small>{t("mission.noMissionsHint")}</small>
           </div>
         ) : (
           missions.map((mission) => {
@@ -145,14 +147,15 @@ function MissionPanel({
                           />
                           <div className="route-info">
                             <span className="route-vehicle">
-                              Vehicle {route.vehicle_id}
+                              {t("mission.vehicle")} {route.vehicle_id}
                             </span>
                             <span className="route-distance">
                               {formatDistance(route.total_distance)}
                             </span>
                           </div>
                           <span className="route-stops">
-                            {route.route?.length - 2 || 0} stops
+                            {route.route?.length - 2 || 0}{" "}
+                            {t("mission.stops").toLowerCase()}
                           </span>
                         </div>
                       ))}
@@ -168,7 +171,9 @@ function MissionPanel({
                         }}
                         disabled={reroutingMissionId && !isRerouting}
                       >
-                        {isRerouting ? "⏳ Select..." : "🔄 Re-route"}
+                        {isRerouting
+                          ? `⏳ ${t("mission.rerouteSelect")}`
+                          : `🔄 ${t("mission.reroute")}`}
                       </button>
                       <button
                         className="btn-complete"
@@ -178,7 +183,7 @@ function MissionPanel({
                         }}
                         disabled={!!reroutingMissionId}
                       >
-                        ✓ Complete
+                        ✓ {t("mission.complete")}
                       </button>
                     </div>
                   </div>

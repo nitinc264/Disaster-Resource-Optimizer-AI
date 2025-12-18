@@ -1,31 +1,26 @@
 import { useEffect, useRef, useState, useCallback } from "react";
-import { v4 as uuidv4 } from "uuid";
+import { useTranslation } from "react-i18next";
 import {
   Camera,
   Upload,
-  MapPin,
   CheckCircle,
   AlertTriangle,
   Loader2,
   X,
   ImageIcon,
+  Send,
 } from "lucide-react";
 import { getCurrentLocation, uploadPhotoReport, db } from "../services";
 import "./PhotoReporter.css";
 
 const PhotoReporter = () => {
+  const { t } = useTranslation();
   const [imageFile, setImageFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
   const [caption, setCaption] = useState("");
   const [error, setError] = useState(null);
-  const [status, setStatus] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
-  const [locationStatus, setLocationStatus] = useState(
-    "Location will be attached automatically"
-  );
-  const [isOnline, setIsOnline] = useState(
-    typeof navigator === "undefined" ? true : navigator.onLine
-  );
+  const [uploadSuccess, setUploadSuccess] = useState(null);
 
   // Camera state
   const [isCameraOpen, setIsCameraOpen] = useState(false);
@@ -36,35 +31,26 @@ const PhotoReporter = () => {
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
 
-  // Online/offline detection
-  useEffect(() => {
-    if (typeof window === "undefined") {
-      return undefined;
-    }
-
-    const handleOnlineChange = () => {
-      setIsOnline(typeof navigator === "undefined" ? true : navigator.onLine);
-    };
-
-    window.addEventListener("online", handleOnlineChange);
-    window.addEventListener("offline", handleOnlineChange);
-
-    return () => {
-      window.removeEventListener("online", handleOnlineChange);
-      window.removeEventListener("offline", handleOnlineChange);
-    };
-  }, []);
-
   // Cleanup preview URL on unmount
   useEffect(() => {
     return () => {
       if (previewUrl) {
         URL.revokeObjectURL(previewUrl);
       }
+      if (stream) {
+        stream.getTracks().forEach((track) => track.stop());
+      }
     };
-  }, [previewUrl]);
+  }, [previewUrl, stream]);
 
-  // Stop camera stream when component unmounts or camera closes
+  // Attach stream to video element when camera opens
+  useEffect(() => {
+    if (isCameraOpen && stream && videoRef.current) {
+      videoRef.current.srcObject = stream;
+    }
+  }, [isCameraOpen, stream]);
+
+  // Stop camera stream
   const stopCamera = useCallback(() => {
     if (stream) {
       stream.getTracks().forEach((track) => track.stop());
@@ -74,14 +60,6 @@ const PhotoReporter = () => {
     setCameraError(null);
   }, [stream]);
 
-  useEffect(() => {
-    return () => {
-      if (stream) {
-        stream.getTracks().forEach((track) => track.stop());
-      }
-    };
-  }, [stream]);
-
   // Start camera stream
   const startCamera = async () => {
     setError(null);
@@ -89,9 +67,7 @@ const PhotoReporter = () => {
 
     // Check if getUserMedia is supported
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-      setCameraError(
-        "Camera not supported in this browser. Please use the file picker."
-      );
+      setCameraError(t("photo.cameraNotSupported"));
       return;
     }
 
@@ -99,8 +75,6 @@ const PhotoReporter = () => {
       const mediaStream = await navigator.mediaDevices.getUserMedia({
         video: {
           facingMode: "environment", // Use back camera on mobile
-          width: { ideal: 1920 },
-          height: { ideal: 1080 },
         },
         audio: false,
       });
@@ -108,203 +82,108 @@ const PhotoReporter = () => {
       setStream(mediaStream);
       setIsCameraOpen(true);
 
-      // Wait for video element to be available
-      setTimeout(() => {
-        if (videoRef.current) {
-          videoRef.current.srcObject = mediaStream;
-          videoRef.current.play().catch(console.error);
-        }
-      }, 100);
+      // Video element will be attached via useEffect
     } catch (err) {
-      console.error("Camera access error:", err);
-      if (err.name === "NotAllowedError") {
-        setCameraError(
-          "Camera access denied. Please allow camera permissions and try again."
-        );
-      } else if (err.name === "NotFoundError") {
-        setCameraError("No camera found on this device.");
-      } else if (err.name === "NotReadableError") {
-        setCameraError("Camera is in use by another application.");
-      } else {
-        setCameraError(`Could not access camera: ${err.message}`);
-      }
+      console.error("Camera error:", err);
+      setCameraError(t("photo.cameraError"));
     }
   };
 
   // Capture photo from video stream
-  const captureFromCamera = () => {
+  const capturePhoto = () => {
     if (!videoRef.current || !canvasRef.current) return;
 
     const video = videoRef.current;
     const canvas = canvasRef.current;
 
-    // Set canvas size to video size
+    // Set canvas dimensions to match video
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
 
     // Draw video frame to canvas
-    const ctx = canvas.getContext("2d");
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    const context = canvas.getContext("2d");
+    context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-    // Convert canvas to blob
+    // Convert to blob
     canvas.toBlob(
       (blob) => {
         if (blob) {
           const file = new File([blob], `photo-${Date.now()}.jpg`, {
             type: "image/jpeg",
           });
-          clearPreview();
-          setImageFile(file);
-          setPreviewUrl(URL.createObjectURL(blob));
-          setError(null);
-          setStatus(null);
-          setLocationStatus("Location will be attached automatically");
+          handleFileSelect(file);
           stopCamera();
         }
       },
       "image/jpeg",
-      0.9
+      0.8
     );
   };
 
-  const clearPreview = () => {
-    if (previewUrl) {
-      URL.revokeObjectURL(previewUrl);
-    }
-    setImageFile(null);
-    setPreviewUrl(null);
-  };
-
-  const handleFileChange = (event) => {
-    const file = event.target.files?.[0];
+  const handleFileSelect = (file) => {
     if (!file) return;
 
+    // Validate file type
     if (!file.type.startsWith("image/")) {
-      setError("Please select a valid image file");
+      setError(t("photo.invalidType"));
       return;
     }
 
-    clearPreview();
+    // Validate file size (max 10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      setError(t("photo.tooLarge"));
+      return;
+    }
+
     setImageFile(file);
-    setPreviewUrl(URL.createObjectURL(file));
+    const url = URL.createObjectURL(file);
+    setPreviewUrl(url);
     setError(null);
-    setStatus(null);
-    setCameraError(null);
-    setLocationStatus("Location will be attached automatically");
   };
 
-  const handleCaptureClick = () => {
-    // Try to open camera first
-    startCamera();
+  const handleInputChange = (e) => {
+    if (e.target.files && e.target.files[0]) {
+      handleFileSelect(e.target.files[0]);
+    }
   };
 
-  const handleFilePickerClick = () => {
+  const handleRemovePhoto = () => {
+    setImageFile(null);
+    setPreviewUrl(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
-      fileInputRef.current.click();
     }
   };
 
-  const handleDiscard = () => {
-    clearPreview();
-    setCaption("");
+  const handleSubmit = async () => {
+    if (!imageFile) return;
+
+    setIsUploading(true);
     setError(null);
-    setStatus(null);
-    setCameraError(null);
-    setLocationStatus("Location will be attached automatically");
-  };
-
-  const persistOfflinePhotoReport = async (file, location, description) => {
-    const offlineId = uuidv4();
-    const blobCopy =
-      file instanceof Blob ? file.slice(0, file.size, file.type) : file;
-
-    await db.offlineReports.put({
-      id: offlineId,
-      reportId: offlineId,
-      type: "photo",
-      source: "Visual Reporter",
-      text: description,
-      caption: description,
-      timestamp: Date.now(),
-      location: {
-        lat: location.lat,
-        lng: location.lng,
-        accuracy: location.accuracy,
-      },
-      synced: 0,
-      hasImage: true,
-      imageBlob: blobCopy,
-    });
-
-    return offlineId;
-  };
-
-  const handleUpload = async () => {
-    if (!imageFile) {
-      setError("Capture a photo before uploading");
-      return;
-    }
 
     try {
-      setIsUploading(true);
-      setError(null);
-      setStatus(null);
-      setLocationStatus("Locking current location...");
-
-      let location;
+      // Get location
+      let location = null;
       try {
         location = await getCurrentLocation();
-        setLocationStatus(
-          `Location locked: ${location.lat.toFixed(4)}, ${location.lng.toFixed(
-            4
-          )}`
-        );
       } catch (locErr) {
-        // Fallback: allow report without precise location when offline
-        console.warn("Location unavailable:", locErr.message);
-        location = { lat: 0, lng: 0, accuracy: null };
-        setLocationStatus(
-          "Location unavailable – report will save without coordinates"
-        );
+        console.warn("Could not get location:", locErr);
       }
 
-      const trimmedCaption = caption.trim();
+      await uploadPhotoReport(imageFile, location, caption);
 
-      if (!isOnline) {
-        const offlineId = await persistOfflinePhotoReport(
-          imageFile,
-          location,
-          trimmedCaption
-        );
-
-        setStatus({
-          message:
-            "Photo saved offline. It will sync automatically when back online.",
-          imageUrl: null,
-          reportId: offlineId,
-        });
-      } else {
-        const response = await uploadPhotoReport(
-          imageFile,
-          location,
-          trimmedCaption
-        );
-
-        setStatus({
-          message:
-            response.message || "Photo uploaded successfully. Thank you!",
-          imageUrl: response.data?.imageUrl,
-          reportId: response.data?.id,
-        });
-      }
-
-      clearPreview();
+      setUploadSuccess(true);
+      setImageFile(null);
+      setPreviewUrl(null);
       setCaption("");
-      setLocationStatus("Location will be attached automatically");
-    } catch (uploadError) {
-      setError(uploadError.message || "Failed to upload photo report");
-      setLocationStatus("Location will be attached automatically");
+
+      // Reset success message after delay
+      setTimeout(() => {
+        setUploadSuccess(null);
+      }, 3000);
+    } catch (err) {
+      console.error("Upload failed:", err);
+      setError(t("photo.uploadError"));
     } finally {
       setIsUploading(false);
     }
@@ -312,171 +191,150 @@ const PhotoReporter = () => {
 
   return (
     <div className="photo-reporter">
-      <div className="photo-reporter-header">
-        <div className="photo-reporter-title">
-          <span className="photo-reporter-icon">
-            <Camera size={22} />
-          </span>
-          <div>
-            <h2>Visual Report</h2>
-            <p>Capture on-ground visuals for the Sentinel agent.</p>
+      <div className="photo-reporter-card">
+        <div className="photo-reporter-header">
+          <div className="photo-reporter-title">
+            <Camera size={24} className="text-primary" />
+            <h2>{t("photo.title")}</h2>
           </div>
         </div>
-        {!isOnline && <span className="photo-reporter-offline">Offline</span>}
-      </div>
 
-      {error && (
-        <div className="photo-reporter-alert error">
-          <AlertTriangle size={18} />
-          <p>{error}</p>
-        </div>
-      )}
-
-      {cameraError && (
-        <div className="photo-reporter-alert warning">
-          <AlertTriangle size={18} />
-          <div>
-            <p>{cameraError}</p>
+        {uploadSuccess ? (
+          <div className="success-message">
+            <CheckCircle className="success-icon" />
+            <h3>{t("photo.successTitle")}</h3>
+            <p>{t("photo.successMessage")}</p>
             <button
-              type="button"
-              className="photo-btn-link"
-              onClick={handleFilePickerClick}
+              className="btn-submit"
+              onClick={() => setUploadSuccess(null)}
+              style={{ marginTop: "1rem" }}
             >
-              Use file picker instead
+              {t("photo.takeAnother")}
             </button>
           </div>
-        </div>
-      )}
-
-      {status && (
-        <div className="photo-reporter-alert success">
-          <CheckCircle size={18} />
-          <div>
-            <p>{status.message}</p>
-            {status.imageUrl && (
-              <a href={status.imageUrl} target="_blank" rel="noreferrer">
-                View uploaded photo
-              </a>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Camera View */}
-      {isCameraOpen && (
-        <div className="camera-modal">
-          <div className="camera-container">
-            <button
-              type="button"
-              className="camera-close-btn"
-              onClick={stopCamera}
-              aria-label="Close camera"
-            >
-              <X size={24} />
-            </button>
-            <video
-              ref={videoRef}
-              autoPlay
-              playsInline
-              muted
-              className="camera-video"
-            />
-            <div className="camera-controls">
-              <button
-                type="button"
-                className="camera-capture-btn"
-                onClick={captureFromCamera}
-                aria-label="Take photo"
+        ) : (
+          <>
+            {error && (
+              <div
+                className="audio-reporter-error"
+                style={{ marginBottom: "1rem" }}
               >
-                <Camera size={32} />
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+                <AlertTriangle size={20} />
+                <p>{error}</p>
+              </div>
+            )}
 
-      {/* Hidden canvas for capturing */}
-      <canvas ref={canvasRef} style={{ display: "none" }} />
+            {isCameraOpen ? (
+              <div className="camera-container">
+                <video
+                  ref={videoRef}
+                  autoPlay
+                  playsInline
+                  className="camera-video"
+                  onLoadedMetadata={() => {
+                    if (videoRef.current) videoRef.current.play();
+                  }}
+                />
+                <canvas ref={canvasRef} style={{ display: "none" }} />
 
-      {/* Photo Preview */}
-      {previewUrl ? (
-        <div className="photo-preview has-preview">
-          <img src={previewUrl} alt="Captured scene" />
-        </div>
-      ) : (
-        <button
-          type="button"
-          className="photo-preview placeholder clickable"
-          onClick={handleCaptureClick}
-          disabled={isCameraOpen}
-        >
-          <div className="photo-preview-placeholder">
-            <Camera size={48} />
-            <p>Tap here to open camera</p>
-          </div>
-        </button>
-      )}
+                <div className="camera-controls">
+                  <button
+                    className="camera-snap-btn"
+                    onClick={capturePhoto}
+                    aria-label={t("photo.capture")}
+                  />
+                </div>
 
-      {/* Hidden file input for fallback */}
-      <input
-        type="file"
-        accept="image/*"
-        capture="environment"
-        ref={fileInputRef}
-        onChange={handleFileChange}
-        style={{ display: "none" }}
-      />
+                <button className="camera-close-btn" onClick={stopCamera}>
+                  <X size={20} />
+                </button>
+              </div>
+            ) : !previewUrl ? (
+              <div className="photo-input-area">
+                <button className="photo-input-btn" onClick={startCamera}>
+                  <Camera className="photo-input-icon" />
+                  <span className="photo-input-label">
+                    {t("photo.takePhoto")}
+                  </span>
+                </button>
 
-      <label className="photo-caption-label" htmlFor="photo-report-caption">
-        Situation (optional)
-      </label>
-      <textarea
-        id="photo-report-caption"
-        placeholder="What are you seeing on the ground?"
-        value={caption}
-        onChange={(e) => setCaption(e.target.value)}
-        rows={3}
-      />
+                <button
+                  className="photo-input-btn"
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  <Upload className="photo-input-icon" />
+                  <span className="photo-input-label">{t("photo.upload")}</span>
+                </button>
 
-      <div className="photo-reporter-location">
-        <MapPin size={18} />
-        <p>{locationStatus}</p>
-      </div>
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleInputChange}
+                  accept="image/*"
+                  style={{ display: "none" }}
+                />
+              </div>
+            ) : (
+              <>
+                <div className="photo-preview-container">
+                  <img
+                    src={previewUrl}
+                    alt="Preview"
+                    className="photo-preview-img"
+                  />
+                  <button
+                    className="photo-remove-btn"
+                    onClick={handleRemovePhoto}
+                  >
+                    <X size={18} />
+                  </button>
+                </div>
 
-      <div className="photo-reporter-actions">
-        <button
-          type="button"
-          className="photo-btn secondary"
-          onClick={handleFilePickerClick}
-        >
-          <ImageIcon size={16} /> Gallery
-        </button>
+                <div className="photo-caption-container">
+                  <label className="photo-caption-label">
+                    {t("photo.descriptionLabel", "Description")}
+                  </label>
+                  <textarea
+                    className="photo-caption-input"
+                    placeholder={t(
+                      "photo.captionPlaceholder",
+                      "Add a description of the situation..."
+                    )}
+                    value={caption}
+                    onChange={(e) => setCaption(e.target.value)}
+                  />
+                </div>
 
-        <button
-          type="button"
-          className="photo-btn ghost"
-          onClick={handleDiscard}
-          disabled={!previewUrl && !caption}
-        >
-          Clear
-        </button>
+                <div className="photo-actions">
+                  <button
+                    className="btn-submit"
+                    onClick={handleSubmit}
+                    disabled={isUploading}
+                  >
+                    {isUploading ? (
+                      <>
+                        <Loader2 size={20} className="animate-spin" />
+                        {t("photo.sending")}
+                      </>
+                    ) : (
+                      <>
+                        <Send size={20} />
+                        {t("photo.send")}
+                      </>
+                    )}
+                  </button>
+                </div>
+              </>
+            )}
 
-        <button
-          type="button"
-          className="photo-btn primary"
-          onClick={handleUpload}
-          disabled={!imageFile || isUploading}
-        >
-          {isUploading ? (
-            <>
-              <Loader2 size={16} className="spin" /> Uploading...
-            </>
-          ) : (
-            <>
-              <Upload size={16} /> {isOnline ? "Send" : "Save Offline"}
-            </>
-          )}
-        </button>
+            {cameraError && (
+              <div className="audio-reporter-error">
+                <AlertTriangle size={20} />
+                <p>{cameraError}</p>
+              </div>
+            )}
+          </>
+        )}
       </div>
     </div>
   );

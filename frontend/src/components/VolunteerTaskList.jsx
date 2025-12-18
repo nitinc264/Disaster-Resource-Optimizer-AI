@@ -1,10 +1,12 @@
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { AlertTriangle } from "lucide-react";
 import { getUnverifiedTasks, verifyTask } from "../services";
 import "./VolunteerTaskList.css";
 
 export default function VolunteerTaskList() {
+  const { t } = useTranslation();
   const [verifyingTasks, setVerifyingTasks] = useState(new Set());
   const [isOnline, setIsOnline] = useState(navigator.onLine);
 
@@ -65,30 +67,30 @@ export default function VolunteerTaskList() {
   }, [refetch]);
 
   if (isLoading) {
-    return <div className="task-list-container">Loading tasks...</div>;
+    return <div className="task-list-container">{t("tasks.loading")}</div>;
   }
 
   if (error) {
     return (
       <div className="task-list-container error-message">
-        Error loading tasks: {error.message}
+        {t("tasks.errorLoading")}: {error.message}
       </div>
     );
   }
 
   return (
     <div className="task-list-container">
-      <h2>Unverified Tasks</h2>
+      <h2>{t("tasks.title")}</h2>
 
       {!isOnline && (
         <div className="task-list-offline-banner">
-          <AlertTriangle size={16} className="icon-inline" /> You are offline.
-          Verifications will be synced when you reconnect.
+          <AlertTriangle size={16} className="icon-inline" />{" "}
+          {t("tasks.offlineBanner")}
         </div>
       )}
 
       {tasks && tasks.length === 0 ? (
-        <p className="task-list-empty">No unverified tasks available.</p>
+        <p className="task-list-empty">{t("tasks.empty")}</p>
       ) : (
         <ul className="task-list">
           {tasks?.map((task) => {
@@ -100,14 +102,15 @@ export default function VolunteerTaskList() {
                 className={`task-item ${isVerifying ? "verifying" : ""}`}
               >
                 <div className="task-field">
-                  <strong>Task ID:</strong> {task.id}
+                  <strong>{t("tasks.taskId")}:</strong> {task.id}
                 </div>
                 <div className="task-field">
-                  <strong>Description:</strong>{" "}
-                  {task.description || "No description"}
+                  <strong>{t("tasks.description")}:</strong>{" "}
+                  {task.description || t("tasks.noDescription")}
                 </div>
                 <div className="task-field">
-                  <strong>Notes:</strong> {task.notes || "No notes"}
+                  <strong>{t("tasks.notes")}:</strong>{" "}
+                  {task.notes || t("tasks.noNotes")}
                 </div>
 
                 <button
@@ -116,10 +119,10 @@ export default function VolunteerTaskList() {
                   className="task-verify-button"
                 >
                   {isVerifying && !isOnline
-                    ? "Pending Sync"
+                    ? t("tasks.pendingSync")
                     : isVerifying
-                    ? "Verifying..."
-                    : "Verify"}
+                    ? t("tasks.verifying")
+                    : t("tasks.verify")}
                 </button>
               </li>
             );

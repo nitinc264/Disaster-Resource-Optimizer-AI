@@ -1,6 +1,22 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Map, ReportsList, MissionPanel } from "../components";
+import { useTranslation } from "react-i18next";
+import {
+  Map,
+  ReportsList,
+  MissionPanel,
+  TriageAlertBanner,
+  ResourceTracker,
+  AnalyticsDashboard,
+  ResourceInventory,
+  NotificationBell,
+  getTriageCategoryFromUrgency,
+  RoadConditions,
+  MissingPersons,
+  ShelterManagement,
+  VolunteerManagement,
+} from "../components";
+import { useAuth } from "../contexts";
 import {
   getNeedsForMap,
   getReports,
@@ -11,9 +27,46 @@ import {
 import "./DashboardPage.css";
 
 function DashboardPage() {
+  const { t } = useTranslation();
+  const { isManager } = useAuth();
   const [selectedReportId, setSelectedReportId] = useState(null);
   const [reroutingMissionId, setReroutingMissionId] = useState(null);
+  const [activeTab, setActiveTab] = useState("map"); // "map" | "analytics" | "resources"
+  const [activePanel, setActivePanel] = useState("missions"); // "missions" | "reports"
+  const [isPanelOpen, setIsPanelOpen] = useState(false); // Mobile panel state
+  const [sosAlerts, setSosAlerts] = useState([]);
+  const [currentLocation, setCurrentLocation] = useState(null);
   const queryClient = useQueryClient();
+
+  // Get current location for new features
+  useEffect(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setCurrentLocation({
+            lat: position.coords.latitude,
+            lng: position.coords.longitude,
+          });
+        },
+        (error) => {
+          console.log("Geolocation error:", error);
+          // Default to a sample location
+          setCurrentLocation({ lat: 19.076, lng: 72.8777 });
+        }
+      );
+    }
+  }, []);
+
+  // Listen for SOS alerts broadcasted from volunteer clients
+  useEffect(() => {
+    const handleSosAlert = (event) => {
+      const alert = event.detail;
+      setSosAlerts((prev) => [alert, ...prev].slice(0, 20));
+    };
+
+    window.addEventListener("sos-alert", handleSosAlert);
+    return () => window.removeEventListener("sos-alert", handleSosAlert);
+  }, []);
 
   const {
     data: needsData = [],
@@ -79,6 +132,25 @@ function DashboardPage() {
     [needsData]
   );
 
+  // Map SOS alerts to map items when location is available
+  const sosMapItems = useMemo(
+    () =>
+      sosAlerts
+        .filter((alert) => alert?.location?.lat && alert?.location?.lng)
+        .map((alert) => ({
+          id: `sos-${alert.timestamp}`,
+          lat: alert.location.lat,
+          lon: alert.location.lng,
+          status: "SOS",
+          category: "SOS",
+          severity: 10,
+          needs: ["Immediate evacuation"],
+          text: alert.message || "Emergency SOS",
+          isReport: false,
+        })),
+    [sosAlerts]
+  );
+
   // Get analyzed reports with valid coordinates to show on map
   const analyzedReports = useMemo(
     () =>
@@ -107,8 +179,8 @@ function DashboardPage() {
       text: report.text || report.transcription,
       isReport: true,
     }));
-    return [...needs, ...reportItems];
-  }, [needs, analyzedReports]);
+    return [...needs, ...reportItems, ...sosMapItems];
+  }, [needs, analyzedReports, sosMapItems]);
 
   const handleReportClick = (report) => {
     setSelectedReportId(report.id);
@@ -125,6 +197,20 @@ function DashboardPage() {
       console.error("Failed to complete mission:", error);
     }
   };
+
+  // Filter reports that are already part of a mission
+  const unroutedReports = useMemo(() => {
+    const routedReportIds = new Set();
+    (missionsData || []).forEach((mission) => {
+      if (mission.reportIds && Array.isArray(mission.reportIds)) {
+        mission.reportIds.forEach((id) => routedReportIds.add(id));
+      }
+    });
+
+    return (reportsData || []).filter(
+      (report) => !routedReportIds.has(report.id)
+    );
+  }, [missionsData, reportsData]);
 
   // Re-routing handlers
   const handleStartReroute = (missionId) => {
@@ -190,115 +276,274 @@ function DashboardPage() {
     (item) => item.status === "InProgress"
   ).length;
 
+  // Calculate critical items for triage alert
+  const criticalItems = allMapItems.filter((item) => {
+    const category = getTriageCategoryFromUrgency(
+      item.severity || item.urgency || 5
+    );
+    return category === "critical";
+  });
+
   return (
     <div className="dashboard-page">
-      {/* Top Header Bar */}
-      <header className="dashboard-header">
-        <div className="header-left">
-          <h1>Command Center</h1>
-          <span className="header-subtitle">
-            Live resource tracking and mission monitoring
-          </span>
-        </div>
+      {/* Critical Triage Alert Banner */}
+      {criticalItems.length > 0 && (
+        <TriageAlertBanner criticalCount={criticalItems.length} />
+      )}
 
-        {/* Stats Bar */}
-        <div className="stats-bar">
-          <div className="stat-chip">
-            <span className="stat-icon">📍</span>
-            <div className="stat-content">
+      {/* Compact Header Bar - Only for Managers */}
+      {isManager && (
+        <header className="dashboard-header dashboard-header-compact">
+          <div className="header-row">
+            <div className="header-title">
+              <h1>
+                <span className="desktop-title">{t("dashboard.title")}</span>
+                <span className="mobile-title">Command Center</span>
+              </h1>
+              <span className="pill pill-critical">
+                {criticalItems.length} critical
+              </span>
+            </div>
+
+            <div className="header-actions">
+              <NotificationBell />
+              <button
+                className="btn-refresh"
+                onClick={handleRefreshAll}
+                disabled={isFetching || isReportsLoading}
+              >
+                <span
+                  className={`refresh-icon ${
+                    isFetching || isReportsLoading ? "spinning" : ""
+                  }`}
+                ></span>
+                <span>
+                  {isFetching || isReportsLoading ? "Syncing" : "Refresh"}
+                </span>
+              </button>
+            </div>
+          </div>
+
+          <div className="header-stats-row">
+            <div className="stat-chip stat-total">
+              <span className="stat-heading">Incidents</span>
               <span className="stat-value">{allMapItems.length}</span>
-              <span className="stat-label">Total Incidents</span>
             </div>
-          </div>
-          <div className="stat-chip stat-pending">
-            <span className="stat-icon">⏳</span>
-            <div className="stat-content">
+            <div className="stat-chip stat-pending">
+              <span className="stat-heading">Pending</span>
               <span className="stat-value">{pendingCount}</span>
-              <span className="stat-label">Pending</span>
             </div>
-          </div>
-          <div className="stat-chip stat-active">
-            <span className="stat-icon">🚀</span>
-            <div className="stat-content">
+            <div className="stat-chip stat-active">
+              <span className="stat-heading">Active</span>
               <span className="stat-value">{inProgressCount}</span>
-              <span className="stat-label">In Progress</span>
             </div>
-          </div>
-          <div className="stat-chip stat-missions">
-            <span className="stat-icon">🚒</span>
-            <div className="stat-content">
+            <div className="stat-chip stat-missions">
+              <span className="stat-heading">Missions</span>
               <span className="stat-value">{missionsData?.length || 0}</span>
-              <span className="stat-label">Active Missions</span>
             </div>
           </div>
-        </div>
+        </header>
+      )}
 
-        <div className="header-actions">
-          <button
-            className="btn-refresh"
-            onClick={handleRefreshAll}
-            disabled={isFetching || isReportsLoading}
-          >
-            <span className="refresh-icon">
-              {isFetching || isReportsLoading ? "⟳" : "↻"}
-            </span>
-            {isFetching || isReportsLoading ? "Syncing..." : "Refresh"}
-          </button>
-        </div>
-      </header>
-
-      {/* Main Content - 3 Column Layout */}
-      <div className="dashboard-content">
-        {/* Left Panel - Missions */}
-        <aside className="panel panel-left">
-          <div className="panel-header">
-            <h2>Active Missions</h2>
-            <span className="panel-badge">{missionsData?.length || 0}</span>
-          </div>
-          <div className="panel-body">
-            <MissionPanel
-              missions={missionsData || []}
-              missionRoutes={missionRoutes}
-              onCompleteMission={handleCompleteMission}
-              onStartReroute={handleStartReroute}
-              reroutingMissionId={reroutingMissionId}
-              onCancelReroute={handleCancelReroute}
-            />
-          </div>
+      <div className="dashboard-main">
+        {/* Sidebar Navigation */}
+        <aside className="dashboard-sidebar">
+          <nav className="sidebar-nav" role="tablist">
+            <button
+              className={`nav-item ${activeTab === "map" ? "active" : ""}`}
+              onClick={() => setActiveTab("map")}
+              title="Map View"
+            >
+              <span className="nav-icon">🗺️</span>
+              <span className="nav-label">Map</span>
+            </button>
+            <button
+              className={`nav-item ${activeTab === "roads" ? "active" : ""}`}
+              onClick={() => setActiveTab("roads")}
+              title="Road Conditions"
+            >
+              <span className="nav-icon">🚧</span>
+              <span className="nav-label">Roads</span>
+            </button>
+            <button
+              className={`nav-item ${activeTab === "missing" ? "active" : ""}`}
+              onClick={() => setActiveTab("missing")}
+              title="Missing Persons"
+            >
+              <span className="nav-icon">🔍</span>
+              <span className="nav-label">Missing</span>
+            </button>
+            {isManager && (
+              <>
+                <button
+                  className={`nav-item ${
+                    activeTab === "shelters" ? "active" : ""
+                  }`}
+                  onClick={() => setActiveTab("shelters")}
+                  title="Shelters"
+                >
+                  <span className="nav-icon">🏠</span>
+                  <span className="nav-label">Shelters</span>
+                </button>
+                <button
+                  className={`nav-item ${
+                    activeTab === "resources" ? "active" : ""
+                  }`}
+                  onClick={() => setActiveTab("resources")}
+                  title="Resources"
+                >
+                  <span className="nav-icon">📦</span>
+                  <span className="nav-label">Resources</span>
+                </button>
+                <button
+                  className={`nav-item ${
+                    activeTab === "analytics" ? "active" : ""
+                  }`}
+                  onClick={() => setActiveTab("analytics")}
+                  title="Analytics"
+                >
+                  <span className="nav-icon">📊</span>
+                  <span className="nav-label">Analytics</span>
+                </button>
+                <button
+                  className={`nav-item ${
+                    activeTab === "volunteers" ? "active" : ""
+                  }`}
+                  onClick={() => setActiveTab("volunteers")}
+                  title="Team"
+                >
+                  <span className="nav-icon">👥</span>
+                  <span className="nav-label">Team</span>
+                </button>
+              </>
+            )}
+          </nav>
         </aside>
 
-        {/* Center - Map */}
-        <main className="map-container">
-          <Map
-            needs={allMapItems}
-            selectedNeedIds={new Set()}
-            onPinClick={() => {}}
-            missionRoutes={missionRoutes}
-            isRerouteMode={!!reroutingMissionId}
-            onStationClick={handleStationClick}
-          />
-          {(isNeedsLoading || isReportsLoading) && (
-            <div className="map-loading-overlay">
-              <div className="spinner"></div>
-              <span>Loading map data...</span>
+        {/* Main Content Area */}
+        <div className="dashboard-content-area">
+          {/* Map View Content */}
+          {activeTab === "map" && (
+            <div className="map-view-layout">
+              {/* Center - Map */}
+              <main className="map-container">
+                <Map
+                  needs={allMapItems}
+                  selectedNeedIds={new Set()}
+                  onPinClick={() => {}}
+                  missionRoutes={missionRoutes}
+                  isRerouteMode={!!reroutingMissionId}
+                  onStationClick={handleStationClick}
+                />
+                {(isNeedsLoading || isReportsLoading) && (
+                  <div className="map-loading-overlay">
+                    <div className="spinner"></div>
+                    <span>Loading...</span>
+                  </div>
+                )}
+              </main>
+
+              {/* Bottom Panel - Missions & Reports */}
+              <aside
+                className={`panel panel-combined ${isPanelOpen ? "open" : ""}`}
+              >
+                <div
+                  className="panel-toggle-handle"
+                  onClick={() => setIsPanelOpen(!isPanelOpen)}
+                  aria-label="Toggle panel"
+                >
+                  <span className="handle-bar"></span>
+                </div>
+                <div className="panel-tabs">
+                  <button
+                    className={`panel-tab ${
+                      activePanel === "missions" ? "active" : ""
+                    }`}
+                    onClick={() => {
+                      setActivePanel("missions");
+                      setIsPanelOpen(true);
+                    }}
+                  >
+                    Missions
+                    <span className="tab-badge">
+                      {missionsData?.length || 0}
+                    </span>
+                  </button>
+                  <button
+                    className={`panel-tab ${
+                      activePanel === "reports" ? "active" : ""
+                    }`}
+                    onClick={() => {
+                      setActivePanel("reports");
+                      setIsPanelOpen(true);
+                    }}
+                  >
+                    Reports
+                    <span className="tab-badge">
+                      {unroutedReports?.length || 0}
+                    </span>
+                  </button>
+                </div>
+
+                <div className="panel-body">
+                  {activePanel === "missions" ? (
+                    <MissionPanel
+                      missions={missionsData || []}
+                      missionRoutes={missionRoutes}
+                      onCompleteMission={handleCompleteMission}
+                      onStartReroute={handleStartReroute}
+                      reroutingMissionId={reroutingMissionId}
+                      onCancelReroute={handleCancelReroute}
+                    />
+                  ) : (
+                    <ReportsList
+                      reports={unroutedReports}
+                      onReportClick={handleReportClick}
+                      selectedReportId={selectedReportId}
+                    />
+                  )}
+                </div>
+              </aside>
             </div>
           )}
-        </main>
 
-        {/* Right Panel - Reports */}
-        <aside className="panel panel-right">
-          <div className="panel-header">
-            <h2>Incoming Reports</h2>
-            <span className="panel-badge">{reportsData?.length || 0}</span>
-          </div>
-          <div className="panel-body">
-            <ReportsList
-              reports={reportsData}
-              onReportClick={handleReportClick}
-              selectedReportId={selectedReportId}
-            />
-          </div>
-        </aside>
+          {activeTab === "roads" && (
+            <div className="dashboard-fullwidth">
+              <RoadConditions currentLocation={currentLocation} />
+            </div>
+          )}
+
+          {activeTab === "missing" && (
+            <div className="dashboard-fullwidth">
+              <MissingPersons currentLocation={currentLocation} />
+            </div>
+          )}
+
+          {activeTab === "shelters" && isManager && (
+            <div className="dashboard-fullwidth">
+              <ShelterManagement currentLocation={currentLocation} />
+            </div>
+          )}
+
+          {activeTab === "resources" && isManager && (
+            <div className="dashboard-fullwidth">
+              <ResourceTracker />
+              <ResourceInventory />
+            </div>
+          )}
+
+          {activeTab === "analytics" && isManager && (
+            <div className="dashboard-fullwidth">
+              <AnalyticsDashboard />
+            </div>
+          )}
+
+          {activeTab === "volunteers" && isManager && (
+            <div className="dashboard-fullwidth">
+              <VolunteerManagement />
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

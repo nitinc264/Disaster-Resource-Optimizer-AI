@@ -1,0 +1,318 @@
+/* Accessibility Settings - Clean, accessible */
+
+/* Skip to content link */
+.skip-to-content {
+  position: absolute;
+  top: -100%;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: var(--space-3) var(--space-6);
+  background: var(--accent);
+  color: white;
+  font-weight: 600;
+  border-radius: var(--radius-lg);
+  z-index: 9999;
+}
+
+.skip-to-content:focus {
+  top: var(--space-4);
+  outline: 3px solid var(--accent-light);
+  outline-offset: 2px;
+}
+
+/* Accessibility Toggle Button */
+.accessibility-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  height: 44px;
+  padding: 0 var(--space-3);
+  background: var(--surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-full);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.accessibility-toggle:hover {
+  background: var(--surface-hover);
+  color: var(--text-primary);
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px var(--primary-light);
+}
+
+/* Overlay */
+.accessibility-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: var(--space-4);
+}
+
+/* Panel */
+.accessibility-panel {
+  background: var(--surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-xl);
+  width: 100%;
+  max-width: 400px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+/* Panel Header */
+.accessibility-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-4);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.accessibility-header h2 {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.accessibility-close {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  border-radius: var(--radius-md);
+}
+
+.accessibility-close:hover {
+  background: var(--surface-elevated);
+  color: var(--text-primary);
+}
+
+/* Panel Content */
+.accessibility-content {
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+/* Setting Group */
+.setting-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.setting-group-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* Setting Row */
+.setting-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  background: var(--background);
+  border-radius: var(--radius-lg);
+}
+
+.setting-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.setting-label {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.setting-description {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+/* Toggle Switch */
+.toggle-switch {
+  position: relative;
+  width: 48px;
+  height: 28px;
+  background: var(--border-color);
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.toggle-switch.active {
+  background: var(--accent);
+}
+
+.toggle-switch::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 22px;
+  height: 22px;
+  background: white;
+  border-radius: 50%;
+  transition: transform 0.15s ease;
+}
+
+.toggle-switch.active::after {
+  transform: translateX(20px);
+}
+
+/* Slider */
+.setting-slider {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.setting-slider input[type="range"] {
+  flex: 1;
+  height: 6px;
+  background: var(--border-color);
+  border-radius: 3px;
+  -webkit-appearance: none;
+  cursor: pointer;
+}
+
+.setting-slider input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 20px;
+  height: 20px;
+  background: var(--accent);
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.slider-value {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  min-width: 40px;
+  text-align: right;
+}
+
+/* Reset Button */
+.accessibility-reset {
+  padding: var(--space-3);
+  background: transparent;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.accessibility-reset:hover {
+  background: var(--surface-elevated);
+  color: var(--text-primary);
+}
+
+/* High Contrast Mode */
+[data-high-contrast="true"] {
+  --text-primary: #ffffff;
+  --text-secondary: #e2e8f0;
+  --border-color: #ffffff;
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Large Text Mode */
+[data-large-text="true"] {
+  font-size: 18px;
+}
+
+[data-large-text="true"] h1 {
+  font-size: 2rem;
+}
+[data-large-text="true"] h2 {
+  font-size: 1.5rem;
+}
+[data-large-text="true"] h3 {
+  font-size: 1.25rem;
+}
+
+/* Mobile Responsive */
+@media (max-width: 480px) {
+  .accessibility-overlay {
+    padding: var(--space-2);
+    align-items: flex-end;
+  }
+
+  .accessibility-panel {
+    max-width: 100%;
+    max-height: 85vh;
+    border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+  }
+
+  .accessibility-header {
+    padding: var(--space-3);
+  }
+
+  .accessibility-header h2 {
+    font-size: 0.9rem;
+  }
+
+  .accessibility-toggle {
+    width: 36px;
+    height: 36px;
+  }
+
+  .accessibility-close {
+    width: 32px;
+    height: 32px;
+  }
+
+  .slider-value {
+    font-size: 0.8rem;
+    min-width: 32px;
+  }
+
+  .accessibility-reset {
+    padding: var(--space-2);
+    font-size: 0.85rem;
+  }
+}
+
+@media (max-width: 380px) {
+  .accessibility-toggle {
+    width: 32px;
+    height: 32px;
+  }
+
+  .accessibility-panel {
+    max-height: 90vh;
+  }
+}

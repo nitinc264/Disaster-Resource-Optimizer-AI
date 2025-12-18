@@ -8,6 +8,7 @@ import {
   getAllReports,
   getReportById,
 } from "../controllers/voiceReportController.js";
+import { requireAuth } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
@@ -84,25 +85,25 @@ const upload = multer({
  * - 400: Invalid request (missing file or location)
  * - 500: Server error
  */
-router.post("/audio", upload.single("audio"), processAudioReport);
+router.post("/audio", requireAuth, upload.single("audio"), processAudioReport);
 
 /**
  * POST /api/reports
  * Create a new text-based report
  */
-router.post("/", createReport);
+router.post("/", requireAuth, createReport);
 
 /**
  * GET /api/reports
  * Get all reports (with optional status filter)
  */
-router.get("/", getAllReports);
+router.get("/", requireAuth, getAllReports);
 
 /**
  * GET /api/reports/:id
  * Get a specific report by ID
  */
-router.get("/:id", getReportById);
+router.get("/:id", requireAuth, getReportById);
 
 // Error handling middleware for multer
 router.use((error, req, res, next) => {

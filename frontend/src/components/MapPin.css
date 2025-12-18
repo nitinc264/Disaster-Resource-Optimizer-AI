@@ -1,90 +1,135 @@
-/* MapPin.css */
+/* Map Pin - Clear, visible markers */
 .map-pin-icon {
   background: transparent;
   border: none;
 }
 
 .map-pin-inner {
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
   display: block;
-  border-radius: 32px 32px 0 32px;
-  transform: rotate(45deg);
-  transform-origin: 50% 50%;
-  border: 2px solid #fff;
-  box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+  border-radius: 50% 50% 50% 0;
+  transform: rotate(-45deg);
+  border: 2px solid white;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
   background-color: var(--text-secondary);
 }
 
+/* Status colors */
 .map-pin-icon.unverified .map-pin-inner {
-  background-color: #757575;
+  background-color: var(--neutral-500);
 }
 
 .map-pin-icon.verified .map-pin-inner {
-  background-color: var(--success-color);
+  background-color: var(--success);
 }
 
 .map-pin-icon.in-progress .map-pin-inner {
-  background-color: #f59e0b;
-  border-color: #fff;
-  box-shadow: 0 0 8px rgba(245, 158, 11, 0.6);
+  background-color: var(--warning);
 }
 
 .map-pin-icon.selected .map-pin-inner {
-  background-color: #b2ff59;
-  border-color: #000;
-  box-shadow: 0 0 6px rgba(0, 0, 0, 0.6);
+  background-color: var(--accent);
+  border-color: white;
+  box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.3);
 }
 
-/* Report pins - purple/blue color scheme */
+/* Report pins */
 .map-pin-icon.report .map-pin-inner {
   background-color: #8b5cf6;
-  border-color: #fff;
-  box-shadow: 0 0 8px rgba(139, 92, 246, 0.6);
 }
 
 .map-pin-icon.report-selected .map-pin-inner {
-  background-color: #c4b5fd;
-  border-color: #000;
-  box-shadow: 0 0 10px rgba(139, 92, 246, 0.8);
+  background-color: #a78bfa;
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.3);
 }
 
 .map-pin-icon.report-in-progress .map-pin-inner {
-  background-color: #fb923c;
-  border-color: #fff;
-  box-shadow: 0 0 8px rgba(251, 146, 60, 0.7);
+  background-color: var(--primary);
 }
 
-/* Popup styling */
+/* SOS Pin - High visibility */
+.map-pin-icon.sos .map-pin-inner {
+  background-color: var(--error);
+  animation: sos-flash 1s ease-in-out infinite;
+}
+
+@keyframes sos-flash {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+/* Pin Popup */
 .pin-popup {
-  min-width: 150px;
+  min-width: 140px;
+  padding: var(--space-2);
 }
 
 .pin-popup p {
-  margin: 0.25rem 0;
+  margin: var(--space-1) 0;
   font-size: 0.85rem;
+  color: var(--text-primary);
 }
 
 .pin-popup .pin-category {
-  color: #6b7280;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  text-transform: uppercase;
 }
 
 .pin-popup .pin-severity {
-  color: #ef4444;
+  color: var(--error);
+  font-weight: 600;
 }
 
 .pin-popup .pin-needs {
-  color: #8b5cf6;
+  color: var(--accent);
 }
 
 .pin-popup .pin-description {
-  margin-top: 0.5rem;
-  color: #374151;
+  margin-top: var(--space-2);
+  color: var(--text-secondary);
+  font-size: 0.8rem;
 }
 
 .pin-popup small {
   display: block;
-  margin-top: 0.5rem;
-  color: #9ca3af;
-  font-style: italic;
+  margin-top: var(--space-2);
+  color: var(--text-muted);
+  font-size: 0.75rem;
+}
+
+/* Mobile Responsive */
+@media (max-width: 640px) {
+  .map-pin-inner {
+    width: 22px;
+    height: 22px;
+    border-width: 1.5px;
+  }
+
+  .pin-popup {
+    min-width: 120px;
+    padding: var(--space-1);
+  }
+
+  .pin-popup p {
+    font-size: 0.75rem;
+  }
+
+  .pin-popup .pin-category {
+    font-size: 0.65rem;
+  }
+
+  .pin-popup .pin-description {
+    font-size: 0.7rem;
+  }
+
+  .pin-popup small {
+    font-size: 0.65rem;
+  }
 }

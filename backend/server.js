@@ -26,6 +26,7 @@ import {
   notFoundHandler,
   requestLogger,
 } from "./middleware/index.js";
+import { initializeDefaultManager } from "./controllers/authController.js";
 
 // ES Module directory resolution
 const __filename = fileURLToPath(import.meta.url);
@@ -182,8 +183,10 @@ process.on("SIGTERM", () => {
   process.exit(0);
 });
 
-// Connect to database
-connectDB();
+// Connect to database and initialize default manager
+connectDB().then(() => {
+  initializeDefaultManager();
+});
 
 // Initialize Express app
 const app = express();

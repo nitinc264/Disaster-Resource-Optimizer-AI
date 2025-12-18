@@ -1,0 +1,689 @@
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
+import {
+  Home,
+  Plus,
+  X,
+  MapPin,
+  Users,
+  Heart,
+  Baby,
+  UserCheck,
+  AlertTriangle,
+  Phone,
+  CheckCircle,
+  RefreshCw,
+  ChevronDown,
+  ChevronUp,
+  Wifi,
+  Droplets,
+  Zap,
+  Thermometer,
+  ShieldCheck,
+  Package,
+  Edit,
+  Navigation,
+} from "lucide-react";
+import { sheltersAPI } from "../services/apiService";
+import "./ShelterManagement.css";
+
+const StatusBadge = ({ status }) => {
+  const statusConfig = {
+    open: { color: "status-open", label: "Open" },
+    full: { color: "status-full", label: "Full" },
+    closing: { color: "status-closing", label: "Closing Soon" },
+    closed: { color: "status-closed", label: "Closed" },
+  };
+
+  const config = statusConfig[status] || statusConfig.closed;
+
+  return (
+    <span className={`shelter-status ${config.color}`}>{config.label}</span>
+  );
+};
+
+const CapacityBar = ({ current, total }) => {
+  const percentage = Math.min((current / total) * 100, 100);
+  const colorClass =
+    percentage >= 90 ? "critical" : percentage >= 70 ? "warning" : "normal";
+
+  return (
+    <div className="capacity-bar-container">
+      <div className="capacity-bar">
+        <div
+          className={`capacity-fill ${colorClass}`}
+          style={{ width: `${percentage}%` }}
+        />
+      </div>
+      <span className="capacity-text">
+        {current}/{total} ({Math.round(percentage)}%)
+      </span>
+    </div>
+  );
+};
+
+const FacilityIcon = ({ facility }) => {
+  const icons = {
+    water: <Droplets size={14} />,
+    electricity: <Zap size={14} />,
+    wifi: <Wifi size={14} />,
+    heating: <Thermometer size={14} />,
+    medical: <Heart size={14} />,
+    security: <ShieldCheck size={14} />,
+  };
+
+  return icons[facility] || <CheckCircle size={14} />;
+};
+
+const ShelterCard = ({ shelter, onEdit, onUpdate }) => {
+  const [expanded, setExpanded] = useState(false);
+  const { t } = useTranslation();
+
+  const occupancyPercentage = Math.round(
+    ((shelter.capacity?.current || 0) / (shelter.capacity?.total || 1)) * 100
+  );
+
+  return (
+    <div className={`shelter-card ${shelter.status}`}>
+      <div className="shelter-header" onClick={() => setExpanded(!expanded)}>
+        <div className="shelter-icon">
+          <Home size={20} />
+        </div>
+        <div className="shelter-info">
+          <h4>{shelter.name}</h4>
+          <div className="shelter-meta">
+            <MapPin size={12} />
+            <span>{shelter.location?.address || "Location not specified"}</span>
+          </div>
+        </div>
+        <StatusBadge status={shelter.status} />
+        {expanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+      </div>
+
+      <div className="shelter-capacity-summary">
+        <CapacityBar
+          current={shelter.capacity?.current || 0}
+          total={shelter.capacity?.total || 100}
+        />
+      </div>
+
+      <div className="shelter-demographics">
+        <div className="demo-item">
+          <Users size={14} />
+          <span>{shelter.capacity?.families || 0} Families</span>
+        </div>
+        <div className="demo-item">
+          <Baby size={14} />
+          <span>{shelter.capacity?.children || 0} Children</span>
+        </div>
+        <div className="demo-item">
+          <UserCheck size={14} />
+          <span>{shelter.capacity?.elderly || 0} Elderly</span>
+        </div>
+      </div>
+
+      {expanded && (
+        <div className="shelter-details">
+          {shelter.facilities && shelter.facilities.length > 0 && (
+            <div className="detail-section">
+              <h5>Facilities Available</h5>
+              <div className="facilities-list">
+                {shelter.facilities.map((facility, index) => (
+                  <span key={index} className="facility-tag">
+                    <FacilityIcon facility={facility} />
+                    {facility}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {shelter.urgentNeeds && shelter.urgentNeeds.length > 0 && (
+            <div className="detail-section urgent">
+              <h5>
+                <AlertTriangle size={14} />
+                Urgent Needs
+              </h5>
+              <div className="needs-list">
+                {shelter.urgentNeeds.map((need, index) => (
+                  <span key={index} className="need-tag">
+                    {need}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {shelter.supplies && (
+            <div className="detail-section">
+              <h5>Supply Status</h5>
+              <div className="supplies-grid">
+                <div className="supply-item">
+                  <span className="supply-label">Food</span>
+                  <span className={`supply-status ${shelter.supplies.food}`}>
+                    {shelter.supplies.food}
+                  </span>
+                </div>
+                <div className="supply-item">
+                  <span className="supply-label">Water</span>
+                  <span className={`supply-status ${shelter.supplies.water}`}>
+                    {shelter.supplies.water}
+                  </span>
+                </div>
+                <div className="supply-item">
+                  <span className="supply-label">Medical</span>
+                  <span className={`supply-status ${shelter.supplies.medical}`}>
+                    {shelter.supplies.medical}
+                  </span>
+                </div>
+                <div className="supply-item">
+                  <span className="supply-label">Blankets</span>
+                  <span
+                    className={`supply-status ${shelter.supplies.blankets}`}
+                  >
+                    {shelter.supplies.blankets}
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {shelter.contactInfo && (
+            <div className="detail-section">
+              <h5>Contact</h5>
+              <div className="contact-info">
+                {shelter.contactInfo.phone && (
+                  <a
+                    href={`tel:${shelter.contactInfo.phone}`}
+                    className="contact-link"
+                  >
+                    <Phone size={14} />
+                    {shelter.contactInfo.phone}
+                  </a>
+                )}
+                {shelter.contactInfo.manager && (
+                  <span className="manager-name">
+                    Manager: {shelter.contactInfo.manager}
+                  </span>
+                )}
+              </div>
+            </div>
+          )}
+
+          <div className="shelter-actions">
+            <button className="btn-navigate">
+              <Navigation size={14} />
+              Navigate
+            </button>
+            <button
+              className="btn-edit"
+              onClick={(e) => {
+                e.stopPropagation();
+                onEdit(shelter);
+              }}
+            >
+              <Edit size={14} />
+              Edit
+            </button>
+            <button
+              className="btn-update-capacity"
+              onClick={(e) => {
+                e.stopPropagation();
+                onUpdate(shelter);
+              }}
+            >
+              <Users size={14} />
+              Update Capacity
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+const AddShelterForm = ({ onSubmit, onCancel, currentLocation }) => {
+  const { t } = useTranslation();
+  const [formData, setFormData] = useState({
+    name: "",
+    address: "",
+    totalCapacity: 100,
+    facilities: [],
+    phone: "",
+    manager: "",
+  });
+
+  const facilityOptions = [
+    "water",
+    "electricity",
+    "wifi",
+    "heating",
+    "medical",
+    "security",
+    "kitchen",
+    "showers",
+    "parking",
+  ];
+
+  const toggleFacility = (facility) => {
+    setFormData((prev) => ({
+      ...prev,
+      facilities: prev.facilities.includes(facility)
+        ? prev.facilities.filter((f) => f !== facility)
+        : [...prev.facilities, facility],
+    }));
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+
+    const shelter = {
+      name: formData.name,
+      location: {
+        address: formData.address,
+        point: currentLocation
+          ? {
+              type: "Point",
+              coordinates: [currentLocation.lng, currentLocation.lat],
+            }
+          : undefined,
+      },
+      capacity: {
+        total: parseInt(formData.totalCapacity),
+        current: 0,
+        families: 0,
+        children: 0,
+        elderly: 0,
+      },
+      facilities: formData.facilities,
+      contactInfo: {
+        phone: formData.phone,
+        manager: formData.manager,
+      },
+      status: "open",
+    };
+
+    onSubmit(shelter);
+  };
+
+  return (
+    <form className="add-shelter-form" onSubmit={handleSubmit}>
+      <h4>Register New Shelter</h4>
+
+      <div className="form-group">
+        <label>Shelter Name *</label>
+        <input
+          type="text"
+          value={formData.name}
+          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+          placeholder="e.g., Community Center Shelter"
+          required
+        />
+      </div>
+
+      <div className="form-group">
+        <label>Address</label>
+        <input
+          type="text"
+          value={formData.address}
+          onChange={(e) =>
+            setFormData({ ...formData, address: e.target.value })
+          }
+          placeholder="Full address"
+        />
+      </div>
+
+      {currentLocation && (
+        <div className="location-info">
+          <MapPin size={14} />
+          <span>
+            Location: {currentLocation.lat.toFixed(5)},{" "}
+            {currentLocation.lng.toFixed(5)}
+          </span>
+        </div>
+      )}
+
+      <div className="form-group">
+        <label>Total Capacity</label>
+        <input
+          type="number"
+          value={formData.totalCapacity}
+          onChange={(e) =>
+            setFormData({ ...formData, totalCapacity: e.target.value })
+          }
+          placeholder="Maximum people"
+          min="1"
+        />
+      </div>
+
+      <div className="form-group">
+        <label>Facilities Available</label>
+        <div className="facilities-select">
+          {facilityOptions.map((facility) => (
+            <button
+              key={facility}
+              type="button"
+              className={`facility-option ${
+                formData.facilities.includes(facility) ? "selected" : ""
+              }`}
+              onClick={() => toggleFacility(facility)}
+            >
+              <FacilityIcon facility={facility} />
+              {facility}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="form-row">
+        <div className="form-group">
+          <label>Contact Phone</label>
+          <input
+            type="tel"
+            value={formData.phone}
+            onChange={(e) =>
+              setFormData({ ...formData, phone: e.target.value })
+            }
+            placeholder="Phone number"
+          />
+        </div>
+
+        <div className="form-group">
+          <label>Manager Name</label>
+          <input
+            type="text"
+            value={formData.manager}
+            onChange={(e) =>
+              setFormData({ ...formData, manager: e.target.value })
+            }
+            placeholder="Manager name"
+          />
+        </div>
+      </div>
+
+      <div className="form-actions">
+        <button type="button" className="btn-cancel" onClick={onCancel}>
+          Cancel
+        </button>
+        <button type="submit" className="btn-submit" disabled={!formData.name}>
+          <Home size={14} />
+          Register Shelter
+        </button>
+      </div>
+    </form>
+  );
+};
+
+const UpdateCapacityModal = ({ shelter, onUpdate, onClose }) => {
+  const [capacity, setCapacity] = useState({
+    current: shelter.capacity?.current || 0,
+    families: shelter.capacity?.families || 0,
+    children: shelter.capacity?.children || 0,
+    elderly: shelter.capacity?.elderly || 0,
+  });
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    onUpdate(shelter._id, { capacity: { ...shelter.capacity, ...capacity } });
+    onClose();
+  };
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="capacity-modal" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-header">
+          <h4>Update Capacity - {shelter.name}</h4>
+          <button className="close-btn" onClick={onClose}>
+            <X size={16} />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit}>
+          <div className="capacity-inputs">
+            <div className="capacity-input">
+              <label>
+                <Users size={16} />
+                Current Occupancy
+              </label>
+              <input
+                type="number"
+                value={capacity.current}
+                onChange={(e) =>
+                  setCapacity({
+                    ...capacity,
+                    current: parseInt(e.target.value) || 0,
+                  })
+                }
+                min="0"
+                max={shelter.capacity?.total || 999}
+              />
+              <span className="max-label">
+                of {shelter.capacity?.total || 0}
+              </span>
+            </div>
+
+            <div className="capacity-input">
+              <label>
+                <Home size={16} />
+                Families
+              </label>
+              <input
+                type="number"
+                value={capacity.families}
+                onChange={(e) =>
+                  setCapacity({
+                    ...capacity,
+                    families: parseInt(e.target.value) || 0,
+                  })
+                }
+                min="0"
+              />
+            </div>
+
+            <div className="capacity-input">
+              <label>
+                <Baby size={16} />
+                Children
+              </label>
+              <input
+                type="number"
+                value={capacity.children}
+                onChange={(e) =>
+                  setCapacity({
+                    ...capacity,
+                    children: parseInt(e.target.value) || 0,
+                  })
+                }
+                min="0"
+              />
+            </div>
+
+            <div className="capacity-input">
+              <label>
+                <UserCheck size={16} />
+                Elderly
+              </label>
+              <input
+                type="number"
+                value={capacity.elderly}
+                onChange={(e) =>
+                  setCapacity({
+                    ...capacity,
+                    elderly: parseInt(e.target.value) || 0,
+                  })
+                }
+                min="0"
+              />
+            </div>
+          </div>
+
+          <div className="modal-actions">
+            <button type="button" className="btn-cancel" onClick={onClose}>
+              Cancel
+            </button>
+            <button type="submit" className="btn-submit">
+              <CheckCircle size={14} />
+              Update
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+export default function ShelterManagement({ currentLocation }) {
+  const { t } = useTranslation();
+  const queryClient = useQueryClient();
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [selectedShelter, setSelectedShelter] = useState(null);
+  const [showCapacityModal, setShowCapacityModal] = useState(false);
+  const [filter, setFilter] = useState("all");
+
+  // Fetch shelters
+  const {
+    data: shelters,
+    isLoading,
+    refetch,
+  } = useQuery({
+    queryKey: ["shelters", filter],
+    queryFn: () =>
+      sheltersAPI.getAll({ status: filter !== "all" ? filter : undefined }),
+    select: (response) => response?.data?.data || [],
+    refetchInterval: 30000,
+  });
+
+  // Create mutation
+  const createMutation = useMutation({
+    mutationFn: (data) => sheltersAPI.create(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries(["shelters"]);
+      setShowAddForm(false);
+    },
+  });
+
+  // Update mutation
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }) => sheltersAPI.update(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries(["shelters"]);
+    },
+  });
+
+  const handleAddShelter = (data) => {
+    createMutation.mutate(data);
+  };
+
+  const handleUpdateCapacity = (id, data) => {
+    updateMutation.mutate({ id, data });
+  };
+
+  const openShelters = shelters?.filter((s) => s.status === "open").length || 0;
+  const totalCapacity =
+    shelters?.reduce((sum, s) => sum + (s.capacity?.total || 0), 0) || 0;
+  const currentOccupancy =
+    shelters?.reduce((sum, s) => sum + (s.capacity?.current || 0), 0) || 0;
+
+  return (
+    <div className="shelter-management-panel">
+      <div className="panel-header">
+        <div className="header-title">
+          <Home size={20} />
+          <h3>Shelter Management</h3>
+        </div>
+        <div className="header-actions">
+          <button
+            className="btn-refresh"
+            onClick={() => refetch()}
+            title="Refresh"
+          >
+            <RefreshCw size={16} />
+          </button>
+          <button
+            className="btn-add"
+            onClick={() => setShowAddForm(!showAddForm)}
+          >
+            {showAddForm ? <X size={16} /> : <Plus size={16} />}
+            {showAddForm ? "Cancel" : "Add Shelter"}
+          </button>
+        </div>
+      </div>
+
+      <div className="stats-summary">
+        <div className="stat-item">
+          <span className="stat-value">{openShelters}</span>
+          <span className="stat-label">Open Shelters</span>
+        </div>
+        <div className="stat-item">
+          <span className="stat-value">{currentOccupancy}</span>
+          <span className="stat-label">Current Occupancy</span>
+        </div>
+        <div className="stat-item">
+          <span className="stat-value">{totalCapacity}</span>
+          <span className="stat-label">Total Capacity</span>
+        </div>
+      </div>
+
+      {showAddForm ? (
+        <AddShelterForm
+          onSubmit={handleAddShelter}
+          onCancel={() => setShowAddForm(false)}
+          currentLocation={currentLocation}
+        />
+      ) : (
+        <>
+          <div className="filter-tabs">
+            {["all", "open", "full", "closing", "closed"].map((f) => (
+              <button
+                key={f}
+                className={`filter-tab ${filter === f ? "active" : ""}`}
+                onClick={() => setFilter(f)}
+              >
+                {f.charAt(0).toUpperCase() + f.slice(1)}
+              </button>
+            ))}
+          </div>
+
+          <div className="shelters-list">
+            {isLoading ? (
+              <div className="loading-state">
+                <RefreshCw className="spin" size={20} />
+                <span>Loading shelters...</span>
+              </div>
+            ) : shelters?.length === 0 ? (
+              <div className="empty-state">
+                <Home size={32} />
+                <p>No shelters registered</p>
+                <span>Add shelters to track evacuation centers</span>
+              </div>
+            ) : (
+              shelters.map((shelter) => (
+                <ShelterCard
+                  key={shelter._id}
+                  shelter={shelter}
+                  onEdit={(s) => setSelectedShelter(s)}
+                  onUpdate={(s) => {
+                    setSelectedShelter(s);
+                    setShowCapacityModal(true);
+                  }}
+                />
+              ))
+            )}
+          </div>
+        </>
+      )}
+
+      {showCapacityModal && selectedShelter && (
+        <UpdateCapacityModal
+          shelter={selectedShelter}
+          onUpdate={handleUpdateCapacity}
+          onClose={() => {
+            setShowCapacityModal(false);
+            setSelectedShelter(null);
+          }}
+        />
+      )}
+    </div>
+  );
+}

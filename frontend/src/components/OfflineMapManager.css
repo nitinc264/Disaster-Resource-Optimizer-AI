@@ -121,3 +121,23 @@
   text-align: center;
   margin-top: 4px;
 }
+
+/* Mobile - Move buttons to not overlap with panels */
+@media (max-width: 640px) {
+  .offline-map-manager {
+    top: 70px; /* Below header */
+    right: 10px;
+    min-width: 140px;
+    max-width: 160px;
+  }
+
+  .download-btn {
+    padding: 8px 12px;
+    font-size: 12px;
+  }
+
+  .clear-btn {
+    padding: 6px 12px;
+    font-size: 11px;
+  }
+}

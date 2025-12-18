@@ -1,3 +1,5 @@
+import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import "./ReportsList.css";
 
 const STATUS_COLORS = {
@@ -25,12 +27,19 @@ const SEVERITY_LABELS = {
 };
 
 function ReportsList({ reports, onReportClick, selectedReportId }) {
+  const { t } = useTranslation();
+  const [expandedReportId, setExpandedReportId] = useState(null);
+
+  const toggleExpand = (reportId) => {
+    setExpandedReportId(expandedReportId === reportId ? null : reportId);
+  };
+
   if (!reports || reports.length === 0) {
     return (
       <div className="reports-list-empty">
         <div className="empty-icon">📋</div>
-        <p>No reports yet</p>
-        <span>Reports will appear here when submitted</span>
+        <p>{t("reports.empty")}</p>
+        <span>{t("reports.emptyHint")}</span>
       </div>
     );
   }
@@ -42,9 +51,9 @@ function ReportsList({ reports, onReportClick, selectedReportId }) {
     const diffMins = Math.floor(diffMs / 60000);
     const diffHours = Math.floor(diffMs / 3600000);
 
-    if (diffMins < 1) return "Just now";
-    if (diffMins < 60) return `${diffMins}m ago`;
-    if (diffHours < 24) return `${diffHours}h ago`;
+    if (diffMins < 1) return t("reports.justNow");
+    if (diffMins < 60) return t("reports.minutesAgo", { count: diffMins });
+    if (diffHours < 24) return t("reports.hoursAgo", { count: diffHours });
     return date.toLocaleDateString();
   };
 
@@ -57,90 +66,121 @@ function ReportsList({ reports, onReportClick, selectedReportId }) {
 
   return (
     <div className="reports-list">
-      {reports.map((report) => (
-        <div
-          key={report.id}
-          className={`report-card ${
-            selectedReportId === report.id ? "selected" : ""
-          } ${
-            (report.status === "Analyzed" ||
-              report.status === "Analyzed_Full") &&
-            report.lat
-              ? "clickable"
-              : ""
-          }`}
-          onClick={() => {
-            if (
+      {reports.map((report) => {
+        const isExpanded = expandedReportId === report.id;
+        return (
+          <div
+            key={report.id}
+            className={`report-card ${
+              selectedReportId === report.id ? "selected" : ""
+            } ${isExpanded ? "expanded" : ""} ${
               (report.status === "Analyzed" ||
                 report.status === "Analyzed_Full") &&
               report.lat
-            ) {
-              onReportClick?.(report);
-            }
-          }}
-        >
-          <div className="report-header">
-            <span
-              className="report-status"
-              style={{
-                backgroundColor: STATUS_COLORS[report.status] || "#6b7280",
-              }}
-            >
-              {report.status.replace(/_/g, " ")}
-            </span>
-            <span className="report-source">{report.source}</span>
-            <span className="report-time">{formatTime(report.createdAt)}</span>
-          </div>
-
-          <div className="report-content">
-            {report.text ? (
-              <p className="report-text">{report.text}</p>
-            ) : report.transcription ? (
-              <p className="report-text transcription">
-                <span className="transcription-label">🎤 </span>
-                {report.transcription}
-              </p>
-            ) : (
-              <p className="report-text pending">Processing...</p>
-            )}
-          </div>
-
-          {(report.status === "Analyzed" ||
-            report.status === "Analyzed_Full") && (
-            <div className="report-analysis">
-              {report.tag && <span className="report-tag">{report.tag}</span>}
-              {report.severity && (
+                ? "clickable"
+                : ""
+            }`}
+            onClick={() => {
+              toggleExpand(report.id);
+              if (
+                (report.status === "Analyzed" ||
+                  report.status === "Analyzed_Full") &&
+                report.lat
+              ) {
+                onReportClick?.(report);
+              }
+            }}
+          >
+            <div className="report-header">
+              <div className="report-header-top">
                 <span
-                  className={`report-severity ${getSeverityClass(
-                    report.severity
-                  )}`}
+                  className="report-status"
+                  style={{
+                    backgroundColor: STATUS_COLORS[report.status] || "#6b7280",
+                  }}
                 >
-                  {SEVERITY_LABELS[report.severity] ||
-                    `Level ${report.severity}`}
+                  {report.status.replace(/_/g, " ")}
                 </span>
-              )}
-              {report.needs && report.needs.length > 0 && (
-                <div className="report-needs">
-                  {report.needs.map((need, idx) => (
-                    <span key={idx} className="need-badge">
-                      {need}
-                    </span>
-                  ))}
+                <span className="report-time">
+                  {formatTime(report.createdAt)}
+                </span>
+              </div>
+              {!isExpanded && (
+                <div className="report-preview">
+                  <span className="report-source">{report.source}</span>
+                  <span className="report-preview-text">
+                    {report.text
+                      ? report.text.substring(0, 40) +
+                        (report.text.length > 40 ? "..." : "")
+                      : report.transcription
+                      ? "🎤 " +
+                        report.transcription.substring(0, 40) +
+                        (report.transcription.length > 40 ? "..." : "")
+                      : "Processing..."}
+                  </span>
                 </div>
               )}
             </div>
-          )}
 
-          {report.lat && report.lon && (
-            <div className="report-location">
-              <span className="location-icon">📍</span>
-              <span className="location-coords">
-                {report.lat.toFixed(4)}, {report.lon.toFixed(4)}
-              </span>
-            </div>
-          )}
-        </div>
-      ))}
+            {isExpanded && (
+              <div className="report-body">
+                <div className="report-meta-row">
+                  <span className="report-source">{report.source}</span>
+                </div>
+                <div className="report-content">
+                  {report.text ? (
+                    <p className="report-text">{report.text}</p>
+                  ) : report.transcription ? (
+                    <p className="report-text transcription">
+                      <span className="transcription-label">🎤 </span>
+                      {report.transcription}
+                    </p>
+                  ) : (
+                    <p className="report-text pending">Processing...</p>
+                  )}
+                </div>
+
+                {(report.status === "Analyzed" ||
+                  report.status === "Analyzed_Full") && (
+                  <div className="report-analysis">
+                    {report.tag && (
+                      <span className="report-tag">{report.tag}</span>
+                    )}
+                    {report.severity && (
+                      <span
+                        className={`report-severity ${getSeverityClass(
+                          report.severity
+                        )}`}
+                      >
+                        {SEVERITY_LABELS[report.severity] ||
+                          `Level ${report.severity}`}
+                      </span>
+                    )}
+                    {report.needs && report.needs.length > 0 && (
+                      <div className="report-needs">
+                        {report.needs.map((need, idx) => (
+                          <span key={idx} className="need-badge">
+                            {need}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {report.lat && report.lon && (
+                  <div className="report-location">
+                    <span className="location-icon">📍</span>
+                    <span className="location-coords">
+                      {report.lat.toFixed(4)}, {report.lon.toFixed(4)}
+                    </span>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 }

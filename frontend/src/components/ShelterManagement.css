@@ -1,0 +1,980 @@
+/* Shelter Management Panel Styles - Modern Design */
+.shelter-management-panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--background);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.shelter-management-panel .panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-6);
+  border-bottom: 1px solid var(--border-color);
+  background: var(--surface);
+}
+
+.shelter-management-panel .header-title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.shelter-management-panel .header-title h3 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.shelter-management-panel .header-title svg {
+  color: var(--primary);
+}
+
+.shelter-management-panel .header-actions {
+  display: flex;
+  gap: var(--space-3);
+}
+
+.shelter-management-panel .btn-refresh {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: var(--surface-elevated);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.shelter-management-panel .btn-refresh:hover {
+  background: var(--background);
+  color: var(--primary);
+  border-color: var(--primary);
+}
+
+.shelter-management-panel .btn-add {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-5);
+  background: var(--primary);
+  color: white;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: var(--shadow-sm);
+}
+
+.shelter-management-panel .btn-add:hover {
+  background: var(--primary-dark);
+  transform: translateY(-1px);
+}
+
+/* Stats Summary */
+.stats-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: var(--space-4);
+  padding: var(--space-5);
+  border-bottom: 1px solid var(--border-color);
+  background: var(--surface);
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-3);
+  background: var(--background);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+  transition: all 0.2s ease;
+}
+
+.stat-item:hover {
+  border-color: var(--primary);
+}
+
+.stat-value {
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--primary);
+  line-height: 1;
+}
+
+.stat-label {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+}
+
+/* Filter Tabs */
+.shelter-management-panel .filter-tabs {
+  display: flex;
+  padding: var(--space-3) var(--space-5);
+  gap: var(--space-2);
+  border-bottom: 1px solid var(--border-color);
+  overflow-x: auto;
+  background: var(--surface);
+}
+
+.shelter-management-panel .filter-tab {
+  padding: var(--space-2) var(--space-4);
+  background: none;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+.shelter-management-panel .filter-tab:hover {
+  background: var(--surface-elevated);
+  border-color: var(--border-color);
+}
+
+.shelter-management-panel .filter-tab.active {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+}
+
+/* Shelters List */
+.shelters-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--space-5);
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: var(--space-4);
+  align-content: start;
+}
+
+.shelters-list .loading-state,
+.shelters-list .empty-state {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-8);
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.shelters-list .empty-state svg {
+  color: var(--primary);
+  margin-bottom: var(--space-4);
+  opacity: 0.5;
+}
+
+.shelters-list .empty-state p {
+  margin: 0;
+  font-weight: 600;
+  font-size: 1.1rem;
+  color: var(--text-secondary);
+}
+
+/* Shelter Card */
+.shelter-card {
+  background: var(--surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.shelter-card:hover {
+  border-color: var(--primary);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.shelter-card.open {
+  border-left: 4px solid var(--success);
+}
+
+.shelter-card.full {
+  border-left: 4px solid var(--danger);
+  background: rgba(239, 68, 68, 0.05);
+}
+
+.shelter-card.closing {
+  border-left: 4px solid var(--warning);
+  background: rgba(245, 158, 11, 0.05);
+}
+
+.shelter-card.closed {
+  border-left: 4px solid var(--text-muted);
+  background: var(--background);
+  opacity: 0.7;
+}
+
+.shelter-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  cursor: pointer;
+}
+
+.shelter-icon {
+  width: 52px;
+  height: 52px;
+  background: var(--surface-elevated);
+  color: var(--primary);
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border: 1px solid var(--border-color);
+}
+
+.shelter-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.shelter-info h4 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.shelter-meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+.shelter-meta svg {
+  color: var(--primary);
+}
+
+/* Status Badge */
+.shelter-status {
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-full);
+  font-size: 0.75rem;
+  font-weight: 700;
+  white-space: nowrap;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.status-open {
+  background: rgba(34, 197, 94, 0.15);
+  color: var(--success);
+}
+
+.status-full {
+  background: rgba(239, 68, 68, 0.15);
+  color: var(--danger);
+}
+
+.status-closing {
+  background: rgba(245, 158, 11, 0.15);
+  color: var(--warning);
+}
+
+.status-closed {
+  background: rgba(107, 114, 128, 0.15);
+  color: var(--text-muted);
+}
+
+/* Capacity Bar */
+.shelter-capacity-summary {
+  margin-top: var(--space-2);
+}
+
+.capacity-bar-container {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.capacity-bar {
+  flex: 1;
+  height: 10px;
+  background: var(--border-color);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+.capacity-fill {
+  height: 100%;
+  border-radius: var(--radius-full);
+  transition: width 0.3s ease;
+}
+
+.capacity-fill.normal {
+  background: linear-gradient(90deg, var(--success), #4ade80);
+}
+
+.capacity-fill.warning {
+  background: linear-gradient(90deg, var(--warning), #fbbf24);
+}
+
+.capacity-fill.critical {
+  background: linear-gradient(90deg, var(--danger), #f87171);
+}
+
+.capacity-text {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  min-width: 110px;
+  text-align: right;
+}
+
+/* Demographics */
+.shelter-demographics {
+  display: flex;
+  gap: var(--space-4);
+  margin-top: var(--space-3);
+  padding-top: var(--space-3);
+  border-top: 1px dashed var(--border-color);
+}
+
+.demo-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.demo-item svg {
+  color: var(--primary);
+}
+
+/* Shelter Details */
+.shelter-details {
+  margin-top: var(--space-3);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--border-color);
+  animation: slideDown 0.2s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.shelter-details .detail-section {
+  margin-bottom: var(--space-4);
+}
+
+.shelter-details .detail-section h5 {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0 0 var(--space-3) 0;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.shelter-details .detail-section.urgent h5 {
+  color: var(--warning);
+}
+
+/* Facilities List */
+.facilities-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.facility-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-2) var(--space-3);
+  background: var(--surface-elevated);
+  color: var(--primary);
+  border-radius: var(--radius-full);
+  font-size: 0.8rem;
+  font-weight: 500;
+  text-transform: capitalize;
+  border: 1px solid var(--border-color);
+}
+
+/* Needs List */
+.needs-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.need-tag {
+  padding: var(--space-2) var(--space-3);
+  background: rgba(245, 158, 11, 0.15);
+  color: var(--warning);
+  border-radius: var(--radius-full);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+/* Supplies Grid */
+.supplies-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-3);
+}
+
+.supply-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-3);
+  background: var(--background);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+}
+
+.supply-label {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.supply-status {
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
+  text-transform: uppercase;
+}
+
+.supply-status.adequate {
+  background: rgba(34, 197, 94, 0.15);
+  color: var(--success);
+}
+
+.supply-status.low {
+  background: rgba(245, 158, 11, 0.15);
+  color: var(--warning);
+}
+
+.supply-status.critical {
+  background: rgba(239, 68, 68, 0.15);
+  color: var(--danger);
+}
+
+/* Contact Info */
+.contact-info {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.contact-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--primary);
+  font-size: 0.9rem;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.contact-link:hover {
+  text-decoration: underline;
+}
+
+.manager-name {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+/* Shelter Actions */
+.shelter-actions {
+  display: flex;
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+  padding-top: var(--space-4);
+  border-top: 1px dashed var(--border-color);
+}
+
+.btn-navigate,
+.btn-edit,
+.btn-update-capacity {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-navigate {
+  background: var(--surface-elevated);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+}
+
+.btn-navigate:hover {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+}
+
+.btn-edit {
+  background: var(--surface-elevated);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+}
+
+.btn-edit:hover {
+  background: var(--background);
+  color: var(--text-primary);
+}
+
+.btn-update-capacity {
+  background: var(--primary);
+  color: white;
+  margin-left: auto;
+}
+
+.btn-update-capacity:hover {
+  background: var(--primary-dark);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .shelters-list {
+    grid-template-columns: 1fr;
+    padding: var(--space-4);
+  }
+
+  .stats-summary {
+    grid-template-columns: repeat(2, 1fr);
+    padding: var(--space-4);
+  }
+
+  .shelter-demographics {
+    flex-wrap: wrap;
+  }
+
+  .supplies-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.btn-update-capacity:hover {
+  background: var(--primary-dark);
+}
+
+/* Add Shelter Form */
+.add-shelter-form {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--space-4);
+  background: var(--background);
+}
+
+.add-shelter-form h4 {
+  margin: 0 0 var(--space-4) 0;
+  font-size: 1rem;
+  color: var(--text-primary);
+}
+
+.add-shelter-form .form-group {
+  margin-bottom: var(--space-4);
+}
+
+.add-shelter-form .form-group label {
+  display: block;
+  margin-bottom: var(--space-1);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.add-shelter-form .form-group input {
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  font-size: 0.875rem;
+  background: var(--surface);
+  color: var(--text-primary);
+}
+
+.add-shelter-form .form-group input:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+.add-shelter-form .form-row {
+  display: flex;
+  gap: var(--space-3);
+}
+
+.add-shelter-form .form-row .form-group {
+  flex: 1;
+}
+
+/* Facilities Select */
+.facilities-select {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.facility-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: var(--space-2) var(--space-3);
+  background: var(--surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  font-size: 0.75rem;
+  text-transform: capitalize;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.facility-option:hover {
+  border-color: var(--primary);
+}
+
+.facility-option.selected {
+  background: var(--primary-light);
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+/* Location Info */
+.add-shelter-form .location-info {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  background: var(--info-light);
+  border-radius: var(--radius-md);
+  font-size: 0.75rem;
+  color: var(--info);
+  margin-bottom: var(--space-4);
+}
+
+/* Form Actions */
+.add-shelter-form .form-actions {
+  display: flex;
+  gap: var(--space-2);
+  justify-content: flex-end;
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--border-color);
+}
+
+.add-shelter-form .btn-cancel {
+  padding: var(--space-2) var(--space-4);
+  background: var(--surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.add-shelter-form .btn-submit {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-2) var(--space-4);
+  background: var(--primary);
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: white;
+  cursor: pointer;
+}
+
+.add-shelter-form .btn-submit:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Modal */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+
+.capacity-modal {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-color);
+  width: 90%;
+  max-width: 400px;
+  overflow: hidden;
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-4);
+  border-bottom: 1px solid var(--border-color);
+  background: var(--background);
+}
+
+.modal-header h4 {
+  margin: 0;
+  font-size: 1rem;
+  color: var(--text-primary);
+}
+
+.close-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: none;
+  border: none;
+  border-radius: var(--radius-md);
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.close-btn:hover {
+  background: var(--surface-elevated);
+}
+
+/* Capacity Inputs */
+.capacity-inputs {
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.capacity-input {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.capacity-input label {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  flex: 1;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.capacity-input input {
+  width: 80px;
+  padding: var(--space-2);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  font-size: 0.875rem;
+  text-align: center;
+  background: var(--background);
+  color: var(--text-primary);
+}
+
+.capacity-input .max-label {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.modal-actions {
+  display: flex;
+  gap: var(--space-2);
+  justify-content: flex-end;
+  padding: var(--space-4);
+  border-top: 1px solid var(--border-color);
+}
+
+.modal-actions .btn-cancel {
+  padding: var(--space-2) var(--space-4);
+  background: var(--surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.modal-actions .btn-submit {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-2) var(--space-4);
+  background: var(--primary);
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: white;
+  cursor: pointer;
+}
+
+/* Spin animation */
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .shelter-management-panel .panel-header {
+    padding: var(--space-3);
+    flex-wrap: wrap;
+    gap: var(--space-2);
+  }
+
+  .shelter-management-panel .header-title h3 {
+    font-size: 0.9rem;
+  }
+
+  .stats-summary {
+    padding: var(--space-3);
+    gap: var(--space-2);
+    flex-wrap: wrap;
+  }
+
+  .stat-item {
+    flex: 1 1 45%;
+    min-width: 0;
+  }
+
+  .stat-value {
+    font-size: 1.25rem;
+  }
+
+  .shelters-list {
+    padding: var(--space-2);
+    gap: var(--space-2);
+  }
+
+  .shelter-card {
+    padding: var(--space-2);
+  }
+
+  .shelter-header {
+    gap: var(--space-2);
+  }
+
+  .shelter-icon {
+    width: 32px;
+    height: 32px;
+  }
+
+  .shelter-info h4 {
+    font-size: 0.85rem;
+  }
+
+  .modal-actions {
+    flex-direction: column;
+  }
+
+  .modal-actions .btn-cancel,
+  .modal-actions .btn-submit {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .shelter-management-panel .panel-header {
+    padding: var(--space-2);
+  }
+
+  .shelter-management-panel .btn-add {
+    padding: var(--space-1) var(--space-2);
+    font-size: 0.75rem;
+  }
+
+  .stats-summary {
+    padding: var(--space-2);
+  }
+
+  .stat-value {
+    font-size: 1.1rem;
+  }
+
+  .stat-label {
+    font-size: 0.6rem;
+  }
+
+  .shelter-management-panel .filter-tabs {
+    padding: var(--space-1) var(--space-2);
+    gap: var(--space-1);
+  }
+
+  .shelter-management-panel .filter-tab {
+    padding: var(--space-1) var(--space-2);
+    font-size: 0.75rem;
+  }
+
+  .shelter-status {
+    font-size: 0.6rem;
+    padding: 2px 6px;
+  }
+
+  .capacity-input input {
+    width: 60px;
+    padding: var(--space-1);
+  }
+}

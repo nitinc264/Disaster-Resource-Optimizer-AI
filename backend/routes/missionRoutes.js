@@ -3,6 +3,7 @@ import mongoose from "mongoose";
 import { sendSuccess, sendError } from "../utils/apiResponse.js";
 import { logger } from "../utils/appLogger.js";
 import { HTTP_STATUS } from "../constants/index.js";
+import { requireAuth, requireManager } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
@@ -10,7 +11,7 @@ const router = express.Router();
  * GET /api/missions
  * Get all active missions with their routes
  */
-router.get("/missions", async (req, res) => {
+router.get("/missions", requireAuth, async (req, res) => {
   try {
     const { status = "Active" } = req.query;
 
@@ -48,7 +49,7 @@ router.get("/missions", async (req, res) => {
  * GET /api/missions/latest
  * Get the most recent active mission
  */
-router.get("/missions/latest", async (req, res) => {
+router.get("/missions/latest", requireAuth, async (req, res) => {
   try {
     const mission = await mongoose.connection.db
       .collection("missions")
@@ -84,7 +85,7 @@ router.get("/missions/latest", async (req, res) => {
  * PATCH /api/missions/:id/complete
  * Mark a mission as complete and update related reports/needs
  */
-router.patch("/missions/:id/complete", async (req, res) => {
+router.patch("/missions/:id/complete", requireManager, async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -181,7 +182,7 @@ router.patch("/missions/:id/complete", async (req, res) => {
  * Re-route a mission to a different station
  * This marks the old mission as cancelled and triggers re-routing
  */
-router.patch("/missions/:id/reroute", async (req, res) => {
+router.patch("/missions/:id/reroute", requireManager, async (req, res) => {
   try {
     const { id } = req.params;
     const { station } = req.body; // { type, name, lat, lon }

@@ -3,6 +3,62 @@ import { useMap } from "react-leaflet";
 import L from "leaflet";
 import "./RouteLine.css";
 
+// Simple in-memory cache for route results
+const routeCache = new Map();
+
+// Request queue for rate limiting
+const requestQueue = [];
+let isProcessingQueue = false;
+const REQUEST_DELAY = 1100; // 1.1 seconds between requests to stay under rate limit
+
+const processQueue = () => {
+  if (isProcessingQueue || requestQueue.length === 0) return;
+  isProcessingQueue = true;
+
+  const { url, resolve, reject, signal } = requestQueue.shift();
+
+  // Check if request was aborted before processing
+  if (signal.aborted) {
+    isProcessingQueue = false;
+    setTimeout(processQueue, 0);
+    return;
+  }
+
+  fetch(url, { signal })
+    .then((res) => {
+      if (res.status === 429) {
+        // Rate limited - put back in queue and wait longer
+        requestQueue.unshift({ url, resolve, reject, signal });
+        setTimeout(() => {
+          isProcessingQueue = false;
+          processQueue();
+        }, 5000); // Wait 5 seconds before retry
+        return;
+      }
+      if (!res.ok) throw new Error("OSRM request failed");
+      return res.json();
+    })
+    .then((data) => {
+      if (data) resolve(data);
+    })
+    .catch(reject)
+    .finally(() => {
+      if (isProcessingQueue) {
+        setTimeout(() => {
+          isProcessingQueue = false;
+          processQueue();
+        }, REQUEST_DELAY);
+      }
+    });
+};
+
+const queuedFetch = (url, signal) => {
+  return new Promise((resolve, reject) => {
+    requestQueue.push({ url, resolve, reject, signal });
+    processQueue();
+  });
+};
+
 /**
  * RouteLine - draws a polyline between waypoints using OSRM for road-snapped routes.
  * Falls back to a straight polyline if the OSRM request fails or is aborted.
@@ -53,19 +109,37 @@ function RouteLine({ route, color = "#3b82f6" }) {
 
     // Try to fetch a road-snapped route from OSRM
     const coordsStr = points.map(([lat, lng]) => `${lng},${lat}`).join(";");
+    const cacheKey = `${coordsStr}-${color}`;
     const url = `https://router.project-osrm.org/route/v1/driving/${coordsStr}?overview=full&geometries=geojson`;
 
-    fetch(url, { signal: abortControllerRef.current.signal })
-      .then((res) => {
-        if (!res.ok) throw new Error("OSRM request failed");
-        return res.json();
-      })
+    // Check cache first
+    if (routeCache.has(cacheKey)) {
+      const cachedCoords = routeCache.get(cacheKey);
+      if (!map.getContainer()) return;
+      const line = L.polyline(cachedCoords, {
+        color,
+        weight: 5,
+        opacity: 0.8,
+      }).addTo(map);
+      polylineRef.current = line;
+      return;
+    }
+
+    // Use queued fetch to respect rate limits
+    queuedFetch(url, abortControllerRef.current.signal)
       .then((data) => {
         if (!map.getContainer()) return; // component unmounted
         if (data.routes && data.routes.length > 0) {
           const coords = data.routes[0].geometry.coordinates.map(
             ([lng, lat]) => [lat, lng]
           );
+          // Cache the result
+          routeCache.set(cacheKey, coords);
+          // Limit cache size
+          if (routeCache.size > 100) {
+            const firstKey = routeCache.keys().next().value;
+            routeCache.delete(firstKey);
+          }
           const line = L.polyline(coords, {
             color,
             weight: 5,

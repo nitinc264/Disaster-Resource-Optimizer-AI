@@ -22,12 +22,12 @@ L.Icon.Default.mergeOptions({
 // ---------------------------------
 
 // Resource Station Icons
-const createStationIcon = (emoji, color, isHighlighted = false) =>
+const createStationIcon = (label, color, isHighlighted = false) =>
   new L.DivIcon({
     className: `station-icon ${isHighlighted ? "station-highlighted" : ""}`,
     html: `<div class="station-marker ${
       isHighlighted ? "highlighted" : ""
-    }" style="background:${color};">${emoji}</div>`,
+    }" style="background:${color};"><span class="station-label">${label}</span></div>`,
     iconSize: [isHighlighted ? 48 : 36, isHighlighted ? 48 : 36],
     iconAnchor: [isHighlighted ? 24 : 18, isHighlighted ? 24 : 18],
     popupAnchor: [0, -20],
@@ -41,15 +41,15 @@ const getStationIcon = (type, isRerouteMode) => {
     rescue: "#10b981",
     command: "#6b7280",
   };
-  const emojis = {
-    police: "🚔",
-    hospital: "🏥",
-    fire: "🚒",
-    rescue: "⛑️",
-    command: "🏛️",
+  const labels = {
+    police: "P",
+    hospital: "H",
+    fire: "F",
+    rescue: "R",
+    command: "C",
   };
   return createStationIcon(
-    emojis[type] || "📍",
+    labels[type] || "?",
     colors[type] || "#6b7280",
     isRerouteMode
   );

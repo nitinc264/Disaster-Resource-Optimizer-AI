@@ -28,7 +28,6 @@
 
 # Start coding the imports and the main loop below:
 import os
-import sys
 import time
 import warnings
 from io import BytesIO
