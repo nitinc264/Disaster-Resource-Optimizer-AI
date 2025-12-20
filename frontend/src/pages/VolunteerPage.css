@@ -17,19 +17,11 @@
   border-radius: var(--radius-xl);
 }
 
-.field-header-top {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-3);
-  margin-bottom: var(--space-2);
-}
-
 .field-header h1 {
   font-size: 1.5rem;
   font-weight: 700;
   color: var(--text-primary);
-  margin: 0;
+  margin: 0 0 var(--space-2) 0;
 }
 
 .field-header p {
@@ -295,6 +287,81 @@
 .missing-report-form .btn-submit:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+/* Photo Upload Section */
+.missing-report-form .photo-upload-area {
+  margin-top: var(--space-2);
+}
+
+.missing-report-form .photo-upload-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-6) var(--space-4);
+  background: var(--bg-secondary);
+  border: 2px dashed var(--border-color);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.missing-report-form .photo-upload-btn:hover {
+  border-color: var(--accent);
+  background: var(--accent-contrast);
+}
+
+.missing-report-form .photo-upload-btn svg {
+  color: var(--text-secondary);
+}
+
+.missing-report-form .photo-upload-btn span {
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.missing-report-form .photo-preview-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: var(--space-3);
+  margin-top: var(--space-3);
+}
+
+.missing-report-form .photo-preview-item {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--bg-secondary);
+}
+
+.missing-report-form .photo-preview-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.missing-report-form .photo-remove-btn {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.missing-report-form .photo-remove-btn:hover {
+  background: rgba(220, 38, 38, 0.9);
 }
 
 /* Success State */

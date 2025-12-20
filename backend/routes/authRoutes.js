@@ -5,6 +5,8 @@ import {
   getVolunteers,
   getCurrentUser,
   deactivateVolunteer,
+  checkSession,
+  logoutUser,
 } from "../controllers/authController.js";
 import { requireAuth, requireManager } from "../middleware/authMiddleware.js";
 
@@ -12,6 +14,10 @@ const router = express.Router();
 
 // Public routes
 router.post("/auth/login", loginWithPin);
+
+// Session management routes
+router.get("/auth/session", checkSession);
+router.post("/auth/logout", logoutUser);
 
 // Protected routes (require authentication)
 router.get("/auth/me", requireAuth, getCurrentUser);

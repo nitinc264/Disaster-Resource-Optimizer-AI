@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import dotenv from "dotenv";
 import path from "path";
 import { fileURLToPath } from "url";
+import User from "../models/UserModel.js";
 
 // Load environment variables from backend/.env
 const __filename = fileURLToPath(import.meta.url);
@@ -50,6 +51,33 @@ async function clearDatabase() {
 
       console.log("Database cleared successfully.");
     }
+
+    // Create default users
+    console.log("\nCreating default users...");
+
+    const defaultManager = await User.create({
+      pin: "0000",
+      name: "Default Manager",
+      role: "manager",
+      email: "manager@disaster-response.local",
+      isActive: true,
+    });
+    console.log(
+      `✅ Created manager with PIN: 0000 (ID: ${defaultManager._id})`
+    );
+
+    const defaultVolunteer = await User.create({
+      pin: "9204",
+      name: "Default Volunteer",
+      role: "volunteer",
+      email: "volunteer@disaster-response.local",
+      isActive: true,
+    });
+    console.log(
+      `✅ Created volunteer with PIN: 9204 (ID: ${defaultVolunteer._id})`
+    );
+
+    console.log("\n✨ Database reset complete with default users!");
   } catch (error) {
     console.error("Failed to clear database:", error);
     process.exitCode = 1;

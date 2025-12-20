@@ -8,7 +8,17 @@ const AUTH_STORAGE_KEY = "disaster_response_auth";
 export const getStoredAuth = () => {
   try {
     const stored = localStorage.getItem(AUTH_STORAGE_KEY);
-    return stored ? JSON.parse(stored) : null;
+    if (!stored) return null;
+
+    const authData = JSON.parse(stored);
+
+    // Check if session has expired locally
+    if (authData.sessionExpires && Date.now() > authData.sessionExpires) {
+      clearAuth();
+      return null;
+    }
+
+    return authData;
   } catch {
     return null;
   }
@@ -29,6 +39,24 @@ export const clearAuth = () => {
 };
 
 /**
+ * Check server session status
+ */
+export const checkSession = async () => {
+  try {
+    const response = await apiClient.get("/auth/session");
+    if (response.data.success && response.data.authenticated) {
+      const userData = response.data.data;
+      storeAuth(userData);
+      apiClient.defaults.headers.common["x-auth-pin"] = userData.pin;
+      return { authenticated: true, user: userData };
+    }
+    return { authenticated: false };
+  } catch {
+    return { authenticated: false };
+  }
+};
+
+/**
  * Login with 4-digit PIN
  */
 export const loginWithPin = async (pin) => {
@@ -42,9 +70,14 @@ export const loginWithPin = async (pin) => {
 };
 
 /**
- * Logout - clear stored auth
+ * Logout - clear stored auth and destroy server session
  */
-export const logout = () => {
+export const logout = async () => {
+  try {
+    await apiClient.post("/auth/logout");
+  } catch (error) {
+    console.error("Logout request failed:", error);
+  }
   clearAuth();
   delete apiClient.defaults.headers.common["x-auth-pin"];
 };
@@ -97,32 +130,4 @@ export const initializeAuth = () => {
     return auth;
   }
   return null;
-};
-
-/**
- * Check if user has a specific role
- */
-export const hasRole = (requiredRole) => {
-  const auth = getStoredAuth();
-  if (!auth) return false;
-
-  if (requiredRole === "manager") {
-    return auth.role === "manager";
-  }
-
-  // Volunteers and managers can access volunteer features
-  return ["volunteer", "manager"].includes(auth.role);
-};
-
-/**
- * Check if user is a manager
- */
-export const isManager = () => hasRole("manager");
-
-/**
- * Check if user is authenticated
- */
-export const isAuthenticated = () => {
-  const auth = getStoredAuth();
-  return !!auth?.pin;
 };

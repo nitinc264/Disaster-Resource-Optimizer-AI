@@ -5,4 +5,5 @@ export * from "./verificationService.js";
 export * from "./audioService.js";
 export * from "./photoService.js";
 export * from "./authService.js";
+export * from "./syncService.js";
 export { db } from "./db.js";

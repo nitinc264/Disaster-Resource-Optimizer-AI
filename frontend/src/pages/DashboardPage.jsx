@@ -2,14 +2,13 @@ import { useState, useMemo, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import {
-  Map,
+  Map as MapComponent,
   ReportsList,
   MissionPanel,
   TriageAlertBanner,
   ResourceTracker,
   AnalyticsDashboard,
   ResourceInventory,
-  NotificationBell,
   getTriageCategoryFromUrgency,
   RoadConditions,
   MissingPersons,
@@ -25,6 +24,7 @@ import {
   rerouteMission,
   getUnverifiedTasks,
 } from "../services";
+import { SYNC_COMPLETE_EVENT } from "../services/syncService";
 import "./DashboardPage.css";
 
 function DashboardPage() {
@@ -74,6 +74,29 @@ function DashboardPage() {
     return () => window.removeEventListener("sos-alert", handleSosAlert);
   }, []);
 
+  // Listen for sync complete events to refresh manager map when volunteers sync offline verifications
+  useEffect(() => {
+    if (!isManager) return;
+
+    const handleSyncComplete = (event) => {
+      const { synced } = event.detail;
+      if (synced > 0) {
+        console.log(
+          `Sync complete: ${synced} verifications synced, refreshing map data...`
+        );
+        // Invalidate all map-related queries to refresh data
+        queryClient.invalidateQueries({ queryKey: ["map-needs"] });
+        queryClient.invalidateQueries({ queryKey: ["missions"] });
+        queryClient.invalidateQueries({ queryKey: ["reports"] });
+        queryClient.invalidateQueries({ queryKey: ["volunteer-tasks"] });
+      }
+    };
+
+    window.addEventListener(SYNC_COMPLETE_EVENT, handleSyncComplete);
+    return () =>
+      window.removeEventListener(SYNC_COMPLETE_EVENT, handleSyncComplete);
+  }, [isManager, queryClient]);
+
   // Fetch needs for map (managers see all, volunteers see only their assigned tasks)
   const {
     data: needsData = [],
@@ -115,23 +138,29 @@ function DashboardPage() {
     enabled: isManager, // Only fetch for managers
   });
 
-  // Extract all routes from missions to display on map
+  // Extract routes from missions - now pre-computed with road-snapped geometry from OSRM
   const missionRoutes = useMemo(() => {
     const allRoutes = [];
     (missionsData || []).forEach((mission) => {
       const stationType = mission.station?.type || "rescue";
       (mission.routes || []).forEach((routeData) => {
         if (routeData.route && routeData.route.length > 0) {
-          const formattedRoute = routeData.route.map((coord) => ({
-            lat: coord[0],
-            lon: coord[1],
-          }));
+          // Routes now come pre-computed with road geometry from OSRM
+          // Format: [[lat, lon], [lat, lon], ...] or [{lat, lon}, ...]
+          const formattedRoute = routeData.route.map((coord) => {
+            if (Array.isArray(coord)) {
+              return { lat: coord[0], lon: coord[1] };
+            }
+            return { lat: coord.lat, lon: coord.lon ?? coord.lng };
+          });
           allRoutes.push({
             vehicleId: routeData.vehicle_id,
             route: formattedRoute,
             distance: routeData.total_distance,
             stationType: routeData.station_type || stationType,
             stationName: routeData.station_name || mission.station?.name,
+            missionId: mission._id,
+            isRoadSnapped: routeData.is_road_snapped ?? true,
           });
         }
       });
@@ -341,15 +370,14 @@ function DashboardPage() {
             <div className="header-title">
               <h1>
                 <span className="desktop-title">{t("dashboard.title")}</span>
-                <span className="mobile-title">Command Center</span>
+                <span className="mobile-title">{t("dashboard.title")}</span>
               </h1>
               <span className="pill pill-critical">
-                {criticalItems.length} critical
+                {criticalItems.length} {t("triage.critical").toLowerCase()}
               </span>
             </div>
 
             <div className="header-actions">
-              <NotificationBell />
               <button
                 className="btn-refresh"
                 onClick={handleRefreshAll}
@@ -361,7 +389,9 @@ function DashboardPage() {
                   }`}
                 ></span>
                 <span>
-                  {isFetching || isReportsLoading ? "Syncing" : "Refresh"}
+                  {isFetching || isReportsLoading
+                    ? t("dashboard.syncing")
+                    : t("dashboard.refresh")}
                 </span>
               </button>
             </div>
@@ -369,19 +399,21 @@ function DashboardPage() {
 
           <div className="header-stats-row">
             <div className="stat-chip stat-total">
-              <span className="stat-heading">Incidents</span>
+              <span className="stat-heading">
+                {t("dashboard.totalIncidents")}
+              </span>
               <span className="stat-value">{allMapItems.length}</span>
             </div>
             <div className="stat-chip stat-pending">
-              <span className="stat-heading">Pending</span>
+              <span className="stat-heading">{t("dashboard.pending")}</span>
               <span className="stat-value">{pendingCount}</span>
             </div>
             <div className="stat-chip stat-active">
-              <span className="stat-heading">Active</span>
+              <span className="stat-heading">{t("dashboard.inProgress")}</span>
               <span className="stat-value">{inProgressCount}</span>
             </div>
             <div className="stat-chip stat-missions">
-              <span className="stat-heading">Missions</span>
+              <span className="stat-heading">{t("missions.title")}</span>
               <span className="stat-value">{missionsData?.length || 0}</span>
             </div>
           </div>
@@ -395,26 +427,26 @@ function DashboardPage() {
             <button
               className={`nav-item ${activeTab === "map" ? "active" : ""}`}
               onClick={() => setActiveTab("map")}
-              title="Map View"
+              title={t("nav.map")}
             >
               <span className="nav-icon">🗺️</span>
-              <span className="nav-label">Map</span>
+              <span className="nav-label">{t("nav.map")}</span>
             </button>
             <button
               className={`nav-item ${activeTab === "roads" ? "active" : ""}`}
               onClick={() => setActiveTab("roads")}
-              title="Road Conditions"
+              title={t("nav.roads")}
             >
               <span className="nav-icon">🚧</span>
-              <span className="nav-label">Roads</span>
+              <span className="nav-label">{t("nav.roads")}</span>
             </button>
             <button
               className={`nav-item ${activeTab === "missing" ? "active" : ""}`}
               onClick={() => setActiveTab("missing")}
-              title="Missing Persons"
+              title={t("nav.missing")}
             >
               <span className="nav-icon">🔍</span>
-              <span className="nav-label">Missing</span>
+              <span className="nav-label">{t("nav.missing")}</span>
             </button>
             {isManager && (
               <>
@@ -423,40 +455,40 @@ function DashboardPage() {
                     activeTab === "shelters" ? "active" : ""
                   }`}
                   onClick={() => setActiveTab("shelters")}
-                  title="Shelters"
+                  title={t("nav.shelters")}
                 >
                   <span className="nav-icon">🏠</span>
-                  <span className="nav-label">Shelters</span>
+                  <span className="nav-label">{t("nav.shelters")}</span>
                 </button>
                 <button
                   className={`nav-item ${
                     activeTab === "resources" ? "active" : ""
                   }`}
                   onClick={() => setActiveTab("resources")}
-                  title="Resources"
+                  title={t("nav.resources")}
                 >
                   <span className="nav-icon">📦</span>
-                  <span className="nav-label">Resources</span>
+                  <span className="nav-label">{t("nav.resources")}</span>
                 </button>
                 <button
                   className={`nav-item ${
                     activeTab === "analytics" ? "active" : ""
                   }`}
                   onClick={() => setActiveTab("analytics")}
-                  title="Analytics"
+                  title={t("nav.analytics")}
                 >
                   <span className="nav-icon">📊</span>
-                  <span className="nav-label">Analytics</span>
+                  <span className="nav-label">{t("nav.analytics")}</span>
                 </button>
                 <button
                   className={`nav-item ${
                     activeTab === "volunteers" ? "active" : ""
                   }`}
                   onClick={() => setActiveTab("volunteers")}
-                  title="Team"
+                  title={t("nav.team")}
                 >
                   <span className="nav-icon">👥</span>
-                  <span className="nav-label">Team</span>
+                  <span className="nav-label">{t("nav.team")}</span>
                 </button>
               </>
             )}
@@ -470,7 +502,7 @@ function DashboardPage() {
             <div className="map-view-layout">
               {/* Center - Map */}
               <main className="map-container">
-                <Map
+                <MapComponent
                   needs={allMapItems}
                   selectedNeedIds={new Set()}
                   onPinClick={() => {}}
@@ -485,7 +517,7 @@ function DashboardPage() {
                 {(isNeedsLoading || isReportsLoading) && !isVolunteer && (
                   <div className="map-loading-overlay">
                     <div className="spinner"></div>
-                    <span>Loading...</span>
+                    <span>{t("common.loading")}</span>
                   </div>
                 )}
               </main>
@@ -514,7 +546,7 @@ function DashboardPage() {
                         setIsPanelOpen(true);
                       }}
                     >
-                      Missions
+                      {t("missions.title")}
                       <span className="tab-badge">
                         {missionsData?.length || 0}
                       </span>
@@ -528,7 +560,7 @@ function DashboardPage() {
                         setIsPanelOpen(true);
                       }}
                     >
-                      Reports
+                      {t("missions.reports")}
                       <span className="tab-badge">
                         {unroutedReports?.length || 0}
                       </span>

@@ -6,7 +6,7 @@ import { ENVIRONMENTS } from "../constants/index.js";
 export const development = {
   port: 3000,
   mongoUri:
-    process.env.MONGO_URI || "mongodb://localhost:27017/disaster-response",
+    process.env.MONGO_URI || "mongodb://localhost:27017/DisasterResponseDB",
   cors: {
     origin: "*",
     credentials: true,
@@ -39,7 +39,8 @@ export const production = {
 export const test = {
   port: 3001,
   mongoUri:
-    process.env.MONGO_URI || "mongodb://localhost:27017/disaster-response-test",
+    process.env.MONGO_URI ||
+    "mongodb://localhost:27017/DisasterResponseDB-test",
   cors: {
     origin: "*",
     credentials: true,

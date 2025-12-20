@@ -1,10 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   BrowserRouter,
   Routes,
   Route,
   NavLink,
-  Link,
   Navigate,
 } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -13,13 +12,12 @@ import { languages } from "./i18n";
 import {
   AccessibilityProvider,
   AccessibilitySettings,
-  AccessibilityToggle,
-  SkipToContent,
   PinLogin,
 } from "./components";
 import { AuthProvider, useAuth, VolunteerRouteProvider } from "./contexts";
 import { VolunteerPage, DashboardPage } from "./pages";
-import { LogOut } from "lucide-react";
+import { LogOut, Globe, Settings, Shield } from "lucide-react";
+import { initSyncListeners } from "./services/syncService";
 import "./App.css";
 
 // Create a react-query client
@@ -36,81 +34,87 @@ function LanguageSwitcher() {
   const { i18n } = useTranslation();
 
   return (
-    <select
-      className="language-switcher"
-      value={i18n.language}
-      onChange={(e) => i18n.changeLanguage(e.target.value)}
-      aria-label="Select language"
-    >
-      {languages.map((lang) => (
-        <option key={lang.code} value={lang.code}>
-          {lang.nativeName}
-        </option>
-      ))}
-    </select>
-  );
-}
-
-function UserMenu() {
-  const { user, logout, isManager } = useAuth();
-
-  return (
-    <div className="user-menu-pill">
-      <span className="user-name">{user?.name || "User"}</span>
-      <span
-        className={`user-role-badge ${isManager ? "manager" : "volunteer"}`}
+    <div className="lang-dropdown">
+      <Globe size={16} />
+      <select
+        className="lang-select"
+        value={i18n.language}
+        onChange={(e) => i18n.changeLanguage(e.target.value)}
+        aria-label="Select language"
       >
-        {isManager ? "MANAGER" : "VOLUNTEER"}
-      </span>
-      <button className="logout-icon-btn" onClick={logout} title="Logout">
-        <LogOut size={16} />
-      </button>
+        {languages.map((lang) => (
+          <option key={lang.code} value={lang.code}>
+            {lang.nativeName}
+          </option>
+        ))}
+      </select>
     </div>
   );
 }
 
 function AuthenticatedApp() {
   const { t } = useTranslation();
-  const [accessibilityOpen, setAccessibilityOpen] = useState(false);
+  const { logout, isManager } = useAuth();
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   return (
     <BrowserRouter>
-      <SkipToContent />
       <div className="app-shell">
-        <header className="app-header">
-          <div className="header-content">
-            <Link to="/dashboard" className="brand-mark">
-              <div className="brand-logo">
-                <span className="brand-dot" />
-              </div>
-              <span className="brand-text">FieldPulse</span>
-            </Link>
+        {/* Clean Simple Navbar */}
+        <header className="navbar">
+          <div className="navbar-inner">
+            {/* Brand */}
+            <div className="navbar-brand">
+              <Shield size={24} className="brand-icon" />
+              <span className="brand-name">AEGIS</span>
+            </div>
 
-            <nav className="header-nav">
+            {/* Role Badge */}
+            <div
+              className={`role-badge ${isManager ? "manager" : "volunteer"}`}
+            >
+              {isManager ? t("common.manager") : t("common.volunteer")}
+            </div>
+
+            {/* Navigation Tabs */}
+            <nav className="navbar-tabs">
               <NavLink
                 to="/dashboard"
                 className={({ isActive }) =>
-                  `nav-link ${isActive ? "active" : ""}`
+                  `nav-tab ${isActive ? "active" : ""}`
                 }
               >
-                Command Center
+                {t("nav.dashboard")}
               </NavLink>
               <NavLink
                 to="/tasks"
                 className={({ isActive }) =>
-                  `nav-link ${isActive ? "active" : ""}`
+                  `nav-tab ${isActive ? "active" : ""}`
                 }
               >
-                Field Tasks
+                {t("nav.tasks")}
               </NavLink>
             </nav>
 
-            <div className="header-controls">
+            {/* Right Controls */}
+            <div className="navbar-actions">
               <LanguageSwitcher />
-              <AccessibilityToggle
-                onClick={() => setAccessibilityOpen(!accessibilityOpen)}
-              />
-              <UserMenu />
+
+              <button
+                className="icon-btn"
+                onClick={() => setSettingsOpen(true)}
+                title={t("settings.title")}
+              >
+                <Settings size={18} />
+              </button>
+
+              <button
+                className="logout-btn"
+                onClick={logout}
+                title={t("common.logout")}
+              >
+                <LogOut size={16} />
+              </button>
             </div>
           </div>
         </header>
@@ -126,8 +130,8 @@ function AuthenticatedApp() {
       </div>
 
       <AccessibilitySettings
-        isOpen={accessibilityOpen}
-        onClose={() => setAccessibilityOpen(false)}
+        isOpen={settingsOpen}
+        onClose={() => setSettingsOpen(false)}
       />
     </BrowserRouter>
   );
@@ -135,6 +139,14 @@ function AuthenticatedApp() {
 
 function App() {
   const { isAuthenticated, loading } = useAuth();
+
+  // Initialize sync listeners when authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      const cleanup = initSyncListeners();
+      return cleanup;
+    }
+  }, [isAuthenticated]);
 
   if (loading) {
     return (

@@ -13,33 +13,96 @@ export function VolunteerRouteProvider({ children }) {
   const [activeRoute, setActiveRoute] = useState(null);
   const [activeTask, setActiveTask] = useState(null);
   const [currentLocation, setCurrentLocation] = useState(null);
-  const [routeInfo, setRouteInfo] = useState(null); // Distance, duration, etc.
+  const [lastKnownLocation, setLastKnownLocation] = useState(null); // Keep last known even if GPS fails
+  const [locationError, setLocationError] = useState(null);
+  const [isLocationStale, setIsLocationStale] = useState(false); // True if using old location
+  const [routeInfo, setRouteInfo] = useState(null);
   const [isLoadingRoute, setIsLoadingRoute] = useState(false);
 
-  // Watch volunteer's current location
+  // Watch volunteer's current location - resilient to temporary failures
   useEffect(() => {
-    if (!navigator.geolocation) return;
+    if (!navigator.geolocation) {
+      setLocationError("unsupported");
+      return;
+    }
 
-    const watchId = navigator.geolocation.watchPosition(
-      (position) => {
-        setCurrentLocation({
-          lat: position.coords.latitude,
-          lng: position.coords.longitude,
-        });
-      },
-      (error) => {
-        console.log("Geolocation error:", error);
-        // Default to sample location for testing
-        setCurrentLocation({ lat: 18.52, lng: 73.85 });
-      },
-      {
-        enableHighAccuracy: true,
-        maximumAge: 30000,
-        timeout: 27000,
-      }
-    );
+    let watchId = null;
+    let retryInterval = null;
+    let lastUpdateTime = Date.now();
 
-    return () => navigator.geolocation.clearWatch(watchId);
+    const startWatching = () => {
+      watchId = navigator.geolocation.watchPosition(
+        (position) => {
+          const newLocation = {
+            lat: position.coords.latitude,
+            lng: position.coords.longitude,
+          };
+          console.log("Location received:", newLocation.lat, newLocation.lng);
+
+          setCurrentLocation(newLocation);
+          setLastKnownLocation(newLocation); // Always save last known
+          setLocationError(null);
+          setIsLocationStale(false);
+          lastUpdateTime = Date.now();
+        },
+        (error) => {
+          console.log("Location error:", error.code, error.message);
+
+          if (error.code === 1) {
+            // PERMISSION_DENIED
+            setLocationError("denied");
+            // Don't clear locations - keep last known
+          } else {
+            // Timeout or unavailable - mark as stale but keep last location
+            const timeSinceUpdate = Date.now() - lastUpdateTime;
+            if (timeSinceUpdate > 30000) {
+              // 30 seconds without update
+              setIsLocationStale(true);
+            }
+            // Don't set error - just keep trying
+            // Don't clear currentLocation or lastKnownLocation
+          }
+        },
+        {
+          enableHighAccuracy: true,
+          maximumAge: 30000, // Accept position up to 30 seconds old
+          timeout: 10000, // 10 second timeout
+        }
+      );
+    };
+
+    // Start watching
+    startWatching();
+
+    // Backup: periodically try getCurrentPosition in case watchPosition stops working
+    retryInterval = setInterval(() => {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const newLocation = {
+            lat: position.coords.latitude,
+            lng: position.coords.longitude,
+          };
+          setCurrentLocation(newLocation);
+          setLastKnownLocation(newLocation);
+          setLocationError(null);
+          setIsLocationStale(false);
+          lastUpdateTime = Date.now();
+        },
+        () => {
+          // Silent fail - watchPosition is still trying
+        },
+        {
+          enableHighAccuracy: false,
+          maximumAge: 60000,
+          timeout: 5000,
+        }
+      );
+    }, 15000); // Every 15 seconds
+
+    return () => {
+      if (watchId) navigator.geolocation.clearWatch(watchId);
+      if (retryInterval) clearInterval(retryInterval);
+    };
   }, []);
 
   // Start route to a task location using centralized backend routing service
@@ -50,8 +113,11 @@ export function VolunteerRouteProvider({ children }) {
         return false;
       }
 
-      if (!currentLocation) {
-        console.warn("Cannot start route: current location not available");
+      // Use current location, or fall back to last known location
+      const locationToUse = currentLocation || lastKnownLocation;
+
+      if (!locationToUse) {
+        console.warn("Cannot start route: no location available");
         return false;
       }
 
@@ -60,7 +126,7 @@ export function VolunteerRouteProvider({ children }) {
 
       try {
         // Use centralized backend routing service
-        const origin = { lat: currentLocation.lat, lon: currentLocation.lng };
+        const origin = { lat: locationToUse.lat, lon: locationToUse.lng };
         const destination = { lat: task.lat, lon: task.lon };
 
         const routeData = await getVolunteerRoute(origin, destination);
@@ -80,7 +146,7 @@ export function VolunteerRouteProvider({ children }) {
         // Fallback to simple two-point straight line route
         // Since RouteLine no longer calls OSRM, this will show as dashed
         const fallbackRoute = [
-          { lat: currentLocation.lat, lon: currentLocation.lng },
+          { lat: locationToUse.lat, lon: locationToUse.lng },
           { lat: task.lat, lon: task.lon },
         ];
         setActiveRoute(fallbackRoute);
@@ -95,7 +161,7 @@ export function VolunteerRouteProvider({ children }) {
         setIsLoadingRoute(false);
       }
     },
-    [currentLocation]
+    [currentLocation, lastKnownLocation]
   );
 
   // Cancel active route
@@ -108,7 +174,10 @@ export function VolunteerRouteProvider({ children }) {
   const value = {
     activeRoute,
     activeTask,
-    currentLocation,
+    currentLocation: currentLocation || lastKnownLocation, // Always provide a location if we have one
+    lastKnownLocation,
+    locationError,
+    isLocationStale,
     routeInfo,
     isLoadingRoute,
     startRoute,

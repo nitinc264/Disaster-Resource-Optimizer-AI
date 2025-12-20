@@ -1,20 +1,48 @@
-/* Pin Login - Simple, accessible */
+/* Pin Login - Modern Professional Design */
 .pin-login-container {
   min-height: 100vh;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: var(--background);
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
   padding: var(--space-4);
+  position: relative;
+  overflow: hidden;
+}
+
+.pin-login-container::before {
+  content: "";
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(
+      circle at 30% 20%,
+      rgba(249, 115, 22, 0.08) 0%,
+      transparent 50%
+    ),
+    radial-gradient(
+      circle at 70% 80%,
+      rgba(59, 130, 246, 0.06) 0%,
+      transparent 50%
+    );
+  pointer-events: none;
 }
 
 .pin-login-card {
-  background: var(--surface);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-xl);
-  padding: var(--space-8);
-  max-width: 400px;
+  background: rgba(30, 41, 59, 0.8);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 24px;
+  padding: var(--space-10);
+  max-width: 420px;
   width: 100%;
+  position: relative;
+  z-index: 1;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(255, 255, 255, 0.05);
 }
 
 .pin-login-header {
@@ -22,29 +50,65 @@
   margin-bottom: var(--space-8);
 }
 
-.pin-login-icon {
-  width: 72px;
-  height: 72px;
-  background: var(--primary);
-  border-radius: 50%;
+.pin-login-logo {
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 0 auto var(--space-4);
+  gap: var(--space-2);
+  margin-bottom: var(--space-6);
+}
+
+.logo-icon {
+  width: 52px;
+  height: 52px;
+  background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   color: white;
+  box-shadow: 0 8px 24px -4px rgba(249, 115, 22, 0.4);
+}
+
+.logo-text {
+  font-size: 1.75rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  background: linear-gradient(135deg, #f97316 0%, #fb923c 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .pin-login-header h1 {
-  color: var(--text-primary);
+  color: #f8fafc;
   font-size: 1.5rem;
-  font-weight: 700;
+  font-weight: 600;
   margin: 0 0 var(--space-2);
+  letter-spacing: -0.02em;
 }
 
-.pin-login-header p {
-  color: var(--text-secondary);
-  font-size: 0.95rem;
+.login-subtitle {
+  color: #94a3b8;
+  font-size: 0.9rem;
   margin: 0;
+}
+
+/* PIN Section */
+.pin-section {
+  margin-bottom: var(--space-6);
+}
+
+.pin-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  color: #64748b;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: var(--space-4);
 }
 
 /* PIN Input */
@@ -52,29 +116,43 @@
   display: flex;
   gap: var(--space-3);
   justify-content: center;
-  margin-bottom: var(--space-6);
+  margin-bottom: var(--space-4);
 }
 
 .pin-input {
-  width: 56px;
-  height: 64px;
-  font-size: 1.75rem;
+  width: 60px;
+  height: 68px;
+  font-size: 1.5rem;
   font-weight: 700;
   text-align: center;
-  background: var(--background);
-  border: 2px solid var(--border-color);
-  border-radius: var(--radius-lg);
-  color: var(--text-primary);
+  background: rgba(15, 23, 42, 0.6);
+  border: 2px solid rgba(100, 116, 139, 0.3);
+  border-radius: 16px;
+  color: #f8fafc;
+  transition: all 0.2s ease;
+  -webkit-text-security: disc;
+}
+
+.pin-input::placeholder {
+  color: #475569;
 }
 
 .pin-input:focus {
-  border-color: var(--primary);
+  border-color: #f97316;
   outline: none;
+  background: rgba(15, 23, 42, 0.8);
+  box-shadow: 0 0 0 4px rgba(249, 115, 22, 0.15),
+    0 0 20px rgba(249, 115, 22, 0.1);
+}
+
+.pin-input.filled {
+  border-color: rgba(249, 115, 22, 0.5);
+  background: rgba(249, 115, 22, 0.1);
 }
 
 .pin-input.error {
-  border-color: var(--error);
-  animation: shake 0.3s ease;
+  border-color: #ef4444;
+  animation: shake 0.4s ease;
 }
 
 .pin-input:disabled {
@@ -86,132 +164,214 @@
   100% {
     transform: translateX(0);
   }
-  25% {
+  20% {
+    transform: translateX(-6px);
+  }
+  40% {
+    transform: translateX(6px);
+  }
+  60% {
     transform: translateX(-4px);
   }
-  75% {
+  80% {
     transform: translateX(4px);
   }
 }
 
 /* Error Message */
-.pin-error-message {
+.pin-error {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: var(--space-2);
-  color: var(--error);
+  color: #f87171;
+  font-size: 0.85rem;
+  padding: var(--space-3);
+  background: rgba(239, 68, 68, 0.1);
+  border-radius: 10px;
+  border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+/* Loading State */
+.pin-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  color: #f97316;
   font-size: 0.9rem;
+  padding: var(--space-3);
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Footer */
+.pin-login-footer {
+  text-align: center;
+  padding-top: var(--space-6);
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.pin-login-footer p {
+  color: #475569;
+  font-size: 0.75rem;
+  margin: 0;
+  letter-spacing: 0.02em;
+}
+
+/* Location Check Section */
+.location-check-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--space-8) var(--space-4);
+  text-align: center;
+}
+
+.location-checking {
+  color: #f97316;
   margin-bottom: var(--space-4);
 }
 
-/* Login Button */
-.pin-login-button {
-  width: 100%;
-  padding: var(--space-4);
-  background: var(--primary);
+.location-error-icon {
+  width: 64px;
+  height: 64px;
+  background: rgba(239, 68, 68, 0.15);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ef4444;
+  margin-bottom: var(--space-4);
+}
+
+.location-message {
+  color: #f8fafc;
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 0 0 var(--space-2);
+}
+
+.location-hint {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin: 0 0 var(--space-6);
+  max-width: 280px;
+  line-height: 1.5;
+}
+
+.enable-location-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-6);
+  background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
   color: white;
   border: none;
-  border-radius: var(--radius-lg);
-  font-size: 1rem;
-  font-weight: 700;
+  border-radius: 12px;
+  font-size: 0.95rem;
+  font-weight: 600;
   cursor: pointer;
-  min-height: var(--touch-target-lg);
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(249, 115, 22, 0.3);
+}
+
+.enable-location-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(249, 115, 22, 0.4);
+}
+
+.enable-location-btn:active {
+  transform: translateY(0);
+}
+
+/* Location Granted Badge */
+.location-granted-badge {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: var(--space-2);
-}
-
-.pin-login-button:hover:not(:disabled) {
-  background: var(--primary-hover);
-}
-
-.pin-login-button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-/* Demo Credentials */
-.pin-demo-section {
-  margin-top: var(--space-6);
-  padding-top: var(--space-6);
-  border-top: 1px solid var(--border-color);
-}
-
-.demo-title {
-  font-size: 0.8rem;
-  color: var(--text-muted);
-  text-align: center;
-  margin-bottom: var(--space-3);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
-.demo-credentials {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--space-3);
-}
-
-.demo-item {
-  background: var(--background);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-lg);
-  padding: var(--space-3);
-  text-align: center;
-  cursor: pointer;
-}
-
-.demo-item:hover {
-  border-color: var(--accent);
-}
-
-.demo-item-role {
+  padding: var(--space-2) var(--space-4);
+  background: rgba(34, 197, 94, 0.15);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  border-radius: 20px;
+  color: #22c55e;
   font-size: 0.75rem;
-  color: var(--text-secondary);
-  margin-bottom: var(--space-1);
+  font-weight: 500;
+  margin-bottom: var(--space-6);
 }
 
-.demo-item-pin {
-  font-size: 1.25rem;
-  font-weight: 700;
-  font-family: var(--font-mono);
-  color: var(--text-primary);
+.location-granted-badge svg {
+  animation: pulse 2s ease-in-out infinite;
 }
 
-/* Mobile */
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* Branding */
+.login-branding {
+  position: absolute;
+  bottom: var(--space-6);
+  text-align: center;
+  z-index: 1;
+}
+
+.login-branding span {
+  color: #334155;
+  font-size: 0.7rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+/* Mobile Responsive */
 @media (max-width: 480px) {
   .pin-login-card {
     padding: var(--space-6);
+    border-radius: 20px;
   }
 
   .pin-input {
-    width: 48px;
-    height: 56px;
-    font-size: 1.5rem;
+    width: 52px;
+    height: 60px;
+    font-size: 1.25rem;
+    border-radius: 12px;
   }
 
   .pin-login-header h1 {
     font-size: 1.25rem;
   }
 
-  .pin-login-icon {
-    width: 60px;
-    height: 60px;
+  .logo-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
   }
 
-  .demo-credentials {
-    grid-template-columns: 1fr;
-    gap: var(--space-2);
+  .logo-icon svg {
+    width: 24px;
+    height: 24px;
   }
 
-  .demo-item {
-    padding: var(--space-2);
-  }
-
-  .demo-item-pin {
-    font-size: 1.1rem;
+  .logo-text {
+    font-size: 1.5rem;
   }
 }
 
@@ -221,7 +381,7 @@
   }
 
   .pin-login-card {
-    padding: var(--space-4);
+    padding: var(--space-5);
   }
 
   .pin-input-group {
@@ -229,18 +389,13 @@
   }
 
   .pin-input {
-    width: 42px;
-    height: 48px;
+    width: 46px;
+    height: 54px;
+    font-size: 1.1rem;
+    border-radius: 10px;
+  }
+
+  .logo-text {
     font-size: 1.25rem;
-  }
-
-  .pin-login-button {
-    padding: var(--space-3);
-    font-size: 0.9rem;
-  }
-
-  .pin-demo-section {
-    margin-top: var(--space-4);
-    padding-top: var(--space-4);
   }
 }

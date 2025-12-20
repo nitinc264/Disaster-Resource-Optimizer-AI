@@ -132,7 +132,7 @@ export default function ResourceInventory() {
     return (
       <div className="inventory-loading">
         <Package size={24} className="pulse" />
-        <span>Loading inventory...</span>
+        <span>{t("resources.loading")}</span>
       </div>
     );
   }
@@ -143,7 +143,7 @@ export default function ResourceInventory() {
       <div className="inventory-header">
         <div className="inventory-title">
           <Package size={24} />
-          <h2>Resource Inventory</h2>
+          <h2>{t("resources.inventory")}</h2>
         </div>
         <button
           className="inventory-refresh"
@@ -151,7 +151,7 @@ export default function ResourceInventory() {
           disabled={isFetching}
         >
           <RefreshCw size={18} className={isFetching ? "spin" : ""} />
-          {isFetching ? "Syncing..." : "Refresh"}
+          {isFetching ? t("resources.syncing") : t("resources.refresh")}
         </button>
       </div>
 
@@ -161,7 +161,10 @@ export default function ResourceInventory() {
           <div className="alert-header">
             <AlertTriangle size={18} />
             <span>
-              {alerts.length} Low Stock Alert{alerts.length > 1 ? "s" : ""}
+              {alerts.length}{" "}
+              {alerts.length > 1
+                ? t("resources.lowStockAlerts")
+                : t("resources.lowStockAlert")}
             </span>
           </div>
           <div className="alert-list">
@@ -171,7 +174,7 @@ export default function ResourceInventory() {
                 <div key={idx} className="alert-item">
                   <category.icon size={16} style={{ color: category.color }} />
                   <span>
-                    <strong>{alert.stationName}</strong>: {category.label} low (
+                    <strong>{alert.stationName}</strong>: {category.label} (
                     {alert.current}/{alert.minimum} {category.unit})
                   </span>
                 </div>
@@ -196,14 +199,14 @@ export default function ResourceInventory() {
               {editingStation === station.id ? (
                 <button className="save-btn" onClick={saveChanges}>
                   <Save size={16} />
-                  Save
+                  {t("common.save")}
                 </button>
               ) : (
                 <button
                   className="edit-btn"
                   onClick={() => startEditing(station.id)}
                 >
-                  Edit
+                  {t("common.edit")}
                 </button>
               )}
             </div>
@@ -271,7 +274,7 @@ export default function ResourceInventory() {
 
             <div className="card-footer">
               <span className="last-restock">
-                Last restocked:{" "}
+                {t("resources.lastRestocked")}{" "}
                 {new Date(station.lastRestocked).toLocaleDateString()}
               </span>
             </div>

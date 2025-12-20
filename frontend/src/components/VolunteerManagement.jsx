@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "../contexts/AuthContext";
 import {
   registerVolunteer,
@@ -36,6 +37,7 @@ const SKILL_OPTIONS = [
 ];
 
 export default function VolunteerManagement() {
+  const { t } = useTranslation();
   const { isManager } = useAuth();
   const [volunteers, setVolunteers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -173,8 +175,8 @@ export default function VolunteerManagement() {
       <div className="volunteer-management">
         <div className="access-denied">
           <Shield size={48} />
-          <h2>Manager Access Required</h2>
-          <p>Only managers can register and manage volunteers.</p>
+          <h2>{t("volunteer.managerRequired")}</h2>
+          <p>{t("volunteer.managerRequiredHint")}</p>
         </div>
       </div>
     );
@@ -185,14 +187,14 @@ export default function VolunteerManagement() {
       <div className="vm-header">
         <h2>
           <Users size={24} />
-          Volunteer Management
+          {t("volunteer.management")}
         </h2>
         <button
           className="btn-add-volunteer"
           onClick={() => setShowForm(!showForm)}
         >
           <UserPlus size={18} />
-          {showForm ? "Cancel" : "Register Volunteer"}
+          {showForm ? t("common.cancel") : t("volunteer.register")}
         </button>
       </div>
 
@@ -212,27 +214,27 @@ export default function VolunteerManagement() {
 
       {newPin && (
         <div className="new-pin-card">
-          <h3>New Volunteer PIN</h3>
-          <p>Share this PIN with the volunteer for login:</p>
+          <h3>{t("volunteer.newPinTitle")}</h3>
+          <p>{t("volunteer.newPinHint")}</p>
           <div className="pin-display">
             <span className="pin-value">{newPin}</span>
             <button className="btn-copy" onClick={copyPin}>
               {copiedPin ? <Check size={18} /> : <Copy size={18} />}
-              {copiedPin ? "Copied!" : "Copy"}
+              {copiedPin ? t("volunteer.copied") : t("volunteer.copy")}
             </button>
           </div>
           <button className="btn-dismiss" onClick={() => setNewPin(null)}>
-            Dismiss
+            {t("volunteer.dismiss")}
           </button>
         </div>
       )}
 
       {showForm && (
         <form className="volunteer-form" onSubmit={handleSubmit}>
-          <h3>Register New Volunteer</h3>
+          <h3>{t("volunteer.registerNew")}</h3>
 
           <div className="form-group">
-            <label htmlFor="name">Full Name *</label>
+            <label htmlFor="name">{t("volunteer.fullName")} *</label>
             <input
               type="text"
               id="name"
@@ -240,14 +242,14 @@ export default function VolunteerManagement() {
               value={formData.name}
               onChange={handleInputChange}
               required
-              placeholder="Enter volunteer's full name"
+              placeholder={t("volunteer.fullName")}
             />
           </div>
 
           <div className="form-row">
             <div className="form-group">
               <label htmlFor="phone">
-                <Phone size={14} /> Phone
+                <Phone size={14} /> {t("volunteer.phone")}
               </label>
               <input
                 type="tel"
@@ -261,7 +263,7 @@ export default function VolunteerManagement() {
 
             <div className="form-group">
               <label htmlFor="email">
-                <Mail size={14} /> Email
+                <Mail size={14} /> {t("volunteer.email")}
               </label>
               <input
                 type="email"
@@ -275,7 +277,7 @@ export default function VolunteerManagement() {
           </div>
 
           <div className="form-group">
-            <label>Skills</label>
+            <label>{t("volunteer.skills")}</label>
             <div className="skills-grid">
               {SKILL_OPTIONS.map((skill) => (
                 <button
@@ -295,11 +297,12 @@ export default function VolunteerManagement() {
           <button type="submit" className="btn-submit" disabled={submitting}>
             {submitting ? (
               <>
-                <Loader2 size={18} className="spin" /> Registering...
+                <Loader2 size={18} className="spin" />{" "}
+                {t("volunteer.registering")}
               </>
             ) : (
               <>
-                <UserPlus size={18} /> Register Volunteer
+                <UserPlus size={18} /> {t("volunteer.register")}
               </>
             )}
           </button>
@@ -308,18 +311,19 @@ export default function VolunteerManagement() {
 
       <div className="volunteers-list">
         <h3>
-          Active Volunteers ({volunteers.filter((v) => v.isActive).length})
+          {t("volunteer.activeVolunteers")} (
+          {volunteers.filter((v) => v.isActive).length})
         </h3>
 
         {loading ? (
           <div className="loading-state">
             <Loader2 size={24} className="spin" />
-            Loading volunteers...
+            {t("common.loading")}
           </div>
         ) : volunteers.length === 0 ? (
           <div className="empty-state">
             <Users size={48} />
-            <p>No volunteers registered yet</p>
+            <p>{t("volunteer.noVolunteers")}</p>
           </div>
         ) : (
           <div className="volunteers-grid">
@@ -329,7 +333,9 @@ export default function VolunteerManagement() {
                 <div key={volunteer._id} className="volunteer-card">
                   <div className="volunteer-header">
                     <h4>{volunteer.name}</h4>
-                    <span className="volunteer-pin">PIN: {volunteer.pin}</span>
+                    <span className="volunteer-pin">
+                      {t("volunteer.pin")}: {volunteer.pin}
+                    </span>
                   </div>
 
                   <div className="volunteer-details">
@@ -357,14 +363,14 @@ export default function VolunteerManagement() {
 
                   <div className="volunteer-actions">
                     <span className="joined-date">
-                      Joined:{" "}
+                      {t("volunteer.joined")}:{" "}
                       {new Date(volunteer.createdAt).toLocaleDateString()}
                     </span>
                     <div className="action-buttons">
                       <button
                         className="btn-message"
                         onClick={() => handleOpenMessage(volunteer)}
-                        title="Send message"
+                        title={t("messaging.send")}
                       >
                         <MessageSquare size={14} />
                       </button>
@@ -373,7 +379,7 @@ export default function VolunteerManagement() {
                         onClick={() =>
                           handleDeactivate(volunteer._id, volunteer.name)
                         }
-                        title="Deactivate volunteer"
+                        title={t("common.delete")}
                       >
                         <Trash2 size={14} />
                       </button>
@@ -395,11 +401,13 @@ export default function VolunteerManagement() {
                   {messageModal.volunteer.name.charAt(0).toUpperCase()}
                 </div>
                 <div className="recipient-info">
-                  <h4>Message {messageModal.volunteer.name}</h4>
+                  <h4>
+                    {t("messaging.send")} {messageModal.volunteer.name}
+                  </h4>
                   <span>
                     {messageModal.volunteer.phone ||
                       messageModal.volunteer.email ||
-                      "No contact info"}
+                      t("family.noPhone")}
                   </span>
                 </div>
               </div>
@@ -412,7 +420,7 @@ export default function VolunteerManagement() {
               <textarea
                 value={messageText}
                 onChange={(e) => setMessageText(e.target.value)}
-                placeholder="Type your message here..."
+                placeholder={t("messaging.typeMessage")}
                 rows={5}
                 autoFocus
               />
@@ -420,7 +428,7 @@ export default function VolunteerManagement() {
 
             <div className="message-modal-footer">
               <button className="btn-cancel-msg" onClick={handleCloseMessage}>
-                Cancel
+                {t("common.cancel")}
               </button>
               <button
                 className="btn-send-msg"
@@ -429,11 +437,12 @@ export default function VolunteerManagement() {
               >
                 {sendingMessage ? (
                   <>
-                    <Loader2 size={16} className="spin" /> Sending...
+                    <Loader2 size={16} className="spin" /> {t("messaging.send")}
+                    ...
                   </>
                 ) : (
                   <>
-                    <Send size={16} /> Send Message
+                    <Send size={16} /> {t("messaging.send")}
                   </>
                 )}
               </button>

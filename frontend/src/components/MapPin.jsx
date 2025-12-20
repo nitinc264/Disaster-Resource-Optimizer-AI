@@ -1,4 +1,5 @@
 import { Marker, Popup } from "react-leaflet";
+import { useTranslation } from "react-i18next";
 import L from "leaflet";
 import "./MapPin.css";
 
@@ -23,6 +24,7 @@ const reportSelectedIcon = createCustomIcon("report-selected"); // Selected repo
 const reportInProgressIcon = createCustomIcon("report-in-progress"); // Routed report
 
 function MapPin({ need, isSelected, onClick }) {
+  const { t } = useTranslation();
   const isReport = need.isReport || need.status === "Report";
   const isInProgress = need.status === "InProgress";
 
@@ -41,15 +43,15 @@ function MapPin({ need, isSelected, onClick }) {
   }
 
   const getStatusLabel = () => {
-    if (isReport) return "Analyzed Report";
+    if (isReport) return t("map.analyzedReport");
     return need.status;
   };
 
   const getDescription = () => {
     if (isReport) {
-      return need.text || need.description || "No description";
+      return need.text || need.description || t("taskList.noDescription");
     }
-    return need.description || "No description";
+    return need.description || t("taskList.noDescription");
   };
 
   return (
@@ -66,27 +68,29 @@ function MapPin({ need, isSelected, onClick }) {
     >
       <Popup>
         <div className="pin-popup">
-          <b>Status: {getStatusLabel()}</b>
+          <b>
+            {t("map.status")}: {getStatusLabel()}
+          </b>
           {isReport && need.category && (
             <p className="pin-category">
-              <strong>Category:</strong> {need.category}
+              <strong>{t("map.category")}:</strong> {need.category}
             </p>
           )}
           {isReport && need.severity && (
             <p className="pin-severity">
-              <strong>Severity:</strong> {need.severity}/10
+              <strong>{t("map.severity")}:</strong> {need.severity}/10
             </p>
           )}
           {isReport && need.needs && need.needs.length > 0 && (
             <p className="pin-needs">
-              <strong>Needs:</strong> {need.needs.join(", ")}
+              <strong>{t("map.needs")}:</strong> {need.needs.join(", ")}
             </p>
           )}
           <p className="pin-description">{getDescription()}</p>
           {!isSelected && (need.status === "Verified" || isReport) && (
-            <small>Click pin to select for routing.</small>
+            <small>{t("map.clickToSelect")}</small>
           )}
-          {isSelected && <small>Selected! Click again to de-select.</small>}
+          {isSelected && <small>{t("map.clickToDeselect")}</small>}
         </div>
       </Popup>
     </Marker>

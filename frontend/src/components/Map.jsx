@@ -1,5 +1,6 @@
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import { useEffect, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import "./Map.css";
@@ -122,6 +123,7 @@ function Map({
   volunteerRoute = null,
   isRouteFallback = false,
 }) {
+  const { t } = useTranslation();
   // Center on Pune area to show all stations, or on volunteer location if in volunteer mode
   const centerPosition = useMemo(() => {
     if (volunteerMode && volunteerLocation) {
@@ -190,7 +192,7 @@ function Map({
         >
           <Popup>
             <div className="user-location-popup">
-              <strong>📍 Your Location</strong>
+              <strong>📍 {t("map.yourLocation")}</strong>
             </div>
           </Popup>
         </Marker>

@@ -1,4 +1,4 @@
-/* App Shell - Clean, simple layout */
+/* App Shell - Clean Layout */
 .app-shell {
   min-height: 100vh;
   display: flex;
@@ -6,192 +6,181 @@
   background: var(--background);
 }
 
-/* Header - Modern Clean Theme */
-.app-header {
+/* ==========================================
+   SIMPLE NAVBAR - Clean & User Friendly
+   ========================================== */
+
+.navbar {
   position: sticky;
   top: 0;
   z-index: 100;
   background: var(--surface);
   border-bottom: 1px solid var(--border-color);
-  box-shadow: var(--shadow-sm);
-  backdrop-filter: blur(8px);
 }
 
-.header-content {
+.navbar-inner {
   max-width: 100%;
   margin: 0 auto;
-  padding: 0 var(--space-6);
-  height: 80px; /* Slightly taller for better vertical spacing */
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
+  padding: 0 var(--space-4);
+  height: 56px;
+  display: flex;
   align-items: center;
   gap: var(--space-4);
 }
 
-/* Brand - FieldPulse Style */
-.brand-mark {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-4); /* More space between logo and text */
-  text-decoration: none;
-  justify-self: start;
-}
-
-.brand-logo {
-  width: 44px; /* Slightly larger */
-  height: 44px;
-  background: linear-gradient(
-    135deg,
-    var(--primary) 0%,
-    var(--primary-dark) 100%
-  );
-  border-radius: 12px;
-  display: grid;
-  place-items: center;
-  box-shadow: 0 4px 12px rgba(249, 115, 22, 0.2);
-}
-
-.brand-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: white;
-}
-
-.brand-text {
-  font-weight: 800;
-  font-size: 1.5rem; /* Larger text */
-  color: var(--text-primary);
-  letter-spacing: -0.03em;
-}
-
-/* Navigation */
-.header-nav {
+/* Brand */
+.navbar-brand {
   display: flex;
+  align-items: center;
   gap: var(--space-2);
-  justify-self: center;
-  background: var(--surface-elevated);
-  padding: 6px; /* More padding */
-  border-radius: var(--radius-full);
-  border: 1px solid var(--border-color);
-  box-shadow: var(--shadow-sm);
+  flex-shrink: 0;
 }
 
-.nav-link {
-  display: flex;
-  align-items: center;
-  padding: var(--space-2) var(--space-6); /* Wider links */
-  color: var(--text-muted);
-  text-decoration: none;
-  font-weight: 600;
-  font-size: 0.9375rem;
-  border-radius: var(--radius-full);
-  transition: all 0.2s ease;
+.brand-icon {
+  color: var(--primary);
 }
 
-.nav-link:hover {
+.brand-name {
+  font-weight: 800;
+  font-size: 1.25rem;
   color: var(--text-primary);
-  background: var(--surface-hover);
+  letter-spacing: 0.02em;
 }
 
-.nav-link.active {
-  color: white;
-  background: var(--primary);
-  box-shadow: 0 2px 8px rgba(249, 115, 22, 0.25);
-}
-
-/* Header Controls */
-.header-controls {
+/* Role Badge - Simple role indicator */
+.role-badge {
   display: flex;
   align-items: center;
-  gap: var(--space-3); /* Reduced gap since divider is gone */
-  justify-self: end;
-}
-
-/* Language Switcher */
-.language-switcher {
-  padding: 0 var(--space-4);
-  border: 1px solid var(--border-color);
+  padding: 6px 14px;
   border-radius: var(--radius-full);
-  background: var(--surface);
-  color: var(--text-primary);
-  font-size: 0.875rem;
-  font-weight: 600;
-  cursor: pointer;
-  height: 44px;
-  display: flex;
-  align-items: center;
-  transition: all 0.2s ease;
-}
-
-.language-switcher:hover {
-  border-color: var(--primary);
-  background: var(--surface-hover);
-}
-
-.language-switcher:focus {
-  outline: none;
-  border-color: var(--primary);
-  box-shadow: 0 0 0 2px var(--primary-light);
-}
-
-/* User Menu Pill */
-.user-menu-pill {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  padding: 4px 4px 4px var(--space-4);
-  background: var(--surface);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-full);
-  height: 44px;
-  transition: all 0.2s ease;
-  cursor: pointer;
-}
-
-.user-menu-pill:hover {
-  border-color: var(--primary);
-  box-shadow: var(--shadow-sm);
-}
-
-.user-name {
-  font-weight: 600;
-  font-size: 0.875rem;
-  color: var(--text-primary);
-}
-
-.user-role-badge {
   font-size: 0.7rem;
   font-weight: 700;
-  padding: 4px 10px;
-  border-radius: var(--radius-full);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
 
-.user-role-badge.manager {
-  background: #f97316;
+.role-badge.manager {
+  background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
   color: white;
 }
 
-.user-role-badge.volunteer {
-  background: #3b82f6;
+.role-badge.volunteer {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
   color: white;
 }
 
-.logout-icon-btn {
+/* Navigation Tabs */
+.navbar-tabs {
+  display: flex;
+  gap: 4px;
+  background: var(--surface-elevated);
+  padding: 4px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border-color);
+}
+
+.nav-tab {
+  display: flex;
+  align-items: center;
+  padding: 8px 16px;
+  color: var(--text-muted);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.875rem;
+  border-radius: var(--radius-full);
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.nav-tab:hover {
+  color: var(--text-primary);
+  background: var(--surface-hover);
+}
+
+.nav-tab.active {
+  color: white;
+  background: var(--primary);
+}
+
+/* Right Actions */
+.navbar-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-left: auto;
+}
+
+/* Language Dropdown */
+.lang-dropdown {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 12px;
+  height: 36px;
+  background: var(--surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-full);
+  color: var(--text-secondary);
+  transition: all 0.15s ease;
+}
+
+.lang-dropdown:hover {
+  border-color: var(--primary);
+}
+
+.lang-select {
   background: transparent;
   border: none;
-  color: #94a3b8;
+  color: var(--text-primary);
+  font-size: 0.8rem;
+  font-weight: 500;
   cursor: pointer;
-  padding: var(--space-2);
+  outline: none;
+}
+
+.lang-select option {
+  background: var(--surface);
+  color: var(--text-primary);
+}
+
+/* Icon Button */
+.icon-btn {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: color 0.2s;
+  width: 36px;
+  height: 36px;
+  background: var(--surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-full);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.15s ease;
 }
 
-.logout-icon-btn:hover {
+.icon-btn:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+/* Logout Button */
+.logout-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: var(--surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-full);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.logout-btn:hover {
+  background: #ef4444;
+  border-color: #ef4444;
   color: white;
 }
 
@@ -202,169 +191,6 @@
   max-width: 100%;
   margin: 0;
   padding: var(--space-4);
-}
-
-/* Mobile Responsive */
-@media (max-width: 768px) {
-  .header-content {
-    padding: 0 var(--space-3);
-    height: auto;
-    min-height: 52px;
-    flex-wrap: wrap;
-    padding-top: var(--space-2);
-    padding-bottom: var(--space-2);
-  }
-
-  .brand-text {
-    font-size: 1.1rem;
-  }
-
-  .header-controls {
-    gap: var(--space-2);
-  }
-
-  .user-name {
-    display: none;
-  }
-
-  .user-menu-pill {
-    padding: 4px;
-    height: 40px;
-  }
-
-  .language-switcher {
-    padding: var(--space-1) var(--space-2);
-    height: 36px;
-    font-size: 0.8rem;
-  }
-}
-
-@media (max-width: 640px) {
-  /* Compact header for mobile - sticky, not fixed */
-  .app-header {
-    position: sticky;
-    top: 0;
-    z-index: 100;
-  }
-
-  .header-content {
-    height: 48px;
-    min-height: 48px;
-    padding: 0 12px;
-    flex-wrap: nowrap;
-  }
-
-  .brand-logo {
-    width: 28px;
-    height: 28px;
-  }
-
-  .brand-text {
-    font-size: 0.95rem;
-  }
-
-  .header-nav {
-    display: none;
-  }
-
-  .app-main {
-    padding: 0;
-    padding-bottom: 0;
-  }
-
-  .nav-links {
-    gap: 0;
-  }
-
-  .nav-link {
-    padding: var(--space-2) var(--space-3);
-    font-size: 0.8rem;
-  }
-
-  .header-actions {
-    gap: var(--space-2);
-  }
-
-  .header-controls {
-    gap: 6px;
-  }
-
-  .settings-divider {
-    display: none;
-  }
-
-  .language-switcher {
-    padding: 4px 8px;
-    height: 32px;
-    font-size: 0.75rem;
-  }
-
-  .user-menu-pill {
-    height: 32px;
-    padding: 2px;
-  }
-
-  .logout-icon-btn {
-    padding: 4px;
-  }
-}
-
-/* User Menu - Simple */
-.user-menu {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  padding: var(--space-2) var(--space-3);
-  background: var(--background);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-lg);
-}
-
-.user-name {
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: var(--text-primary);
-  max-width: 120px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.user-role {
-  font-size: 0.7rem;
-  padding: var(--space-1) var(--space-2);
-  border-radius: var(--radius-md);
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-}
-
-.user-role.manager {
-  background: var(--primary);
-  color: white;
-}
-
-.user-role.volunteer {
-  background: var(--accent);
-  color: white;
-}
-
-.logout-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  border: none;
-  background: transparent;
-  color: var(--text-secondary);
-  border-radius: var(--radius-md);
-  cursor: pointer;
-}
-
-.logout-btn:hover {
-  background: var(--surface-elevated);
-  color: var(--text-primary);
 }
 
 /* App Loading */
@@ -398,64 +224,48 @@
   font-size: 0.9rem;
 }
 
-/* Responsive */
+/* ==========================================
+   RESPONSIVE STYLES
+   ========================================== */
+
+/* Tablet */
 @media (max-width: 768px) {
-  .header-content {
+  .navbar-inner {
     padding: 0 var(--space-3);
-    height: 56px;
-    gap: var(--space-2);
+    height: 52px;
+    gap: var(--space-3);
   }
 
-  .user-name {
-    display: none;
+  .brand-name {
+    font-size: 1.1rem;
   }
 
-  .user-menu-pill {
-    padding: 4px;
-    gap: 8px;
-    height: 40px;
-  }
-
-  .brand-text {
-    font-size: 1rem;
-  }
-
-  .brand-logo {
-    width: 36px;
-    height: 36px;
-  }
-
-  .nav-link {
-    padding: var(--space-2) var(--space-3);
+  .nav-tab {
+    padding: 6px 12px;
     font-size: 0.8rem;
   }
 
-  .language-switcher {
+  .user-info {
     display: none;
   }
 
-  .settings-divider {
-    display: none;
+  .user-chip {
+    padding: 4px;
+    height: 36px;
   }
 
-  /* Show nav on mobile with horizontal scroll */
-  .header-nav {
-    display: flex;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-    -ms-overflow-style: none;
-    gap: var(--space-1);
-    flex: 1;
-    justify-content: center;
+  .lang-dropdown {
+    padding: 0 8px;
+    height: 32px;
   }
 
-  .header-nav::-webkit-scrollbar {
-    display: none;
+  .lang-select {
+    font-size: 0.75rem;
   }
 
-  .header-controls {
-    gap: var(--space-2);
+  .icon-btn {
+    width: 32px;
+    height: 32px;
   }
 
   .app-main {
@@ -463,70 +273,117 @@
   }
 }
 
+/* Mobile Phones (6.2 - 6.9 inch screens: ~360px - 430px) */
 @media (max-width: 480px) {
-  .header-content {
-    height: 52px;
-    padding: 0 var(--space-2);
+  .navbar {
+    background: var(--surface);
   }
 
-  .brand-text {
+  .navbar-inner {
+    height: auto;
+    min-height: 56px;
+    padding: 8px 12px;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: space-between;
+  }
+
+  /* Top row: Brand + Role Badge + Actions */
+  .navbar-brand {
+    order: 1;
+  }
+
+  .brand-icon {
+    width: 22px;
+    height: 22px;
+  }
+
+  .brand-name {
     display: none;
   }
 
-  .brand-logo {
-    width: 32px;
-    height: 32px;
-    border-radius: 6px;
+  /* Role badge in center */
+  .role-badge {
+    order: 2;
+    padding: 5px 12px;
+    font-size: 0.65rem;
   }
 
-  .user-menu-pill {
-    height: 36px;
-    padding: 2px;
+  .navbar-actions {
+    order: 3;
+    margin-left: 0;
+    gap: 6px;
   }
 
-  .user-role-badge {
-    font-size: 0.6rem;
-    padding: 3px 6px;
+  /* Bottom row: Nav tabs - full width */
+  .navbar-tabs {
+    order: 4;
+    width: 100%;
+    justify-content: center;
+    padding: 3px;
+    gap: 2px;
   }
 
-  .logout-icon-btn {
-    padding: var(--space-1);
+  .nav-tab {
+    flex: 1;
+    justify-content: center;
+    padding: 10px 8px;
+    font-size: 0.85rem;
+    font-weight: 600;
+  }
+
+  /* Hide language on small mobile */
+  .lang-dropdown {
+    display: none;
+  }
+
+  .icon-btn {
+    width: 34px;
+    height: 34px;
+  }
+
+  .icon-btn svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .logout-btn {
+    width: 34px;
+    height: 34px;
   }
 
   .app-main {
     padding: var(--space-2);
   }
-
-  /* Mobile nav - compact */
-  .header-nav {
-    gap: 0;
-    flex: 1;
-    justify-content: center;
-  }
-
-  .nav-link {
-    padding: var(--space-2);
-    font-size: 0.7rem;
-    white-space: nowrap;
-  }
 }
 
-@media (max-width: 380px) {
-  .header-content {
-    height: 48px;
+/* Very small phones */
+@media (max-width: 360px) {
+  .navbar-inner {
+    padding: 6px 8px;
   }
 
-  .brand-logo {
-    width: 28px;
-    height: 28px;
+  .brand-name {
+    font-size: 0.9rem;
   }
 
-  .user-role-badge {
-    display: none;
+  .role-badge {
+    padding: 4px 10px;
+    font-size: 0.6rem;
   }
 
-  .nav-link {
-    padding: var(--space-1) var(--space-2);
-    font-size: 0.65rem;
+  .nav-tab {
+    padding: 8px 6px;
+    font-size: 0.8rem;
+  }
+
+  .icon-btn {
+    width: 30px;
+    height: 30px;
+  }
+
+  .logout-btn {
+    width: 30px;
+    height: 30px;
   }
 }

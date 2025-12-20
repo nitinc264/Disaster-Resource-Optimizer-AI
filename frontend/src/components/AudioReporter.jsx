@@ -4,15 +4,12 @@ import { v4 as uuidv4 } from "uuid";
 import {
   Mic,
   AlertTriangle,
-  Lock,
   Hourglass,
   CheckCircle,
   Upload,
-  Save,
   Trash2,
-  WifiOff,
 } from "lucide-react";
-import { uploadAudioReport, getCurrentLocation, db } from "../services";
+import { uploadAudioReport, getCurrentLocation } from "../services";
 import "./AudioReporter.css";
 
 const AudioReporter = () => {
@@ -22,7 +19,6 @@ const AudioReporter = () => {
   const [audioUrl, setAudioUrl] = useState(null);
   const [error, setError] = useState(null);
   const [permissionStatus, setPermissionStatus] = useState("prompt"); // 'granted', 'denied', 'prompt'
-  const [isSaving, setIsSaving] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadSuccess, setUploadSuccess] = useState(null);
   const [recordingTime, setRecordingTime] = useState(0);

@@ -7,10 +7,9 @@ import {
   AlertTriangle,
   Loader2,
   X,
-  ImageIcon,
   Send,
 } from "lucide-react";
-import { getCurrentLocation, uploadPhotoReport, db } from "../services";
+import { getCurrentLocation, uploadPhotoReport } from "../services";
 import "./PhotoReporter.css";
 
 const PhotoReporter = () => {

@@ -11,13 +11,13 @@ import {
   AlertCircle,
   CheckCircle,
   Loader2,
+  X,
 } from "lucide-react";
 import {
   AudioReporter,
   PhotoReporter,
   VolunteerTaskList,
   FloatingSOSButton,
-  NotificationBell,
 } from "../components";
 import { missingPersonsAPI } from "../services/apiService";
 import "./VolunteerPage.css";
@@ -38,6 +38,7 @@ function MissingPersonReport() {
     reporterName: "",
     reporterPhone: "",
   });
+  const [photos, setPhotos] = useState([]);
 
   useEffect(() => {
     if (navigator.geolocation) {
@@ -52,12 +53,29 @@ function MissingPersonReport() {
     }
   }, []);
 
+  const handlePhotoChange = (e) => {
+    const files = Array.from(e.target.files);
+    const newPhotos = files.map((file) => ({
+      file,
+      preview: URL.createObjectURL(file),
+    }));
+    setPhotos([...photos, ...newPhotos]);
+  };
+
+  const removePhoto = (index) => {
+    URL.revokeObjectURL(photos[index].preview);
+    setPhotos(photos.filter((_, i) => i !== index));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
     setSubmitting(true);
 
     try {
+      // Create FormData for multipart upload
+      const submitData = new FormData();
+
       const report = {
         fullName: formData.fullName,
         age: parseInt(formData.age) || 0,
@@ -79,8 +97,20 @@ function MissingPersonReport() {
         },
       };
 
-      await missingPersonsAPI.report(report);
+      // Add data as JSON string
+      submitData.append("data", JSON.stringify(report));
+
+      // Add photo file if exists
+      if (photos.length > 0 && photos[0].file) {
+        submitData.append("photo", photos[0].file);
+      }
+
+      await missingPersonsAPI.report(submitData);
       setSuccess(true);
+
+      // Clean up photo previews
+      photos.forEach((photo) => URL.revokeObjectURL(photo.preview));
+
       setFormData({
         fullName: "",
         age: "",
@@ -90,6 +120,7 @@ function MissingPersonReport() {
         reporterName: "",
         reporterPhone: "",
       });
+      setPhotos([]);
       setTimeout(() => setSuccess(false), 5000);
     } catch (err) {
       setError(err.response?.data?.message || "Failed to submit report");
@@ -118,8 +149,8 @@ function MissingPersonReport() {
       <div className="form-header">
         <Search size={24} />
         <div>
-          <h3>Report Missing Person</h3>
-          <p>Help reunite families by reporting missing persons</p>
+          <h3>{t("missingPerson.title")}</h3>
+          <p>{t("missingPerson.subtitle")}</p>
         </div>
       </div>
 
@@ -131,11 +162,11 @@ function MissingPersonReport() {
       )}
 
       <div className="form-section">
-        <h4>Person Information</h4>
+        <h4>{t("missingPerson.personInfo")}</h4>
 
         <div className="form-group">
           <label>
-            <User size={14} /> Full Name *
+            <User size={14} /> {t("missingPerson.fullName")} *
           </label>
           <input
             type="text"
@@ -143,60 +174,100 @@ function MissingPersonReport() {
             onChange={(e) =>
               setFormData({ ...formData, fullName: e.target.value })
             }
-            placeholder="Enter the person's full name"
+            placeholder={t("missingPerson.fullNamePlaceholder")}
             required
           />
         </div>
 
         <div className="form-row">
           <div className="form-group">
-            <label>Age</label>
+            <label>{t("missingPerson.age")}</label>
             <input
               type="number"
               value={formData.age}
               onChange={(e) =>
                 setFormData({ ...formData, age: e.target.value })
               }
-              placeholder="Age"
+              placeholder={t("missingPerson.age")}
               min="0"
               max="150"
             />
           </div>
           <div className="form-group">
-            <label>Gender</label>
+            <label>{t("missingPerson.gender")}</label>
             <select
               value={formData.gender}
               onChange={(e) =>
                 setFormData({ ...formData, gender: e.target.value })
               }
             >
-              <option value="unknown">Unknown</option>
-              <option value="male">Male</option>
-              <option value="female">Female</option>
-              <option value="other">Other</option>
+              <option value="unknown">
+                {t("missingPerson.genderUnknown")}
+              </option>
+              <option value="male">{t("missingPerson.genderMale")}</option>
+              <option value="female">{t("missingPerson.genderFemale")}</option>
+              <option value="other">{t("missingPerson.genderOther")}</option>
             </select>
           </div>
         </div>
 
         <div className="form-group">
-          <label>Description</label>
+          <label>{t("missingPerson.description")}</label>
           <textarea
             value={formData.description}
             onChange={(e) =>
               setFormData({ ...formData, description: e.target.value })
             }
-            placeholder="Physical description, clothing, distinguishing features..."
+            placeholder={t("missingPerson.descriptionPlaceholder")}
             rows={3}
           />
+        </div>
+
+        <div className="form-group">
+          <label>
+            <Camera size={14} /> {t("missingPerson.photo")}
+          </label>
+          <div className="photo-upload-area">
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handlePhotoChange}
+              id="volunteer-missing-photo"
+              hidden
+            />
+            <label
+              htmlFor="volunteer-missing-photo"
+              className="photo-upload-btn"
+            >
+              <Camera size={20} />
+              <span>{t("missingPerson.addPhoto", "Add Photo")}</span>
+            </label>
+          </div>
+          {photos.length > 0 && (
+            <div className="photo-preview-grid">
+              {photos.map((photo, index) => (
+                <div key={index} className="photo-preview-item">
+                  <img src={photo.preview} alt={`Preview ${index + 1}`} />
+                  <button
+                    type="button"
+                    className="photo-remove-btn"
+                    onClick={() => removePhoto(index)}
+                  >
+                    <X size={14} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
       <div className="form-section">
-        <h4>Last Seen Location</h4>
+        <h4>{t("missingPerson.lastSeen")}</h4>
 
         <div className="form-group">
           <label>
-            <MapPin size={14} /> Location / Address
+            <MapPin size={14} /> {t("missingPerson.locationAddress")}
           </label>
           <input
             type="text"
@@ -204,7 +275,7 @@ function MissingPersonReport() {
             onChange={(e) =>
               setFormData({ ...formData, lastSeenAddress: e.target.value })
             }
-            placeholder="Where was the person last seen?"
+            placeholder={t("missingPerson.locationPlaceholder")}
           />
         </div>
 
@@ -212,19 +283,19 @@ function MissingPersonReport() {
           <div className="location-detected">
             <MapPin size={14} />
             <span>
-              Your location detected: {currentLocation.lat.toFixed(4)},{" "}
-              {currentLocation.lng.toFixed(4)}
+              {t("missingPerson.locationDetected")}:{" "}
+              {currentLocation.lat.toFixed(4)}, {currentLocation.lng.toFixed(4)}
             </span>
           </div>
         )}
       </div>
 
       <div className="form-section">
-        <h4>Your Contact Information</h4>
+        <h4>{t("missingPerson.contactInfo")}</h4>
 
         <div className="form-group">
           <label>
-            <User size={14} /> Your Name *
+            <User size={14} /> {t("missingPerson.yourName")} *
           </label>
           <input
             type="text"
@@ -232,14 +303,14 @@ function MissingPersonReport() {
             onChange={(e) =>
               setFormData({ ...formData, reporterName: e.target.value })
             }
-            placeholder="Your name"
+            placeholder={t("missingPerson.yourNamePlaceholder")}
             required
           />
         </div>
 
         <div className="form-group">
           <label>
-            <Phone size={14} /> Phone Number *
+            <Phone size={14} /> {t("missingPerson.phone")} *
           </label>
           <input
             type="tel"
@@ -247,7 +318,7 @@ function MissingPersonReport() {
             onChange={(e) =>
               setFormData({ ...formData, reporterPhone: e.target.value })
             }
-            placeholder="+1 234 567 8900"
+            placeholder={t("missingPerson.phonePlaceholder")}
             required
           />
         </div>
@@ -257,12 +328,12 @@ function MissingPersonReport() {
         {submitting ? (
           <>
             <Loader2 size={18} className="spin" />
-            Submitting...
+            {t("missingPerson.submitting")}
           </>
         ) : (
           <>
             <Search size={18} />
-            Submit Missing Person Report
+            {t("missingPerson.submit")}
           </>
         )}
       </button>
@@ -275,21 +346,18 @@ function VolunteerPage() {
   const [viewMode, setViewMode] = useState("tasks"); // 'tasks' | 'voice' | 'photo' | 'missing'
 
   const tabs = [
-    { id: "tasks", icon: ClipboardList, label: "My Tasks" },
-    { id: "voice", icon: Mic, label: "Voice Report" },
-    { id: "photo", icon: Camera, label: "Photo Report" },
-    { id: "missing", icon: Search, label: "Missing Person" },
+    { id: "tasks", icon: ClipboardList, label: t("volunteer.myTasks") },
+    { id: "voice", icon: Mic, label: t("volunteer.voiceReport") },
+    { id: "photo", icon: Camera, label: t("volunteer.photoReport") },
+    { id: "missing", icon: Search, label: t("volunteer.missingPerson") },
   ];
 
   return (
     <div className="volunteer-page">
       {/* Simple Header */}
       <header className="field-header">
-        <div className="field-header-top">
-          <h1>🚨 Field Operations</h1>
-          <NotificationBell />
-        </div>
-        <p>Report incidents and manage your assigned tasks</p>
+        <h1>🚨 {t("volunteer.title")}</h1>
+        <p>{t("volunteer.subtitle")}</p>
       </header>
 
       {/* Large, Easy-to-Tap Action Cards */}

@@ -56,6 +56,12 @@ export const loginWithPin = async (req, res) => {
     user.lastLogin = new Date();
     await user.save();
 
+    // Store user in session for 24-hour persistence
+    req.session.userId = user._id;
+    req.session.userPin = user.pin;
+    req.session.userRole = user.role;
+    req.session.loginTime = Date.now();
+
     res.json({
       success: true,
       data: {
@@ -63,6 +69,7 @@ export const loginWithPin = async (req, res) => {
         name: user.name,
         role: user.role,
         pin: user.pin,
+        sessionExpires: Date.now() + 24 * 60 * 60 * 1000, // 24 hours from now
       },
     });
   } catch (error) {
@@ -235,6 +242,77 @@ export const deactivateVolunteer = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Failed to deactivate user",
+    });
+  }
+};
+
+/**
+ * Check session status
+ * GET /api/auth/session
+ */
+export const checkSession = async (req, res) => {
+  try {
+    // Check if session exists and has userId
+    if (req.session?.userId) {
+      const user = await User.findById(req.session.userId).select("-__v");
+
+      if (user && user.isActive) {
+        return res.json({
+          success: true,
+          authenticated: true,
+          data: {
+            id: user._id,
+            name: user.name,
+            role: user.role,
+            pin: user.pin,
+            sessionExpires:
+              (req.session.loginTime || Date.now()) + 24 * 60 * 60 * 1000,
+          },
+        });
+      }
+    }
+
+    // No valid session - return unauthenticated (not an error)
+    return res.json({
+      success: true,
+      authenticated: false,
+    });
+  } catch (error) {
+    console.error("Check session error:", error);
+    // Even on error, return unauthenticated rather than 500
+    return res.json({
+      success: true,
+      authenticated: false,
+    });
+  }
+};
+
+/**
+ * Logout user and destroy session
+ * POST /api/auth/logout
+ */
+export const logoutUser = async (req, res) => {
+  try {
+    req.session.destroy((err) => {
+      if (err) {
+        console.error("Session destroy error:", err);
+        return res.status(500).json({
+          success: false,
+          message: "Logout failed",
+        });
+      }
+
+      res.clearCookie("connect.sid");
+      res.json({
+        success: true,
+        message: "Logged out successfully",
+      });
+    });
+  } catch (error) {
+    console.error("Logout error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Logout failed",
     });
   }
 };

@@ -4,13 +4,37 @@
  */
 
 import express from "express";
+import multer from "multer";
 import { v4 as uuidv4 } from "uuid";
 import MissingPerson from "../models/MissingPersonModel.js";
 import { sendSuccess, sendError } from "../utils/apiResponse.js";
 import { HTTP_STATUS } from "../constants/index.js";
 import { requireAuth, requireManager } from "../middleware/authMiddleware.js";
+import { uploadImageBuffer } from "../services/cloudinaryService.js";
 
 const router = express.Router();
+
+// Configure multer for photo uploads
+const photoUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB max
+  },
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = [
+      "image/jpeg",
+      "image/png",
+      "image/webp",
+      "image/heic",
+      "image/heif",
+    ];
+    if (allowedTypes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error("Unsupported image format"));
+    }
+  },
+});
 
 /**
  * GET /api/missing-persons
@@ -64,69 +88,107 @@ router.get("/missing-persons/:id", requireAuth, async (req, res) => {
 
 /**
  * POST /api/missing-persons
- * Report a missing person
+ * Report a missing person (supports photo upload)
  */
-router.post("/missing-persons", requireAuth, async (req, res) => {
-  try {
-    const {
-      fullName,
-      nickname,
-      age,
-      gender,
-      description,
-      photos,
-      lastSeenLocation,
-      lastSeenDate,
-      reporterInfo,
-      priority,
-    } = req.body;
+router.post(
+  "/missing-persons",
+  requireAuth,
+  photoUpload.single("photo"),
+  async (req, res) => {
+    try {
+      // Parse JSON data from form field if sent as FormData
+      let data = req.body;
+      if (req.body.data) {
+        try {
+          data = JSON.parse(req.body.data);
+        } catch {
+          data = req.body;
+        }
+      }
 
-    if (
-      !fullName ||
-      !lastSeenDate ||
-      !reporterInfo?.name ||
-      !reporterInfo?.phone
-    ) {
-      return sendError(
+      const {
+        fullName,
+        nickname,
+        age,
+        gender,
+        description,
+        lastSeenLocation,
+        lastSeenDate,
+        reporterInfo,
+        priority,
+      } = data;
+
+      if (!fullName || !reporterInfo?.name || !reporterInfo?.phone) {
+        return sendError(
+          res,
+          "Full name and reporter contact are required",
+          HTTP_STATUS.BAD_REQUEST
+        );
+      }
+
+      // Upload photo to Cloudinary if provided
+      let photos = [];
+      if (req.file) {
+        try {
+          const uploadResult = await uploadImageBuffer(req.file.buffer, {
+            folder: "disaster-response/missing-persons",
+            transformation: [
+              { width: 800, height: 800, crop: "limit" },
+              { quality: "auto:good" },
+            ],
+          });
+          photos = [
+            {
+              url: uploadResult.secure_url,
+              publicId: uploadResult.public_id,
+              isPrimary: true,
+              uploadedAt: new Date(),
+            },
+          ];
+        } catch (uploadError) {
+          console.error("Photo upload failed:", uploadError);
+          // Continue without photo if upload fails
+        }
+      }
+
+      // Determine priority based on vulnerability
+      let calculatedPriority = priority || "medium";
+      const parsedAge = parseInt(age);
+      if (parsedAge && parsedAge < 12) calculatedPriority = "critical";
+      else if (parsedAge && parsedAge > 70) calculatedPriority = "high";
+
+      const person = new MissingPerson({
+        caseId: `MP-${uuidv4().slice(0, 8).toUpperCase()}`,
+        fullName,
+        nickname,
+        age: parsedAge || undefined,
+        gender,
+        description:
+          typeof description === "string"
+            ? { physical: description }
+            : description || {},
+        photos,
+        lastSeenLocation: lastSeenLocation || {},
+        lastSeenDate: lastSeenDate ? new Date(lastSeenDate) : new Date(),
+        reporterInfo,
+        priority: calculatedPriority,
+        isChild: parsedAge && parsedAge < 18,
+        isElderly: parsedAge && parsedAge > 65,
+        hasMedicalNeeds: data.medicalInfo ? true : false,
+      });
+
+      await person.save();
+      sendSuccess(res, person, "Missing person report submitted successfully");
+    } catch (error) {
+      console.error("Error reporting missing person:", error);
+      sendError(
         res,
-        "Full name, last seen date, and reporter contact are required",
-        HTTP_STATUS.BAD_REQUEST
+        "Failed to submit report",
+        HTTP_STATUS.INTERNAL_SERVER_ERROR
       );
     }
-
-    // Determine priority based on vulnerability
-    let calculatedPriority = priority || "medium";
-    if (age && age < 12) calculatedPriority = "critical";
-    else if (age && age > 70) calculatedPriority = "high";
-
-    const person = new MissingPerson({
-      caseId: `MP-${uuidv4().slice(0, 8).toUpperCase()}`,
-      fullName,
-      nickname,
-      age,
-      gender,
-      description: description || {},
-      photos: photos || [],
-      lastSeenLocation: lastSeenLocation || {},
-      lastSeenDate: new Date(lastSeenDate),
-      reporterInfo,
-      priority: calculatedPriority,
-      isChild: age && age < 18,
-      isElderly: age && age > 65,
-      hasMedicalNeeds: description?.medicalConditions ? true : false,
-    });
-
-    await person.save();
-    sendSuccess(res, person, "Missing person report submitted successfully");
-  } catch (error) {
-    console.error("Error reporting missing person:", error);
-    sendError(
-      res,
-      "Failed to submit report",
-      HTTP_STATUS.INTERNAL_SERVER_ERROR
-    );
   }
-});
+);
 
 /**
  * PATCH /api/missing-persons/:id/found

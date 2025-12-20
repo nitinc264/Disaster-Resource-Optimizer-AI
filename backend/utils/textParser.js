@@ -27,7 +27,7 @@ export function extractLocationHint(text = "") {
   return null;
 }
 
-export function extractNeedType(text = "") {
+function extractNeedType(text = "") {
   for (const { pattern, type } of NEED_TYPE_PATTERNS) {
     if (pattern.test(text)) {
       return type;
@@ -36,7 +36,7 @@ export function extractNeedType(text = "") {
   return "Other";
 }
 
-export function extractUrgency(text = "") {
+function extractUrgency(text = "") {
   for (const { pattern, level } of URGENCY_PATTERNS) {
     if (pattern.test(text)) {
       return level;

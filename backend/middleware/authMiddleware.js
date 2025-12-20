@@ -1,10 +1,26 @@
 import User from "../models/UserModel.js";
 
 /**
- * Middleware to require authentication via PIN header
+ * Middleware to require authentication via session or PIN header
+ * Sessions persist for 24 hours
  */
 export const requireAuth = async (req, res, next) => {
   try {
+    // First check session (24-hour persistent login)
+    if (req.session && req.session.userId) {
+      const user = await User.findOne({
+        _id: req.session.userId,
+        isActive: true,
+      });
+      if (user) {
+        req.user = user;
+        return next();
+      }
+      // Session exists but user not found/inactive - clear session
+      req.session.destroy();
+    }
+
+    // Fallback to PIN header authentication
     const pin = req.headers["x-auth-pin"];
 
     if (!pin) {
@@ -40,6 +56,24 @@ export const requireAuth = async (req, res, next) => {
  */
 export const requireManager = async (req, res, next) => {
   try {
+    // First check session
+    if (
+      req.session &&
+      req.session.userId &&
+      req.session.userRole === "manager"
+    ) {
+      const user = await User.findOne({
+        _id: req.session.userId,
+        isActive: true,
+        role: "manager",
+      });
+      if (user) {
+        req.user = user;
+        return next();
+      }
+    }
+
+    // Fallback to PIN header
     const pin = req.headers["x-auth-pin"];
 
     if (!pin) {

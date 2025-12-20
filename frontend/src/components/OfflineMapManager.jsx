@@ -1,5 +1,6 @@
 import { useState, useRef } from "react";
 import { useMap } from "react-leaflet";
+import { useTranslation } from "react-i18next";
 import { db } from "../services";
 import "./OfflineMapManager.css";
 
@@ -13,6 +14,7 @@ const TILE_SERVERS = [
 // Main OfflineMapManager Component
 const OfflineMapManager = () => {
   const map = useMap();
+  const { t } = useTranslation();
   const [isDownloading, setIsDownloading] = useState(false);
   const [progress, setProgress] = useState({
     current: 0,
@@ -163,8 +165,8 @@ const OfflineMapManager = () => {
       }
 
       const message = abortControllerRef.current.signal.aborted
-        ? `Download cancelled.\nDownloaded: ${downloaded}\nCached: ${cached}`
-        : `Download complete!\nNew tiles: ${downloaded}\nAlready cached: ${cached}\nFailed: ${failed}`;
+        ? t("map.downloadCancelled")
+        : t("map.downloadComplete");
 
       alert(message);
     } catch (error) {
@@ -185,10 +187,10 @@ const OfflineMapManager = () => {
 
   // Clear cached tiles
   const clearCache = async () => {
-    if (confirm("Clear all cached map tiles?")) {
+    if (confirm(t("map.clearCacheConfirm"))) {
       try {
         await db.mapTiles.clear();
-        alert("Cache cleared!");
+        alert(t("map.cacheCleared"));
       } catch (error) {
         alert("Error clearing cache: " + error.message);
       }
@@ -200,16 +202,16 @@ const OfflineMapManager = () => {
       {!isDownloading ? (
         <div className="manager-buttons">
           <button onClick={downloadSector} className="download-btn">
-            Download Sector
+            {t("map.downloadSector")}
           </button>
           <button onClick={clearCache} className="clear-btn">
-            Clear Cache
+            {t("map.clearCache")}
           </button>
         </div>
       ) : (
         <div className="download-progress">
           <div className="progress-header">
-            <span>Downloading tiles...</span>
+            <span>{t("map.downloading")}...</span>
             <button onClick={cancelDownload} className="cancel-btn">
               ✕
             </button>

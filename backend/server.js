@@ -11,6 +11,7 @@ dotenv.config();
 
 import express from "express";
 import cors from "cors";
+import session from "express-session";
 import path from "path";
 import fs from "fs";
 import { fileURLToPath } from "url";
@@ -196,7 +197,27 @@ const app = express();
 // =============================================================================
 
 // CORS middleware
-app.use(cors(config.cors || {}));
+app.use(
+  cors({
+    ...config.cors,
+    credentials: true, // Allow cookies to be sent with requests
+  })
+);
+
+// Session middleware - 24 hour persistence
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET || "disaster-response-secret-key",
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      secure: false, // Set to true in production with HTTPS
+      maxAge: 24 * 60 * 60 * 1000, // 24 hours
+      httpOnly: true,
+      sameSite: "lax",
+    },
+  })
+);
 
 // Body parsing middleware
 app.use(express.json());

@@ -282,11 +282,16 @@ export async function getMissingPersons(options = {}) {
 }
 
 /**
- * Report a missing person
+ * Report a missing person (supports photo upload)
+ * @param {Object|FormData} data - Person data or FormData with photo
  */
-export async function reportMissingPerson(person) {
+export async function reportMissingPerson(data) {
   try {
-    const response = await apiClient.post("/missing-persons", person);
+    // Check if data is FormData (has photo)
+    const isFormData = data instanceof FormData;
+    const response = await apiClient.post("/missing-persons", data, {
+      headers: isFormData ? { "Content-Type": "multipart/form-data" } : {},
+    });
     return response.data.data;
   } catch (error) {
     console.error("Error reporting missing person:", error);
@@ -447,48 +452,6 @@ export const sheltersAPI = {
   },
 };
 
-/**
- * Add urgent need to shelter
- */
-export async function addShelterNeed(shelterId, need) {
-  try {
-    const response = await apiClient.post(`/shelters/${shelterId}/needs`, need);
-    return response.data.data;
-  } catch (error) {
-    console.error("Error adding need:", error);
-    throw error;
-  }
-}
-
-/**
- * Check-in at shelter
- */
-export async function shelterCheckIn(shelterId, checkInData) {
-  try {
-    const response = await apiClient.patch(
-      `/shelters/${shelterId}/checkin`,
-      checkInData
-    );
-    return response.data.data;
-  } catch (error) {
-    console.error("Error checking in:", error);
-    throw error;
-  }
-}
-
-/**
- * Get shelter statistics summary
- */
-export async function getShelterStats() {
-  try {
-    const response = await apiClient.get("/shelters/stats/summary");
-    return response.data.data;
-  } catch (error) {
-    console.error("Error fetching shelter stats:", error);
-    throw error;
-  }
-}
-
 // ============================================
 // Route Calculation API
 // ============================================
@@ -509,44 +472,6 @@ export async function getVolunteerRoute(origin, destination) {
     return response.data.data;
   } catch (error) {
     console.error("Error calculating volunteer route:", error);
-    throw error;
-  }
-}
-
-/**
- * Calculate a general route between waypoints
- * @param {Array} waypoints - Array of {lat, lon} objects
- * @param {Object} options - Optional configuration {profile, steps}
- * @returns {Promise<Object>} Route data
- */
-export async function calculateRoute(waypoints, options = {}) {
-  try {
-    const response = await apiClient.post("/routes/calculate", {
-      waypoints,
-      ...options,
-    });
-    return response.data.data;
-  } catch (error) {
-    console.error("Error calculating route:", error);
-    throw error;
-  }
-}
-
-/**
- * Calculate an optimized route for multiple stops (TSP)
- * @param {Array} waypoints - Array of {lat, lon} objects
- * @param {Object} options - Optional configuration {roundtrip}
- * @returns {Promise<Object>} Optimized route data with order
- */
-export async function calculateOptimizedRoute(waypoints, options = {}) {
-  try {
-    const response = await apiClient.post("/routes/optimize", {
-      waypoints,
-      ...options,
-    });
-    return response.data.data;
-  } catch (error) {
-    console.error("Error calculating optimized route:", error);
     throw error;
   }
 }

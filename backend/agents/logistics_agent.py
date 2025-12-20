@@ -3,12 +3,12 @@
 # Context: 
 # This is "The Logistics Agent" for the Aegis AI Disaster Response System.
 # It is a background Python script that monitors a MongoDB database for "Critical" disaster reports 
-# and automatically generates optimized rescue routes using Google OR-Tools.
+# and automatically generates optimized rescue routes using OSRM (Open Source Routing Machine).
 #
 # Dependencies:
 # - pymongo (Database)
-# - ortools.constraint_solver (Routing Math)
-# - math (for Haversine formula)
+# - requests (HTTP calls to OSRM)
+# - math (for Haversine formula as fallback)
 #
 # Data Contract (MongoDB):
 # - Input Collection: 'reports'
@@ -19,30 +19,24 @@
 # Logic Flow (Infinite Loop):
 # 1. Poll MongoDB every 5 seconds.
 # 2. Query: Find all reports where 'severity' > 8 AND 'dispatch_status' == 'Unassigned'.
-# 3. Trigger Condition: If fewer than 5 reports are found, continue (wait for cluster).
-# 4. If 5+ reports exist:
-#    - Extract latitudes/longitudes.
-#    - Calculate a Distance Matrix between all points using the Haversine Formula (Earth curve distance).
-#    - Initialize Google OR-Tools (RoutingIndexManager, RoutingModel).
-#    - Set parameters: 3 Vehicles, Depot is the first location (or fixed Base Camp).
-#    - Solve for: "Path Cheapest Arc" (Minimize total distance).
-#    - Parse the solution: Extract the ordered list of coordinates for each vehicle.
-# 5. Atomic Update:
+# 3. For each report/need:
+#    - Determine the appropriate station type (police, hospital, fire, rescue)
+#    - Find the nearest station of that type
+#    - Call OSRM to get road-snapped route geometry
+# 4. Atomic Update:
 #    - Insert a new document into 'missions' collection with the generated routes.
 #    - Update all processed reports: Set 'dispatch_status' = 'Assigned' (to prevent re-routing).
-# 6. Logging: Print clear updates like "[Logistics] 🚚 Cluster detected...", "[Logistics] 🗺️ Route generated."
-#
-# Special Math Helper:
-# - Define a helper function `haversine(lat1, lon1, lat2, lon2)` that returns distance in Meters.
-#
-# Start coding the imports and the main loop below:
+# 5. Logging: Print clear updates like "[Logistics] 🚚 Processing...", "[Logistics] 🗺️ Route generated."
 
 import time
 import math
+import requests
 from datetime import datetime, timezone
 from pymongo import MongoClient
-from ortools.constraint_solver import routing_enums_pb2
-from ortools.constraint_solver import pywrapcp
+
+# OSRM Configuration
+OSRM_BASE_URL = "https://router.project-osrm.org"
+OSRM_TIMEOUT = 10  # seconds
 
 # MongoDB Connection Configuration
 MONGO_URI = "mongodb://localhost:27017"
@@ -144,125 +138,103 @@ def haversine(lat1, lon1, lat2, lon2):
     return R * c
 
 
-def create_distance_matrix(locations):
+def get_osrm_route(waypoints, profile="driving"):
     """
-    Create a distance matrix between all locations using the Haversine formula.
+    Get a road-snapped route from OSRM between waypoints.
     
     Args:
-        locations: List of (lat, lng) tuples
+        waypoints: List of (lat, lon) tuples
+        profile: OSRM profile - 'driving', 'walking', 'cycling'
     
     Returns:
-        2D list representing distances between all pairs of locations
+        dict with 'geometry' (list of [lat, lon]), 'distance' (meters), 'duration' (seconds)
+        or None if OSRM fails
     """
-    num_locations = len(locations)
-    distance_matrix = []
+    if len(waypoints) < 2:
+        return None
     
-    for i in range(num_locations):
-        row = []
-        for j in range(num_locations):
-            if i == j:
-                row.append(0)
-            else:
-                dist = haversine(
-                    locations[i][0], locations[i][1],
-                    locations[j][0], locations[j][1]
-                )
-                row.append(int(dist))  # OR-Tools requires integers
-        distance_matrix.append(row)
+    # OSRM expects coordinates as lon,lat (reversed from our lat,lon format)
+    coords_str = ";".join([f"{lon},{lat}" for lat, lon in waypoints])
+    url = f"{OSRM_BASE_URL}/route/v1/{profile}/{coords_str}"
     
-    return distance_matrix
+    params = {
+        "overview": "full",
+        "geometries": "geojson",
+        "steps": "false"
+    }
+    
+    try:
+        response = requests.get(url, params=params, timeout=OSRM_TIMEOUT)
+        data = response.json()
+        
+        if data.get("code") != "Ok" or not data.get("routes"):
+            print(f"[Logistics] ⚠️ OSRM returned no routes: {data.get('code')}")
+            return None
+        
+        osrm_route = data["routes"][0]
+        
+        # Convert GeoJSON coordinates (lon, lat) to our format (lat, lon)
+        geometry = [[coord[1], coord[0]] for coord in osrm_route["geometry"]["coordinates"]]
+        
+        return {
+            "geometry": geometry,
+            "distance": osrm_route["distance"],  # meters
+            "duration": osrm_route["duration"],  # seconds
+        }
+        
+    except requests.exceptions.Timeout:
+        print("[Logistics] ⚠️ OSRM request timed out")
+        return None
+    except requests.exceptions.RequestException as e:
+        print(f"[Logistics] ⚠️ OSRM request failed: {e}")
+        return None
+    except Exception as e:
+        print(f"[Logistics] ⚠️ Error parsing OSRM response: {e}")
+        return None
 
 
-def solve_vrp(locations):
+def get_route_with_fallback(origin, destination, station_type, station_name):
     """
-    Solve the Vehicle Routing Problem using Google OR-Tools.
+    Get route from OSRM with fallback to straight-line if OSRM fails.
     
     Args:
-        locations: List of (lat, lng) tuples where index 0 is the depot
+        origin: (lat, lon) tuple for start point
+        destination: (lat, lon) tuple for end point
+        station_type: Type of station (for metadata)
+        station_name: Name of station (for metadata)
     
     Returns:
-        List of routes, where each route is a list of (lat, lng) coordinates
+        Route dictionary with geometry and metadata
     """
-    if len(locations) < 2:
-        return []
+    waypoints = [origin, destination]
     
-    # Create distance matrix
-    distance_matrix = create_distance_matrix(locations)
+    # Try OSRM first
+    osrm_result = get_osrm_route(waypoints)
     
-    # Create the routing index manager
-    # Args: num_locations, num_vehicles, depot_index
-    manager = pywrapcp.RoutingIndexManager(
-        len(locations),
-        NUM_VEHICLES,
-        0  # Depot is the first location
-    )
-    
-    # Create the routing model
-    routing = pywrapcp.RoutingModel(manager)
-    
-    # Create the distance callback
-    def distance_callback(from_index, to_index):
-        from_node = manager.IndexToNode(from_index)
-        to_node = manager.IndexToNode(to_index)
-        return distance_matrix[from_node][to_node]
-    
-    transit_callback_index = routing.RegisterTransitCallback(distance_callback)
-    
-    # Define cost of each arc (distance)
-    routing.SetArcCostEvaluatorOfAllVehicles(transit_callback_index)
-    
-    # Add distance dimension for optimization
-    dimension_name = 'Distance'
-    routing.AddDimension(
-        transit_callback_index,
-        0,  # No slack
-        100000000,  # Maximum distance per vehicle (100km)
-        True,  # Start cumul at zero
-        dimension_name
-    )
-    distance_dimension = routing.GetDimensionOrDie(dimension_name)
-    distance_dimension.SetGlobalSpanCostCoefficient(100)
-    
-    # Set search parameters
-    search_parameters = pywrapcp.DefaultRoutingSearchParameters()
-    search_parameters.first_solution_strategy = (
-        routing_enums_pb2.FirstSolutionStrategy.PATH_CHEAPEST_ARC
-    )
-    search_parameters.local_search_metaheuristic = (
-        routing_enums_pb2.LocalSearchMetaheuristic.GUIDED_LOCAL_SEARCH
-    )
-    search_parameters.time_limit.seconds = 30
-    
-    # Solve the problem
-    solution = routing.SolveWithParameters(search_parameters)
-    
-    if not solution:
-        print("[Logistics] ⚠️ No solution found for routing problem")
-        return []
-    
-    # Extract routes from solution
-    routes = []
-    for vehicle_id in range(NUM_VEHICLES):
-        route = []
-        index = routing.Start(vehicle_id)
-        
-        while not routing.IsEnd(index):
-            node_index = manager.IndexToNode(index)
-            route.append(list(locations[node_index]))  # [lat, lng]
-            index = solution.Value(routing.NextVar(index))
-        
-        # Add the final node (return to depot)
-        node_index = manager.IndexToNode(index)
-        route.append(list(locations[node_index]))
-        
-        if len(route) >= 2:  # Include routes with at least one stop
-            routes.append({
-                'vehicle_id': vehicle_id,
-                'route': route,
-                'total_distance': solution.Value(routing.GetDimensionOrDie('Distance').CumulVar(index))
-            })
-    
-    return routes
+    if osrm_result:
+        # OSRM success - use road-snapped route
+        return {
+            'vehicle_id': 0,
+            'route': osrm_result['geometry'],
+            'total_distance': osrm_result['distance'],
+            'duration': osrm_result['duration'],
+            'station_type': station_type,
+            'station_name': station_name,
+            'is_road_snapped': True,
+        }
+    else:
+        # Fallback to straight-line route
+        print(f"[Logistics] ⚠️ Using fallback straight-line route")
+        distance = haversine(origin[0], origin[1], destination[0], destination[1])
+        return {
+            'vehicle_id': 0,
+            'route': [list(origin), list(destination)],
+            'total_distance': distance,
+            'duration': distance / 13.89,  # Assume ~50 km/h average
+            'station_type': station_type,
+            'station_name': station_name,
+            'is_road_snapped': False,
+        }
 
 
 def get_critical_reports(db):
@@ -609,31 +581,18 @@ def run_logistics_agent():
                         print(f"[Logistics]    Need type: {station_type.upper()}")
                         print(f"[Logistics]    Dispatching from: {station['name']}")
                         
-                        # Create route: Station -> Report Location
+                        # Create route: Station -> Report Location using OSRM
                         depot_location = (station['lat'], station['lon'])
                         report_location = (report_lat, report_lng)
                         
-                        # For single destination, create simple route
-                        locations = [depot_location, report_location]
-                        
-                        # Generate route
-                        routes = solve_vrp(locations)
-                        
-                        if not routes:
-                            # Fallback: create simple direct route
-                            routes = [{
-                                'vehicle_id': 0,
-                                'route': [list(depot_location), list(report_location), list(depot_location)],
-                                'total_distance': haversine(depot_location[0], depot_location[1], 
-                                                           report_location[0], report_location[1]) * 2,
-                                'station_type': station_type,
-                                'station_name': station['name'],
-                            }]
-                        else:
-                            # Add station info to routes
-                            for route in routes:
-                                route['station_type'] = station_type
-                                route['station_name'] = station['name']
+                        # Get road-snapped route from OSRM
+                        route = get_route_with_fallback(
+                            depot_location, 
+                            report_location, 
+                            station_type, 
+                            station['name']
+                        )
+                        routes = [route]
                         
                         # Save mission
                         station_info = {
@@ -646,8 +605,9 @@ def run_logistics_agent():
                         
                         # Log success
                         distance_km = routes[0]['total_distance'] / 1000 if routes else 0
+                        route_type = "🛣️ road-snapped" if route.get('is_road_snapped') else "📏 straight-line"
                         print(f"[Logistics] ✅ Mission {mission_id} created (Report)")
-                        print(f"[Logistics]    🚗 {station_type.upper()} unit dispatched, {distance_km:.2f} km")
+                        print(f"[Logistics]    🚗 {station_type.upper()} unit dispatched, {distance_km:.2f} km ({route_type})")
                         
                     except Exception as e:
                         print(f"[Logistics] ❌ Error processing report: {e}")
@@ -697,31 +657,18 @@ def run_logistics_agent():
                         print(f"[Logistics]    Station type: {station_type.upper()}")
                         print(f"[Logistics]    Dispatching from: {station['name']}")
                         
-                        # Create route: Station -> Need Location
+                        # Create route: Station -> Need Location using OSRM
                         depot_location = (station['lat'], station['lon'])
                         need_location = (need_lat, need_lon)
                         
-                        # For single destination, create simple route
-                        locations = [depot_location, need_location]
-                        
-                        # Generate route
-                        routes = solve_vrp(locations)
-                        
-                        if not routes:
-                            # Fallback: create simple direct route
-                            routes = [{
-                                'vehicle_id': 0,
-                                'route': [list(depot_location), list(need_location), list(depot_location)],
-                                'total_distance': haversine(depot_location[0], depot_location[1], 
-                                                           need_location[0], need_location[1]) * 2,
-                                'station_type': station_type,
-                                'station_name': station['name'],
-                            }]
-                        else:
-                            # Add station info to routes
-                            for route in routes:
-                                route['station_type'] = station_type
-                                route['station_name'] = station['name']
+                        # Get road-snapped route from OSRM
+                        route = get_route_with_fallback(
+                            depot_location, 
+                            need_location, 
+                            station_type, 
+                            station['name']
+                        )
+                        routes = [route]
                         
                         # Save mission for verified need
                         station_info = {
@@ -734,8 +681,9 @@ def run_logistics_agent():
                         
                         # Log success
                         distance_km = routes[0]['total_distance'] / 1000 if routes else 0
+                        route_type = "🛣️ road-snapped" if route.get('is_road_snapped') else "📏 straight-line"
                         print(f"[Logistics] ✅ Mission {mission_id} created (Verified Need)")
-                        print(f"[Logistics]    🚗 {station_type.upper()} unit dispatched, {distance_km:.2f} km")
+                        print(f"[Logistics]    🚗 {station_type.upper()} unit dispatched, {distance_km:.2f} km ({route_type})")
                         
                     except Exception as e:
                         print(f"[Logistics] ❌ Error processing verified need: {e}")

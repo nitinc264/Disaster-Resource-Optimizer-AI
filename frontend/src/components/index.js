@@ -8,9 +8,7 @@ export { default as MissionPanel } from "./MissionPanel.jsx";
 
 // New feature components
 export {
-  TriageBadge,
   TriageAlertBanner,
-  getTriageCategory,
   getTriageCategoryFromUrgency,
 } from "./TriageBadge.jsx";
 export { default as ResourceTracker } from "./ResourceTracker.jsx";
@@ -19,10 +17,6 @@ export { default as AnalyticsDashboard } from "./AnalyticsDashboard.jsx";
 // High Priority Safety Features
 export { default as SOSButton, FloatingSOSButton } from "./SOSButton.jsx";
 export { default as ResourceInventory } from "./ResourceInventory.jsx";
-export {
-  default as AlertNotifications,
-  NotificationBell,
-} from "./AlertNotifications.jsx";
 
 // Medium Priority Features
 export { default as RoadConditions } from "./RoadConditions.jsx";
@@ -33,8 +27,6 @@ export { default as ShelterManagement } from "./ShelterManagement.jsx";
 export {
   default as AccessibilitySettings,
   AccessibilityProvider,
-  AccessibilityToggle,
-  SkipToContent,
   useAccessibility,
 } from "./AccessibilitySettings.jsx";
 

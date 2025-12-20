@@ -8,6 +8,9 @@ import {
 import {
   loginWithPin as loginService,
   logout as logoutService,
+  checkSession,
+  getStoredAuth,
+  initializeAuth,
 } from "../services/authService";
 
 const AuthContext = createContext(null);
@@ -16,11 +19,32 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Always require PIN on website first load - don't auto-restore session
+  // Check session on app load for 24-hour persistence
   useEffect(() => {
-    // Just set loading to false, don't auto-login from localStorage
-    // User must always enter PIN when website first starts
-    setLoading(false);
+    const restoreSession = async () => {
+      try {
+        // First check local storage for quick restore
+        const storedAuth = getStoredAuth();
+
+        if (storedAuth) {
+          // Initialize auth headers
+          initializeAuth();
+
+          // Verify session is still valid on server
+          const sessionStatus = await checkSession();
+
+          if (sessionStatus.authenticated) {
+            setUser(sessionStatus.user);
+          }
+        }
+      } catch (error) {
+        console.error("Session restore error:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    restoreSession();
   }, []);
 
   const login = useCallback(async (pin) => {
@@ -31,8 +55,8 @@ export function AuthProvider({ children }) {
     return result;
   }, []);
 
-  const logout = useCallback(() => {
-    logoutService();
+  const logout = useCallback(async () => {
+    await logoutService();
     setUser(null);
   }, []);
 
