@@ -91,6 +91,41 @@ const reportSchema = new mongoose.Schema(
       },
     },
 
+    // Emergency Station Status - tracks alert routing
+    emergencyStatus: {
+      type: String,
+      enum: [
+        "none", // Not yet assigned (gray)
+        "pending", // Verified but not assigned (green)
+        "assigned", // Assigned to station (yellow)
+        "dispatched", // Station dispatched units (orange)
+        "rejected", // Rejected by station, needs reroute (red)
+        "resolved", // Emergency resolved
+      ],
+      default: "none",
+    },
+
+    // Emergency alert reference
+    emergencyAlertId: {
+      type: String,
+      default: null,
+    },
+
+    // Assigned station info
+    assignedStation: {
+      stationId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "EmergencyStation",
+        default: null,
+      },
+      stationName: String,
+      stationType: String,
+      assignedAt: Date,
+      dispatchedAt: Date,
+      rejectedAt: Date,
+      rejectionReason: String,
+    },
+
     // Metadata
     timestamp: {
       type: Date,

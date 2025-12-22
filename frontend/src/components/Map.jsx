@@ -1,5 +1,5 @@
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
@@ -8,6 +8,7 @@ import "./Map.css";
 import MapPin from "./MapPin";
 import RouteLine from "./RouteLine";
 import OfflineMapManager from "./OfflineMapManager";
+import { getAllStations } from "../services/emergencyStationService";
 
 // User location icon for volunteer's current position
 const createUserLocationIcon = () =>
@@ -65,42 +66,6 @@ const getStationIcon = (type, isRerouteMode) => {
   );
 };
 
-// Resource Stations Data (matching backend)
-const RESOURCE_STATIONS = [
-  {
-    type: "police",
-    name: "Police Station 1 - Pimpri",
-    lat: 18.6073,
-    lon: 73.7654,
-  },
-  {
-    type: "police",
-    name: "Police Station 2 - Chinchwad",
-    lat: 18.64,
-    lon: 73.7945,
-  },
-  { type: "hospital", name: "Hospital 1 - Wakad", lat: 18.5135, lon: 73.7604 },
-  {
-    type: "hospital",
-    name: "Hospital 2 - Hadapsar",
-    lat: 18.4852,
-    lon: 73.9047,
-  },
-  {
-    type: "hospital",
-    name: "Hospital 3 - Hinjewadi",
-    lat: 18.587,
-    lon: 73.7785,
-  },
-  { type: "fire", name: "Fire Station - Swargate", lat: 18.4549, lon: 73.8563 },
-  {
-    type: "rescue",
-    name: "Rescue Station - Shivajinagar",
-    lat: 18.5196,
-    lon: 73.8553,
-  },
-];
-
 // Colors for different station type routes
 const ROUTE_COLORS = {
   police: "#3b82f6",
@@ -124,6 +89,26 @@ function Map({
   isRouteFallback = false,
 }) {
   const { t } = useTranslation();
+  const [registeredStations, setRegisteredStations] = useState([]);
+
+  // Fetch registered emergency stations from the API
+  useEffect(() => {
+    if (!volunteerMode) {
+      const fetchStations = async () => {
+        try {
+          const response = await getAllStations({ status: "active" });
+          if (response.success && response.data?.stations) {
+            setRegisteredStations(response.data.stations);
+          }
+        } catch (error) {
+          console.error("Failed to fetch emergency stations:", error);
+          setRegisteredStations([]); // Fallback to empty array on error
+        }
+      };
+      fetchStations();
+    }
+  }, [volunteerMode]);
+
   // Center on Pune area to show all stations, or on volunteer location if in volunteer mode
   const centerPosition = useMemo(() => {
     if (volunteerMode && volunteerLocation) {
@@ -159,15 +144,20 @@ function Map({
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
       />
 
-      {/* 1. Render Resource Station Markers - Only for managers, not volunteers */}
+      {/* 1. Render Registered Emergency Station Markers - Only for managers, not volunteers */}
       {!volunteerMode &&
-        RESOURCE_STATIONS.map((station, index) => (
+        registeredStations.map((station) => (
           <Marker
-            key={`station-${index}-${isRerouteMode}`}
-            position={[station.lat, station.lon]}
+            key={`station-${station._id}-${isRerouteMode}`}
+            position={[station.location.lat, station.location.lng]}
             icon={getStationIcon(station.type, isRerouteMode)}
             eventHandlers={{
-              click: (e) => handleStationClick(e, station),
+              click: (e) =>
+                handleStationClick(e, {
+                  ...station,
+                  lat: station.location.lat,
+                  lon: station.location.lng,
+                }),
             }}
           >
             {!isRerouteMode && (
@@ -178,6 +168,22 @@ function Map({
                   <span className="station-type">
                     {station.type.toUpperCase()}
                   </span>
+                  <br />
+                  <small style={{ color: "#666" }}>
+                    {station.location.address ||
+                      `${station.location.lat.toFixed(
+                        4
+                      )}, ${station.location.lng.toFixed(4)}`}
+                  </small>
+                  <br />
+                  <small
+                    style={{
+                      color:
+                        station.status === "active" ? "#10b981" : "#f59e0b",
+                    }}
+                  >
+                    ● {station.status}
+                  </small>
                 </div>
               </Popup>
             )}

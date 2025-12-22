@@ -9,6 +9,7 @@ import missingPersonRoutes from "./missingPersonRoutes.js";
 import shelterRoutes from "./shelterRoutes.js";
 import authRoutes from "./authRoutes.js";
 import routeRoutes from "./routeRoutes.js";
+import emergencyStationRoutes from "./emergencyStationRoutes.js";
 
 const router = express.Router();
 
@@ -22,5 +23,6 @@ router.use(roadConditionRoutes);
 router.use(missingPersonRoutes);
 router.use(shelterRoutes);
 router.use(routeRoutes);
+router.use("/emergency-stations", emergencyStationRoutes);
 
 export default router;

@@ -23,6 +23,9 @@ export { default as RoadConditions } from "./RoadConditions.jsx";
 export { default as MissingPersons } from "./MissingPersons.jsx";
 export { default as ShelterManagement } from "./ShelterManagement.jsx";
 
+// Emergency Station Management
+export { default as EmergencyStations } from "./EmergencyStations.jsx";
+
 // Accessibility components
 export {
   default as AccessibilitySettings,

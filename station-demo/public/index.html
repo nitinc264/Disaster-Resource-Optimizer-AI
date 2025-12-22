@@ -1,0 +1,1827 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Emergency Station Dashboard</title>
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css"
+    />
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.min.js"></script>
+    <style>
+      :root {
+        --primary-color: #f97316;
+        --bg-dark: #1a1a2e;
+        --bg-card: #16213e;
+        --text-primary: #ffffff;
+        --text-secondary: #a0aec0;
+        --danger: #ef4444;
+        --warning: #f59e0b;
+        --success: #10b981;
+        --info: #3b82f6;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: var(--bg-dark);
+        color: var(--text-primary);
+        min-height: 100vh;
+      }
+
+      /* Header */
+      .header {
+        background: var(--bg-card);
+        padding: 1rem 2rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 3px solid var(--primary-color);
+        position: sticky;
+        top: 0;
+        z-index: 1000;
+      }
+
+      .station-info {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+      }
+
+      .station-emoji {
+        font-size: 2.5rem;
+      }
+
+      .station-name {
+        font-size: 1.5rem;
+        font-weight: bold;
+      }
+
+      .station-type {
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        font-size: 0.8rem;
+        letter-spacing: 1px;
+      }
+
+      .status-indicator {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      .status-dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: var(--success);
+        animation: pulse 2s infinite;
+      }
+
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.5;
+        }
+      }
+
+      /* Main Content */
+      .main-content {
+        display: grid;
+        grid-template-columns: 1fr 400px;
+        gap: 1rem;
+        padding: 1rem;
+        height: calc(100vh - 80px);
+      }
+
+      /* Map Section */
+      .map-section {
+        background: var(--bg-card);
+        border-radius: 12px;
+        overflow: hidden;
+        position: relative;
+      }
+
+      #map {
+        height: 100%;
+        width: 100%;
+      }
+
+      /* Alerts Panel */
+      .alerts-panel {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+      }
+
+      .panel-header {
+        background: var(--bg-card);
+        padding: 1rem;
+        border-radius: 12px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .panel-title {
+        font-size: 1.2rem;
+        font-weight: bold;
+      }
+
+      .alert-count {
+        background: var(--danger);
+        color: white;
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-weight: bold;
+      }
+
+      /* Stats */
+      .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.5rem;
+      }
+
+      .stat-card {
+        background: var(--bg-card);
+        padding: 1rem;
+        border-radius: 8px;
+        text-align: center;
+      }
+
+      .stat-value {
+        font-size: 2rem;
+        font-weight: bold;
+      }
+
+      .stat-label {
+        color: var(--text-secondary);
+        font-size: 0.8rem;
+      }
+
+      .stat-card.critical .stat-value {
+        color: var(--danger);
+      }
+
+      .stat-card.active .stat-value {
+        color: var(--warning);
+      }
+
+      /* Alerts List */
+      .alerts-list {
+        flex: 1;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+      }
+
+      .alert-card {
+        background: var(--bg-card);
+        border-radius: 12px;
+        padding: 1rem;
+        border-left: 4px solid var(--warning);
+        cursor: pointer;
+        transition: all 0.3s ease;
+      }
+
+      .alert-card:hover {
+        transform: translateX(5px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      }
+
+      .alert-card.critical {
+        border-left-color: var(--danger);
+        animation: criticalPulse 1s infinite;
+      }
+
+      @keyframes criticalPulse {
+        0%,
+        100% {
+          background: var(--bg-card);
+        }
+        50% {
+          background: rgba(239, 68, 68, 0.1);
+        }
+      }
+
+      .alert-card.new {
+        animation: newAlert 0.5s ease;
+      }
+
+      @keyframes newAlert {
+        0% {
+          transform: translateX(100%);
+          opacity: 0;
+        }
+        100% {
+          transform: translateX(0);
+          opacity: 1;
+        }
+      }
+
+      .alert-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 0.5rem;
+      }
+
+      .alert-title {
+        font-weight: bold;
+        font-size: 0.95rem;
+      }
+
+      .severity-badge {
+        padding: 0.2rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        font-weight: bold;
+      }
+
+      .severity-badge.critical {
+        background: var(--danger);
+      }
+
+      .severity-badge.high {
+        background: var(--warning);
+      }
+
+      .severity-badge.medium {
+        background: var(--info);
+      }
+
+      .severity-badge.low {
+        background: var(--success);
+      }
+
+      .alert-description {
+        color: var(--text-secondary);
+        font-size: 0.85rem;
+        margin-bottom: 0.5rem;
+      }
+
+      .alert-meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 0.75rem;
+        color: var(--text-secondary);
+      }
+
+      .alert-type {
+        background: rgba(255, 255, 255, 0.1);
+        padding: 0.2rem 0.5rem;
+        border-radius: 4px;
+      }
+
+      .alert-actions {
+        display: flex;
+        gap: 0.5rem;
+        margin-top: 0.75rem;
+      }
+
+      .btn {
+        padding: 0.5rem 1rem;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 0.8rem;
+        font-weight: bold;
+        transition: all 0.2s ease;
+      }
+
+      .btn-acknowledge {
+        background: var(--info);
+        color: white;
+      }
+
+      .btn-dispatch {
+        background: var(--warning);
+        color: white;
+      }
+
+      .btn-reject {
+        background: var(--danger);
+        color: white;
+      }
+
+      .btn-resolve {
+        background: var(--success);
+        color: white;
+      }
+
+      .btn:hover {
+        opacity: 0.9;
+        transform: translateY(-2px);
+      }
+
+      /* Alert Modal */
+      .modal-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.8);
+        z-index: 2000;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .modal-overlay.active {
+        display: flex;
+      }
+
+      .modal {
+        background: var(--bg-card);
+        border-radius: 16px;
+        padding: 2rem;
+        max-width: 500px;
+        width: 90%;
+        max-height: 80vh;
+        overflow-y: auto;
+      }
+
+      .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+      }
+
+      .modal-close {
+        background: none;
+        border: none;
+        color: var(--text-secondary);
+        font-size: 1.5rem;
+        cursor: pointer;
+      }
+
+      .modal-body {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+      }
+
+      .detail-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .detail-label {
+        color: var(--text-secondary);
+      }
+
+      .detail-value {
+        font-weight: bold;
+      }
+
+      /* Sound Control */
+      .sound-control {
+        position: fixed;
+        bottom: 1rem;
+        right: 1rem;
+        background: var(--bg-card);
+        padding: 0.75rem 1rem;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        cursor: pointer;
+        z-index: 1500;
+      }
+
+      .sound-control:hover {
+        background: rgba(255, 255, 255, 0.1);
+      }
+
+      /* No Alerts */
+      .no-alerts {
+        text-align: center;
+        padding: 3rem;
+        color: var(--text-secondary);
+      }
+
+      .no-alerts-icon {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+      }
+
+      /* Status Badge */
+      .status-badge {
+        padding: 0.2rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.7rem;
+        text-transform: uppercase;
+      }
+
+      .status-received {
+        background: var(--info);
+      }
+      .status-acknowledged {
+        background: var(--warning);
+      }
+      .status-dispatched {
+        background: #8b5cf6;
+      }
+      .status-en_route {
+        background: #06b6d4;
+      }
+      .status-on_scene {
+        background: var(--success);
+      }
+      .status-resolved {
+        background: #6b7280;
+      }
+      .status-rejected {
+        background: var(--danger);
+      }
+
+      /* Leaflet Customizations */
+      .emergency-marker {
+        animation: markerPulse 1s infinite;
+      }
+
+      @keyframes markerPulse {
+        0%,
+        100% {
+          transform: scale(1);
+        }
+        50% {
+          transform: scale(1.2);
+        }
+      }
+
+      .leaflet-popup-content-wrapper {
+        background: var(--bg-card);
+        color: var(--text-primary);
+      }
+
+      .leaflet-popup-tip {
+        background: var(--bg-card);
+      }
+
+      /* Route styling */
+      .leaflet-routing-container {
+        display: none !important;
+      }
+
+      .route-info-panel {
+        position: absolute;
+        bottom: 1rem;
+        left: 1rem;
+        background: var(--bg-card);
+        padding: 1rem;
+        border-radius: 8px;
+        z-index: 1000;
+        min-width: 200px;
+        display: none;
+      }
+
+      .route-info-panel.active {
+        display: block;
+      }
+
+      .route-info-title {
+        font-weight: bold;
+        margin-bottom: 0.5rem;
+        color: var(--primary-color);
+      }
+
+      .route-info-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.25rem 0;
+        font-size: 0.9rem;
+      }
+
+      .route-info-label {
+        color: var(--text-secondary);
+      }
+
+      .route-info-value {
+        font-weight: bold;
+      }
+
+      /* Alert pin marker */
+      .alert-pin {
+        position: relative;
+      }
+
+      .alert-pin::after {
+        content: "";
+        position: absolute;
+        bottom: -5px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 0;
+        height: 0;
+        border-left: 8px solid transparent;
+        border-right: 8px solid transparent;
+        border-top: 10px solid var(--danger);
+      }
+
+      /* Settings Button */
+      .settings-btn {
+        background: var(--bg-card);
+        border: 2px solid var(--primary-color);
+        color: var(--text-primary);
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.9rem;
+        transition: all 0.2s;
+      }
+
+      .settings-btn:hover {
+        background: var(--primary-color);
+        color: white;
+      }
+
+      /* API Key Info Panel */
+      .api-info-panel {
+        background: var(--bg-card);
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 0.5rem;
+      }
+
+      .api-info-title {
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+        margin-bottom: 0.5rem;
+      }
+
+      .api-key-display {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        background: rgba(0, 0, 0, 0.3);
+        padding: 0.5rem;
+        border-radius: 4px;
+        font-family: monospace;
+        font-size: 0.85rem;
+        word-break: break-all;
+      }
+
+      .api-key-display .key-text {
+        flex: 1;
+        color: var(--primary-color);
+      }
+
+      .copy-btn {
+        background: var(--primary-color);
+        border: none;
+        color: white;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 0.75rem;
+      }
+
+      .copy-btn:hover {
+        opacity: 0.8;
+      }
+
+      .api-endpoint {
+        margin-top: 0.5rem;
+        font-size: 0.75rem;
+        color: var(--text-secondary);
+      }
+
+      .api-endpoint code {
+        background: rgba(0, 0, 0, 0.3);
+        padding: 0.2rem 0.4rem;
+        border-radius: 4px;
+        color: #10b981;
+      }
+
+      /* Settings Modal */
+      .settings-modal {
+        max-width: 600px;
+      }
+
+      .settings-section {
+        margin-bottom: 1.5rem;
+      }
+
+      .settings-section h3 {
+        font-size: 1rem;
+        margin-bottom: 0.75rem;
+        color: var(--primary-color);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        padding-bottom: 0.5rem;
+      }
+
+      .settings-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.5rem 0;
+      }
+
+      .settings-label {
+        color: var(--text-secondary);
+      }
+
+      .settings-value {
+        font-family: monospace;
+        background: rgba(0, 0, 0, 0.3);
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+      }
+
+      .register-btn {
+        width: 100%;
+        padding: 0.75rem;
+        background: var(--success);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 1rem;
+        font-weight: bold;
+        cursor: pointer;
+        margin-top: 1rem;
+      }
+
+      .register-btn:hover {
+        opacity: 0.9;
+      }
+
+      .register-btn:disabled {
+        background: #6b7280;
+        cursor: not-allowed;
+      }
+
+      .registration-status {
+        margin-top: 0.5rem;
+        padding: 0.5rem;
+        border-radius: 4px;
+        font-size: 0.85rem;
+        text-align: center;
+      }
+
+      .registration-status.success {
+        background: rgba(16, 185, 129, 0.2);
+        color: #10b981;
+      }
+
+      .registration-status.error {
+        background: rgba(239, 68, 68, 0.2);
+        color: #ef4444;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Header -->
+    <header class="header">
+      <div class="station-info">
+        <span class="station-emoji" id="stationEmoji">🚒</span>
+        <div>
+          <div class="station-name" id="stationName">Emergency Station</div>
+          <div class="station-type" id="stationType">Loading...</div>
+        </div>
+      </div>
+      <div style="display: flex; align-items: center; gap: 1rem">
+        <button class="settings-btn" onclick="openSettings()">
+          ⚙️ Settings & API
+        </button>
+        <div class="status-indicator">
+          <div class="status-dot"></div>
+          <span>Online</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Map Section -->
+      <section class="map-section">
+        <div id="map"></div>
+        <div class="route-info-panel" id="routeInfoPanel">
+          <div class="route-info-title">🚗 Route to Emergency</div>
+          <div class="route-info-item">
+            <span class="route-info-label">Distance:</span>
+            <span class="route-info-value" id="routeDistance">--</span>
+          </div>
+          <div class="route-info-item">
+            <span class="route-info-label">Est. Time:</span>
+            <span class="route-info-value" id="routeTime">--</span>
+          </div>
+          <div class="route-info-item">
+            <span class="route-info-label">Alert:</span>
+            <span class="route-info-value" id="routeAlertType">--</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Alerts Panel -->
+      <aside class="alerts-panel">
+        <div class="panel-header">
+          <span class="panel-title">Active Alerts</span>
+          <span class="alert-count" id="alertCount">0</span>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats-grid">
+          <div class="stat-card critical">
+            <div class="stat-value" id="criticalCount">0</div>
+            <div class="stat-label">Critical</div>
+          </div>
+          <div class="stat-card active">
+            <div class="stat-value" id="activeCount">0</div>
+            <div class="stat-label">Active</div>
+          </div>
+        </div>
+
+        <!-- Alerts List -->
+        <div class="alerts-list" id="alertsList">
+          <div class="no-alerts">
+            <div class="no-alerts-icon">✅</div>
+            <div>No active alerts</div>
+            <div>All clear!</div>
+          </div>
+        </div>
+      </aside>
+    </main>
+
+    <!-- Alert Detail Modal -->
+    <div class="modal-overlay" id="alertModal">
+      <div class="modal">
+        <div class="modal-header">
+          <h2>Alert Details</h2>
+          <button class="modal-close" onclick="closeModal()">&times;</button>
+        </div>
+        <div class="modal-body" id="modalBody">
+          <!-- Dynamic content -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div class="modal-overlay" id="settingsModal">
+      <div class="modal settings-modal">
+        <div class="modal-header">
+          <h2>⚙️ Station Settings & API</h2>
+          <button class="modal-close" onclick="closeSettings()">&times;</button>
+        </div>
+        <div class="modal-body">
+          <!-- Station Info Section -->
+          <div class="settings-section">
+            <h3>🏢 Station Information</h3>
+            <div class="settings-row">
+              <span class="settings-label">Station ID:</span>
+              <span class="settings-value" id="settingsStationId">--</span>
+            </div>
+            <div class="settings-row">
+              <span class="settings-label">Name:</span>
+              <span class="settings-value" id="settingsStationName">--</span>
+            </div>
+            <div class="settings-row">
+              <span class="settings-label">Type:</span>
+              <span class="settings-value" id="settingsStationType">--</span>
+            </div>
+            <div class="settings-row">
+              <span class="settings-label">Location:</span>
+              <span class="settings-value" id="settingsLocation">--</span>
+            </div>
+          </div>
+
+          <!-- API Configuration Section -->
+          <div class="settings-section">
+            <h3>🔑 API Configuration</h3>
+            <div class="api-info-panel">
+              <div class="api-info-title">
+                API Key (use this to register on main platform)
+              </div>
+              <div class="api-key-display">
+                <span class="key-text" id="apiKeyText">Loading...</span>
+                <button class="copy-btn" onclick="copyApiKey()">📋 Copy</button>
+              </div>
+              <div class="api-endpoint">
+                Alert Endpoint: <code id="alertEndpoint">--</code>
+              </div>
+            </div>
+          </div>
+
+          <!-- Registration Section -->
+          <div class="settings-section">
+            <h3>📝 Register with Main Platform</h3>
+            <div class="settings-row">
+              <span class="settings-label">Main Platform URL:</span>
+              <input
+                type="text"
+                id="mainPlatformUrl"
+                value="http://localhost:3000"
+                style="
+                  flex: 1;
+                  margin-left: 1rem;
+                  padding: 0.5rem;
+                  border-radius: 4px;
+                  border: 1px solid #444;
+                  background: #1a1a2e;
+                  color: white;
+                "
+              />
+            </div>
+            <button
+              class="register-btn"
+              id="registerBtn"
+              onclick="registerWithPlatform()"
+            >
+              🚀 Register This Station
+            </button>
+            <div
+              class="registration-status"
+              id="registrationStatus"
+              style="display: none"
+            ></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sound Control -->
+    <div class="sound-control" id="soundControl" onclick="toggleSound()">
+      <span id="soundIcon">🔊</span>
+      <span id="soundText">Sound On</span>
+    </div>
+
+    <!-- Audio Elements -->
+    <audio id="alertSound" preload="auto">
+      <source
+        src="/sounds/emergency-alarm-with-reverb-29431.mp3"
+        type="audio/mpeg"
+      />
+    </audio>
+
+    <script>
+      // Configuration
+      let stationConfig = null;
+      let alerts = [];
+      let soundEnabled = true;
+      let map = null;
+      let markers = {};
+      let alertMarkers = {};
+      let routeControls = {};
+      let stationMarker = null;
+      let activeRouteAlertId = null;
+
+      // Socket.IO connection
+      const socket = io();
+
+      // Initialize
+      async function init() {
+        // Fetch station config
+        try {
+          const response = await fetch("/api/station");
+          stationConfig = await response.json();
+          updateStationUI();
+          initMap();
+        } catch (error) {
+          console.error("Failed to load station config:", error);
+        }
+
+        // Fetch initial stats
+        fetchStats();
+      }
+
+      // Update station UI with config
+      function updateStationUI() {
+        document.getElementById("stationEmoji").textContent = getStationEmoji(
+          stationConfig.type
+        );
+        document.getElementById("stationName").textContent = stationConfig.name;
+        document.getElementById("stationType").textContent =
+          stationConfig.type.toUpperCase() + " STATION";
+
+        // Update theme color
+        const themeColors = {
+          fire: "#f97316",
+          hospital: "#ef4444",
+          police: "#3b82f6",
+          rescue: "#10b981",
+        };
+        document.documentElement.style.setProperty(
+          "--primary-color",
+          themeColors[stationConfig.type] || "#f97316"
+        );
+        document.title = stationConfig.name + " Dashboard";
+      }
+
+      function getStationEmoji(type) {
+        const emojis = {
+          fire: "🚒",
+          hospital: "🏥",
+          police: "🚔",
+          rescue: "🚑",
+        };
+        return emojis[type] || "🏢";
+      }
+
+      // Initialize map
+      function initMap() {
+        const lat = stationConfig?.location?.lat || 18.52;
+        const lng = stationConfig?.location?.lng || 73.85;
+
+        map = L.map("map").setView([lat, lng], 13);
+
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+          attribution: "© OpenStreetMap contributors",
+        }).addTo(map);
+
+        // Add station marker
+        const stationIcon = L.divIcon({
+          className: "station-marker",
+          html: `<div style="background: var(--primary-color); width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; border: 4px solid white; box-shadow: 0 4px 15px rgba(0,0,0,0.4);">${getStationEmoji(
+            stationConfig.type
+          )}</div>`,
+          iconSize: [40, 40],
+          iconAnchor: [20, 20],
+        });
+
+        stationMarker = L.marker([lat, lng], { icon: stationIcon })
+          .addTo(map)
+          .bindPopup(
+            `<b>${stationConfig.name}</b><br>📍 Station Location<br><small>${
+              stationConfig.location?.address || "Command Center"
+            }</small>`
+          );
+      }
+
+      // Fetch stats
+      async function fetchStats() {
+        try {
+          const response = await fetch("/api/stats");
+          const data = await response.json();
+
+          document.getElementById("criticalCount").textContent =
+            data.stats.criticalAlerts;
+          document.getElementById("activeCount").textContent =
+            data.stats.activeAlerts;
+        } catch (error) {
+          console.error("Failed to fetch stats:", error);
+        }
+      }
+
+      // Socket event handlers
+      socket.on("connect", () => {
+        console.log("Connected to station server");
+      });
+
+      socket.on("initialAlerts", (initialAlerts) => {
+        alerts = initialAlerts;
+        renderAlerts();
+        updateMarkers();
+      });
+
+      socket.on("newAlert", (alert) => {
+        console.log("New alert received:", alert);
+
+        // Add to alerts array
+        alerts.unshift(alert);
+
+        // Always play sound for new alerts if sound is enabled
+        if (soundEnabled) {
+          playAlertSound(alert.priority === "critical" || alert.severity >= 7);
+        }
+
+        // Re-render
+        renderAlerts(true);
+        addAlertMarker(alert);
+        fetchStats();
+
+        // Show notification
+        showNotification(alert);
+      });
+
+      socket.on("alertUpdated", (updatedAlert) => {
+        const index = alerts.findIndex(
+          (a) => a.alertId === updatedAlert.alertId
+        );
+        if (index !== -1) {
+          alerts[index] = updatedAlert;
+
+          // If resolved or rejected, remove from map immediately
+          if (
+            updatedAlert.status === "resolved" ||
+            updatedAlert.status === "rejected"
+          ) {
+            if (alertMarkers[updatedAlert.alertId]) {
+              map.removeLayer(alertMarkers[updatedAlert.alertId]);
+              delete alertMarkers[updatedAlert.alertId];
+            }
+            // Clear route if this was the active route
+            if (activeRouteAlertId === updatedAlert.alertId) {
+              clearRoute();
+            }
+          }
+
+          renderAlerts();
+          updateMarkers();
+          fetchStats();
+        }
+      });
+
+      // Render alerts list
+      function renderAlerts(isNew = false) {
+        const container = document.getElementById("alertsList");
+        const activeAlerts = alerts.filter(
+          (a) => a.status !== "resolved" && a.status !== "rejected"
+        );
+
+        document.getElementById("alertCount").textContent = activeAlerts.length;
+
+        if (activeAlerts.length === 0) {
+          container.innerHTML = `
+          <div class="no-alerts">
+            <div class="no-alerts-icon">✅</div>
+            <div>No active alerts</div>
+            <div>All clear!</div>
+          </div>
+        `;
+          return;
+        }
+
+        container.innerHTML = activeAlerts
+          .map((alert, index) => {
+            const severityClass =
+              alert.severity >= 7
+                ? "critical"
+                : alert.severity >= 5
+                ? "high"
+                : alert.severity >= 3
+                ? "medium"
+                : "low";
+
+            const isNewAlert = isNew && index === 0;
+
+            return `
+          <div class="alert-card ${alert.severity >= 7 ? "critical" : ""} ${
+              isNewAlert ? "new" : ""
+            }" 
+               onclick="showAlertDetail('${alert.alertId}')">
+            <div class="alert-header">
+              <span class="alert-title">${alert.title}</span>
+              <span class="severity-badge ${severityClass}">
+                ${alert.severity}/10
+              </span>
+            </div>
+            <div class="alert-description">${
+              alert.description || "No description"
+            }</div>
+            <div class="alert-meta">
+              <span class="alert-type">${alert.emergencyType}</span>
+              <span class="status-badge status-${alert.status}">${
+              alert.status
+            }</span>
+            </div>
+            <div class="alert-actions">
+              ${
+                alert.status === "received"
+                  ? `<button class="btn btn-acknowledge" onclick="event.stopPropagation(); acknowledgeAlert('${alert.alertId}')">
+                  Acknowledge
+                </button>
+                <button class="btn btn-reject" onclick="event.stopPropagation(); rejectAlert('${alert.alertId}')">
+                  Reject
+                </button>`
+                  : ""
+              }
+              ${
+                alert.status === "acknowledged"
+                  ? `<button class="btn btn-dispatch" onclick="event.stopPropagation(); dispatchToAlert('${alert.alertId}')">
+                  Dispatch Unit
+                </button>
+                <button class="btn btn-reject" onclick="event.stopPropagation(); rejectAlert('${alert.alertId}')">
+                  Reject
+                </button>`
+                  : ""
+              }
+              ${
+                ["dispatched", "en_route", "on_scene"].includes(alert.status)
+                  ? `<button class="btn btn-resolve" onclick="event.stopPropagation(); resolveAlert('${alert.alertId}')">
+                  Resolve
+                </button>`
+                  : ""
+              }
+              ${
+                alert.status === "rejected"
+                  ? `<span style="color: var(--danger); font-size: 0.8rem;">❌ Rejected: ${
+                      alert.rejectionReason || "No reason provided"
+                    }</span>`
+                  : ""
+              }
+            </div>
+          </div>
+        `;
+          })
+          .join("");
+      }
+
+      // Add alert marker to map
+      function addAlertMarker(alert) {
+        if (!map || !alert.location) return;
+
+        console.log(
+          "Adding marker for alert:",
+          alert.alertId,
+          "at",
+          alert.location.lat,
+          alert.location.lng
+        );
+
+        // Get severity-based color
+        const severityColor =
+          alert.severity >= 7
+            ? "#ef4444"
+            : alert.severity >= 5
+            ? "#f59e0b"
+            : "#3b82f6";
+
+        // Use a simple, highly visible red marker icon
+        const redIcon = L.icon({
+          iconUrl:
+            "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png",
+          shadowUrl:
+            "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png",
+          iconSize: [25, 41],
+          iconAnchor: [12, 41],
+          popupAnchor: [1, -34],
+          shadowSize: [41, 41],
+        });
+
+        const marker = L.marker([alert.location.lat, alert.location.lng], {
+          icon: redIcon,
+        }).addTo(map).bindPopup(`
+          <div style="min-width: 220px; color: #333;">
+            <h4 style="margin: 0 0 8px 0; color: ${severityColor};">${
+          alert.title
+        }</h4>
+            <p style="margin: 0 0 8px 0; font-size: 12px;">${
+              alert.description || "Emergency alert"
+            }</p>
+            <hr style="margin: 8px 0; border: none; border-top: 1px solid #ddd;">
+            <div style="font-size: 12px;">
+              <b>🚨 Severity:</b> ${alert.severity}/10<br>
+              <b>📋 Status:</b> ${alert.status}<br>
+              <b>🏷️ Type:</b> ${alert.emergencyType}<br>
+              <b>📍 Location:</b> ${alert.location.lat.toFixed(
+                4
+              )}, ${alert.location.lng.toFixed(4)}
+            </div>
+          </div>
+        `);
+
+        markers[alert.alertId] = marker;
+
+        // Fit map to show both station and alert
+        if (stationConfig?.location) {
+          const bounds = L.latLngBounds(
+            [stationConfig.location.lat, stationConfig.location.lng],
+            [alert.location.lat, alert.location.lng]
+          );
+          map.fitBounds(bounds, { padding: [80, 80] });
+        }
+      }
+
+      // Show route from station to alert
+      function showRouteToAlert(alert) {
+        if (!stationConfig || !alert.location) return;
+
+        const stationLat = stationConfig.location?.lat;
+        const stationLng = stationConfig.location?.lng;
+
+        if (!stationLat || !stationLng) return;
+
+        // Clear existing route for this alert if any
+        if (routeControls[alert.alertId]) {
+          map.removeControl(routeControls[alert.alertId]);
+          delete routeControls[alert.alertId];
+        }
+
+        // Clear any other active routes
+        Object.keys(routeControls).forEach((id) => {
+          if (routeControls[id]) {
+            map.removeControl(routeControls[id]);
+            delete routeControls[id];
+          }
+        });
+
+        // Get route color based on severity
+        const routeColor =
+          alert.severity >= 7
+            ? "#ef4444"
+            : alert.severity >= 5
+            ? "#f59e0b"
+            : "#3b82f6";
+
+        // Create routing control
+        const routeControl = L.Routing.control({
+          waypoints: [
+            L.latLng(stationLat, stationLng),
+            L.latLng(alert.location.lat, alert.location.lng),
+          ],
+          routeWhileDragging: false,
+          addWaypoints: false,
+          draggableWaypoints: false,
+          fitSelectedRoutes: true,
+          showAlternatives: false,
+          lineOptions: {
+            styles: [
+              { color: routeColor, opacity: 0.8, weight: 6 },
+              { color: "white", opacity: 0.3, weight: 2 },
+            ],
+          },
+          createMarker: function () {
+            return null;
+          }, // Don't create default markers
+        }).addTo(map);
+
+        routeControl.on("routesfound", function (e) {
+          const route = e.routes[0];
+          const distance = (route.summary.totalDistance / 1000).toFixed(1);
+          const time = Math.round(route.summary.totalTime / 60);
+
+          // Update route info panel
+          document.getElementById(
+            "routeDistance"
+          ).textContent = `${distance} km`;
+          document.getElementById("routeTime").textContent = `${time} min`;
+          document.getElementById("routeAlertType").textContent =
+            alert.emergencyType;
+          document.getElementById("routeInfoPanel").classList.add("active");
+
+          activeRouteAlertId = alert.alertId;
+        });
+
+        routeControl.on("routingerror", function (e) {
+          console.error("Routing error:", e.error);
+          // Fallback: draw a straight line
+          drawStraightLineRoute(stationLat, stationLng, alert, routeColor);
+        });
+
+        routeControls[alert.alertId] = routeControl;
+
+        // Fit bounds to show both station and alert
+        const bounds = L.latLngBounds(
+          [stationLat, stationLng],
+          [alert.location.lat, alert.location.lng]
+        );
+        map.fitBounds(bounds, { padding: [50, 50] });
+      }
+
+      // Fallback: draw straight line if routing fails
+      function drawStraightLineRoute(stationLat, stationLng, alert, color) {
+        const line = L.polyline(
+          [
+            [stationLat, stationLng],
+            [alert.location.lat, alert.location.lng],
+          ],
+          {
+            color: color,
+            weight: 4,
+            opacity: 0.7,
+            dashArray: "10, 10",
+          }
+        ).addTo(map);
+
+        // Calculate straight-line distance
+        const distance =
+          map.distance(
+            [stationLat, stationLng],
+            [alert.location.lat, alert.location.lng]
+          ) / 1000;
+
+        // Estimate time (assuming 40 km/h average speed for emergency vehicles)
+        const time = Math.round((distance / 40) * 60);
+
+        document.getElementById(
+          "routeDistance"
+        ).textContent = `~${distance.toFixed(1)} km`;
+        document.getElementById("routeTime").textContent = `~${time} min`;
+        document.getElementById("routeAlertType").textContent =
+          alert.emergencyType;
+        document.getElementById("routeInfoPanel").classList.add("active");
+
+        // Store line reference for cleanup
+        if (!routeControls[alert.alertId]) {
+          routeControls[alert.alertId] = {
+            remove: () => map.removeLayer(line),
+          };
+        }
+      }
+
+      // Clear route display
+      function clearRoute() {
+        Object.keys(routeControls).forEach((id) => {
+          if (routeControls[id]) {
+            if (routeControls[id].remove) {
+              routeControls[id].remove();
+            } else {
+              map.removeControl(routeControls[id]);
+            }
+            delete routeControls[id];
+          }
+        });
+        document.getElementById("routeInfoPanel").classList.remove("active");
+        activeRouteAlertId = null;
+      }
+
+      // Update all markers
+      function updateMarkers() {
+        // Remove old markers
+        Object.values(markers).forEach((marker) => map.removeLayer(marker));
+        markers = {};
+
+        // Clear routes
+        clearRoute();
+
+        // Add current alerts (exclude resolved and rejected)
+        alerts
+          .filter((a) => a.status !== "resolved" && a.status !== "rejected")
+          .forEach(addAlertMarker);
+      }
+
+      // Show alert detail modal
+      function showAlertDetail(alertId) {
+        const alert = alerts.find((a) => a.alertId === alertId);
+        if (!alert) return;
+
+        const modal = document.getElementById("alertModal");
+        const body = document.getElementById("modalBody");
+
+        body.innerHTML = `
+        <div class="detail-row">
+          <span class="detail-label">Alert ID</span>
+          <span class="detail-value">${alert.alertId}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Type</span>
+          <span class="detail-value">${alert.emergencyType}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Severity</span>
+          <span class="detail-value">${alert.severity}/10</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Status</span>
+          <span class="detail-value status-badge status-${alert.status}">${
+          alert.status
+        }</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Location</span>
+          <span class="detail-value">${alert.location?.lat?.toFixed(
+            4
+          )}, ${alert.location?.lng?.toFixed(4)}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Description</span>
+          <span class="detail-value">${alert.description || "N/A"}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Needs</span>
+          <span class="detail-value">${alert.needs?.join(", ") || "N/A"}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Received</span>
+          <span class="detail-value">${new Date(
+            alert.createdAt
+          ).toLocaleString()}</span>
+        </div>
+        ${
+          alert.assignedUnits?.length
+            ? `
+          <div class="detail-row">
+            <span class="detail-label">Assigned Units</span>
+            <span class="detail-value">${alert.assignedUnits
+              .map((u) => u.unitName)
+              .join(", ")}</span>
+          </div>
+        `
+            : ""
+        }
+        ${
+          alert.status === "rejected"
+            ? `
+          <div class="detail-row" style="color: var(--danger);">
+            <span class="detail-label">Rejection Reason</span>
+            <span class="detail-value">${
+              alert.rejectionReason || "No reason provided"
+            }</span>
+          </div>
+        `
+            : ""
+        }
+        <div class="alert-actions" style="margin-top: 1rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
+          ${
+            alert.status === "received"
+              ? `<button class="btn btn-acknowledge" onclick="acknowledgeAlert('${alert.alertId}'); closeModal();">
+              Acknowledge
+            </button>
+            <button class="btn btn-reject" onclick="rejectAlert('${alert.alertId}'); closeModal();">
+              Reject
+            </button>`
+              : ""
+          }
+          ${
+            alert.status === "acknowledged"
+              ? `<button class="btn btn-dispatch" onclick="dispatchToAlert('${alert.alertId}'); closeModal();">
+              Dispatch Unit
+            </button>
+            <button class="btn btn-reject" onclick="rejectAlert('${alert.alertId}'); closeModal();">
+              Reject
+            </button>`
+              : ""
+          }
+          ${
+            ["dispatched", "en_route", "on_scene"].includes(alert.status)
+              ? `<button class="btn btn-resolve" onclick="resolveAlert('${alert.alertId}'); closeModal();">
+              Resolve
+            </button>`
+              : ""
+          }
+        </div>
+      `;
+
+        modal.classList.add("active");
+
+        // Center map on alert (don't auto-show route, only on Dispatch)
+        if (alert.location && map) {
+          // Fit bounds to show both station and alert
+          if (stationConfig?.location) {
+            const bounds = L.latLngBounds(
+              [stationConfig.location.lat, stationConfig.location.lng],
+              [alert.location.lat, alert.location.lng]
+            );
+            map.fitBounds(bounds, { padding: [80, 80] });
+          } else {
+            map.panTo([alert.location.lat, alert.location.lng]);
+          }
+        }
+      }
+
+      function closeModal() {
+        document.getElementById("alertModal").classList.remove("active");
+      }
+
+      // Alert actions
+      async function acknowledgeAlert(alertId) {
+        try {
+          await fetch(`/api/alerts/${alertId}/acknowledge`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+          });
+        } catch (error) {
+          console.error("Failed to acknowledge alert:", error);
+        }
+      }
+
+      async function dispatchToAlert(alertId) {
+        const unitName = prompt("Enter unit name/ID to dispatch:");
+        if (!unitName) return;
+
+        try {
+          const response = await fetch(`/api/alerts/${alertId}/dispatch`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ unitId: Date.now().toString(), unitName }),
+          });
+
+          if (response.ok) {
+            // Show route to the alert after dispatching
+            const alert = alerts.find((a) => a.alertId === alertId);
+            if (alert) {
+              showRouteToAlert(alert);
+            }
+          }
+        } catch (error) {
+          console.error("Failed to dispatch unit:", error);
+        }
+      }
+
+      async function resolveAlert(alertId) {
+        if (!confirm("Mark this alert as resolved?")) return;
+
+        try {
+          const response = await fetch(`/api/alerts/${alertId}/resolve`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              notes: "Emergency resolved by station",
+              outcome: "resolved",
+            }),
+          });
+
+          if (response.ok) {
+            // Clear route if this was the active route
+            if (activeRouteAlertId === alertId) {
+              clearRoute();
+            }
+
+            // Remove marker from map
+            if (alertMarkers[alertId]) {
+              map.removeLayer(alertMarkers[alertId]);
+              delete alertMarkers[alertId];
+            }
+
+            // Update local state - mark as resolved so renderAlerts filters it out
+            const alertIndex = alerts.findIndex((a) => a.alertId === alertId);
+            if (alertIndex !== -1) {
+              alerts[alertIndex].status = "resolved";
+            }
+
+            // Re-render to remove from list
+            renderAlerts();
+            fetchStats();
+
+            // Close modal if open
+            closeModal();
+
+            console.log("Alert resolved successfully");
+          } else {
+            alert("Failed to resolve alert. Please try again.");
+          }
+        } catch (error) {
+          console.error("Failed to resolve alert:", error);
+          alert("Failed to resolve alert. Please try again.");
+        }
+      }
+
+      async function rejectAlert(alertId) {
+        const reason = prompt(
+          "Please provide a reason for rejecting this alert:",
+          "Unable to respond at this time"
+        );
+
+        if (reason === null) return; // User cancelled
+
+        try {
+          const response = await fetch(`/api/alerts/${alertId}/reject`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ reason }),
+          });
+
+          if (response.ok) {
+            // Clear route if this was the active route
+            if (activeRouteAlertId === alertId) {
+              clearRoute();
+            }
+
+            // Remove marker from map
+            if (alertMarkers[alertId]) {
+              map.removeLayer(alertMarkers[alertId]);
+              delete alertMarkers[alertId];
+            }
+
+            // Update local state - mark as rejected so renderAlerts filters it out
+            const alertIndex = alerts.findIndex((a) => a.alertId === alertId);
+            if (alertIndex !== -1) {
+              alerts[alertIndex].status = "rejected";
+            }
+
+            // Re-render to remove from list
+            renderAlerts();
+            fetchStats();
+
+            // Close modal if open
+            closeModal();
+
+            console.log("Alert rejected successfully");
+          } else {
+            alert("Failed to reject alert. Please try again.");
+          }
+        } catch (error) {
+          console.error("Failed to reject alert:", error);
+          alert("Failed to reject alert. Please try again.");
+        }
+      }
+
+      // Sound control
+      function toggleSound() {
+        soundEnabled = !soundEnabled;
+        document.getElementById("soundIcon").textContent = soundEnabled
+          ? "🔊"
+          : "🔇";
+        document.getElementById("soundText").textContent = soundEnabled
+          ? "Sound On"
+          : "Sound Off";
+      }
+
+      function playAlertSound(isCritical) {
+        const audio = document.getElementById("alertSound");
+        audio.currentTime = 0;
+        audio.play().catch((err) => console.log("Audio play failed:", err));
+
+        if (isCritical) {
+          // Play multiple times for critical alerts
+          setTimeout(() => audio.play().catch(() => {}), 500);
+          setTimeout(() => audio.play().catch(() => {}), 1000);
+        }
+      }
+
+      // Browser notification
+      function showNotification(alert) {
+        if (!("Notification" in window)) return;
+
+        if (Notification.permission === "granted") {
+          new Notification(`🚨 ${alert.title}`, {
+            body: `Severity: ${alert.severity}/10 - ${alert.emergencyType}`,
+            icon: "/favicon.ico",
+            requireInteraction: alert.severity >= 7,
+          });
+        } else if (Notification.permission !== "denied") {
+          Notification.requestPermission();
+        }
+      }
+
+      // Close modal on escape
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") {
+          closeModal();
+          closeSettings();
+        }
+      });
+
+      // Close modal on overlay click
+      document.getElementById("alertModal").addEventListener("click", (e) => {
+        if (e.target.id === "alertModal") closeModal();
+      });
+
+      document
+        .getElementById("settingsModal")
+        .addEventListener("click", (e) => {
+          if (e.target.id === "settingsModal") closeSettings();
+        });
+
+      // Settings Modal Functions
+      function openSettings() {
+        const modal = document.getElementById("settingsModal");
+
+        // Populate settings
+        if (stationConfig) {
+          document.getElementById("settingsStationId").textContent =
+            stationConfig.stationId;
+          document.getElementById("settingsStationName").textContent =
+            stationConfig.name;
+          document.getElementById("settingsStationType").textContent =
+            stationConfig.type.toUpperCase();
+          document.getElementById(
+            "settingsLocation"
+          ).textContent = `${stationConfig.location?.lat?.toFixed(
+            4
+          )}, ${stationConfig.location?.lng?.toFixed(4)}`;
+          document.getElementById("apiKeyText").textContent =
+            stationConfig.apiKey || "Not configured";
+          document.getElementById(
+            "alertEndpoint"
+          ).textContent = `http://localhost:${window.location.port}/api/alerts/receive`;
+        }
+
+        modal.classList.add("active");
+      }
+
+      function closeSettings() {
+        document.getElementById("settingsModal").classList.remove("active");
+      }
+
+      function copyApiKey() {
+        const apiKey = stationConfig?.apiKey || "";
+        navigator.clipboard
+          .writeText(apiKey)
+          .then(() => {
+            const btn = event.target;
+            btn.textContent = "✓ Copied!";
+            setTimeout(() => (btn.textContent = "📋 Copy"), 2000);
+          })
+          .catch((err) => {
+            console.error("Failed to copy:", err);
+            alert("Failed to copy API key");
+          });
+      }
+
+      async function registerWithPlatform() {
+        const btn = document.getElementById("registerBtn");
+        const status = document.getElementById("registrationStatus");
+        const mainUrl = document.getElementById("mainPlatformUrl").value.trim();
+
+        if (!mainUrl) {
+          status.textContent = "❌ Please enter the main platform URL";
+          status.className = "registration-status error";
+          status.style.display = "block";
+          return;
+        }
+
+        btn.disabled = true;
+        btn.textContent = "⏳ Registering...";
+        status.style.display = "none";
+
+        try {
+          // First try to authenticate
+          let authCookie = "";
+          try {
+            const loginResponse = await fetch(`${mainUrl}/api/auth/login`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ pin: "0000" }),
+              credentials: "include",
+            });
+            if (loginResponse.ok) {
+              console.log("Authenticated with main platform");
+            }
+          } catch (e) {
+            console.warn("Auth failed, proceeding without auth");
+          }
+
+          // Build registration data
+          const registrationData = {
+            stationId: stationConfig.stationId,
+            name: stationConfig.name,
+            type: stationConfig.type,
+            location: {
+              lat: stationConfig.location.lat,
+              lng: stationConfig.location.lng,
+              address: stationConfig.location.address || "",
+            },
+            apiConfig: {
+              baseUrl: `http://localhost:${window.location.port}`,
+              alertEndpoint: "/api/alerts/receive",
+              apiKey: stationConfig.apiKey,
+            },
+            capabilities: stationConfig.capabilities || [
+              stationConfig.type,
+              "general",
+            ],
+            contact: {
+              phone: "+91-20-12345000",
+              email: `${stationConfig.type}@demo.local`,
+              emergencyLine: "100",
+            },
+            isOperational24x7: true,
+          };
+
+          const response = await fetch(`${mainUrl}/api/emergency-stations`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(registrationData),
+            credentials: "include",
+          });
+
+          const data = await response.json();
+
+          if (response.ok && data.success !== false) {
+            status.textContent =
+              "✅ Station registered successfully! You should now see this station on the main platform map.";
+            status.className = "registration-status success";
+          } else if (response.status === 409) {
+            status.textContent =
+              "⚠️ Station is already registered on the platform.";
+            status.className = "registration-status success";
+          } else {
+            throw new Error(data.message || "Registration failed");
+          }
+        } catch (error) {
+          console.error("Registration error:", error);
+          status.textContent = `❌ ${error.message}`;
+          status.className = "registration-status error";
+        } finally {
+          btn.disabled = false;
+          btn.textContent = "🚀 Register This Station";
+          status.style.display = "block";
+        }
+      }
+
+      // Request notification permission on load
+      if ("Notification" in window && Notification.permission === "default") {
+        Notification.requestPermission();
+      }
+
+      // Initialize
+      init();
+    </script>
+  </body>
+</html>

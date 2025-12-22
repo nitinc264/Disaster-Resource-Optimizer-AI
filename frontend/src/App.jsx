@@ -13,10 +13,11 @@ import {
   AccessibilityProvider,
   AccessibilitySettings,
   PinLogin,
+  EmergencyStations,
 } from "./components";
 import { AuthProvider, useAuth, VolunteerRouteProvider } from "./contexts";
 import { VolunteerPage, DashboardPage, ResourcesPage } from "./pages";
-import { LogOut, Globe, Settings, Shield } from "lucide-react";
+import { LogOut, Globe, Settings, Shield, AlertTriangle } from "lucide-react";
 import { initSyncListeners } from "./services/syncService";
 import "./App.css";
 
@@ -102,6 +103,17 @@ function AuthenticatedApp() {
               >
                 {t("nav.resources", "Resources")}
               </NavLink>
+              {isManager && (
+                <NavLink
+                  to="/emergency-stations"
+                  className={({ isActive }) =>
+                    `nav-tab ${isActive ? "active" : ""}`
+                  }
+                >
+                  <AlertTriangle size={14} style={{ marginRight: "4px" }} />
+                  Stations
+                </NavLink>
+              )}
             </nav>
 
             {/* Right Controls */}
@@ -133,6 +145,7 @@ function AuthenticatedApp() {
             <Route path="/tasks" element={<VolunteerPage />} />
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/resources" element={<ResourcesPage />} />
+            <Route path="/emergency-stations" element={<EmergencyStations />} />
             <Route path="*" element={<Navigate to="/dashboard" replace />} />
           </Routes>
         </main>

@@ -1,0 +1,39 @@
+{
+  "name": "emergency-station-demo",
+  "version": "1.0.0",
+  "description": "Demo emergency station websites for testing the alert system",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start:fire": "cross-env STATION_TYPE=fire STATION_PORT=4001 node server.js",
+    "start:hospital": "cross-env STATION_TYPE=hospital STATION_PORT=4002 node server.js",
+    "start:police": "cross-env STATION_TYPE=police STATION_PORT=4003 node server.js",
+    "start:rescue": "cross-env STATION_TYPE=rescue STATION_PORT=4004 node server.js",
+    "start:all": "concurrently \"npm run start:fire\" \"npm run start:hospital\" \"npm run start:police\" \"npm run start:rescue\"",
+    "dev:fire": "cross-env STATION_TYPE=fire STATION_PORT=4001 nodemon server.js",
+    "dev:hospital": "cross-env STATION_TYPE=hospital STATION_PORT=4002 nodemon server.js",
+    "dev:police": "cross-env STATION_TYPE=police STATION_PORT=4003 nodemon server.js",
+    "dev:rescue": "cross-env STATION_TYPE=rescue STATION_PORT=4004 nodemon server.js",
+    "setup": "node scripts/register-stations.js",
+    "db:init": "node scripts/init-station-dbs.js",
+    "db:clear": "node scripts/clear-station-db.js",
+    "test:fire": "node scripts/test-alert.js fire",
+    "test:hospital": "node scripts/test-alert.js hospital",
+    "test:police": "node scripts/test-alert.js police",
+    "test:rescue": "node scripts/test-alert.js rescue"
+  },
+  "dependencies": {
+    "axios": "^1.6.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "mongoose": "^8.0.0",
+    "socket.io": "^4.7.2",
+    "uuid": "^9.0.0"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "cross-env": "^7.0.3",
+    "nodemon": "^3.0.1"
+  }
+}
