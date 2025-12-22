@@ -51,58 +51,61 @@ MIN_CLUSTER_SIZE = 1  # Process every single report immediately (hackathon demo)
 NUM_VEHICLES = 1  # Single vehicle for individual reports
 SEVERITY_THRESHOLD = 0  # Accept all severity levels
 
-# Resource Stations - Multiple depots based on emergency type
-RESOURCE_STATIONS = {
-    "police": [
-        {"name": "Police Station 1 - Pimpri", "lat": 18.6073, "lon": 73.7654},
-        {"name": "Police Station 2 - Chinchwad", "lat": 18.6400, "lon": 73.7945},
-    ],
-    "hospital": [
-        {"name": "Hospital 1 - Wakad", "lat": 18.5135, "lon": 73.7604},
-        {"name": "Hospital 2 - Hadapsar", "lat": 18.4852, "lon": 73.9047},
-        {"name": "Hospital 3 - Hinjewadi", "lat": 18.5870, "lon": 73.7785},
-    ],
-    "fire": [
-        {"name": "Fire Station - Swargate", "lat": 18.4549, "lon": 73.8563},
-    ],
-    "rescue": [
-        {"name": "Rescue Station - Shivajinagar", "lat": 18.5196, "lon": 73.8553},
-    ],
-}
+# Collection for registered emergency stations
+STATIONS_COLLECTION = "emergencystations"
+
+# Cache for stations (refreshed periodically)
+_stations_cache = {}
+_stations_cache_time = 0
+STATIONS_CACHE_TTL = 60  # Refresh station cache every 60 seconds
 
 # Mapping of need types/tags to resource station types (ordered by priority)
 # More specific keywords should be checked first
 NEED_TO_STATION_MAP = [
     # Fire emergencies (high priority - check first)
     ("fire suppression", "fire"),
+    ("gas leak", "fire"),
+    ("hazmat", "fire"),
+    ("chemical", "fire"),
     ("fire", "fire"),
     ("burning", "fire"),
     ("smoke", "fire"),
     ("blaze", "fire"),
+    # Police/Security emergencies (check before medical/rescue)
+    ("need police", "police"),
+    ("call police", "police"),
+    ("stampede", "police"),
+    ("panic", "police"),
+    ("crowd", "police"),
+    ("riot", "police"),
+    ("police", "police"),
+    ("security", "police"),
+    ("crime", "police"),
+    ("theft", "police"),
+    ("robbery", "police"),
+    ("violence", "police"),
+    ("law enforcement", "police"),
     # Medical emergencies
+    ("need ambulance", "hospital"),
     ("medical", "hospital"),
     ("health", "hospital"),
     ("injury", "hospital"),
     ("injured", "hospital"),
     ("sick", "hospital"),
     ("ambulance", "hospital"),
-    ("evacuation", "hospital"),  # Evacuation often needs medical
-    # Police/Security
-    ("police", "police"),
-    ("security", "police"),
-    ("crime", "police"),
-    ("theft", "police"),
-    ("violence", "police"),
-    ("law", "police"),
-    # Rescue operations (lower priority - catch-all for disasters)
+    ("bleeding", "hospital"),
+    ("unconscious", "hospital"),
+    # Rescue operations (catch-all for disasters)
     ("rescue", "rescue"),
     ("trapped", "rescue"),
+    ("stuck", "rescue"),
     ("flood", "rescue"),
     ("earthquake", "rescue"),
     ("collapse", "rescue"),
+    ("evacuation", "rescue"),
     ("water", "rescue"),
     ("food", "rescue"),
-    ("disaster", "rescue"),  # Generic disaster - lowest priority
+    ("disaster", "rescue"),
     ("other", "rescue"),
 ]
 
@@ -136,6 +139,56 @@ def haversine(lat1, lon1, lat2, lon2):
     c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
     
     return R * c
+
+
+def get_registered_stations(db):
+    """
+    Fetch all active registered emergency stations from the database.
+    Results are cached for STATIONS_CACHE_TTL seconds to avoid excessive DB queries.
+    
+    Args:
+        db: MongoDB database instance
+    
+    Returns:
+        Dictionary mapping station types to list of station dicts
+        e.g., {'fire': [{'name': '...', 'lat': ..., 'lon': ...}], ...}
+    """
+    global _stations_cache, _stations_cache_time
+    
+    current_time = time.time()
+    
+    # Return cached stations if still valid
+    if _stations_cache and (current_time - _stations_cache_time) < STATIONS_CACHE_TTL:
+        return _stations_cache
+    
+    stations_collection = db[STATIONS_COLLECTION]
+    
+    # Fetch all active stations
+    query = {'status': 'active'}
+    cursor = stations_collection.find(query)
+    
+    # Group stations by type
+    stations_by_type = {}
+    for station in cursor:
+        station_type = station.get('type', 'rescue')
+        if station_type not in stations_by_type:
+            stations_by_type[station_type] = []
+        
+        # Convert to our internal format (note: DB uses 'lng', we use 'lon')
+        location = station.get('location', {})
+        stations_by_type[station_type].append({
+            'name': station.get('name', 'Unknown Station'),
+            'lat': location.get('lat'),
+            'lon': location.get('lng'),  # Convert lng to lon
+            'id': str(station.get('_id')),
+            'stationId': station.get('stationId'),
+        })
+    
+    # Update cache
+    _stations_cache = stations_by_type
+    _stations_cache_time = current_time
+    
+    return stations_by_type
 
 
 def get_osrm_route(waypoints, profile="driving"):
@@ -385,11 +438,12 @@ def save_need_mission(db, routes, need_ids, station_info=None):
     return mission_id
 
 
-def get_nearest_station(report_lat, report_lng, station_type):
+def get_nearest_station(db, report_lat, report_lng, station_type):
     """
-    Find the nearest station of a given type to the report location.
+    Find the nearest registered station of a given type to the report location.
     
     Args:
+        db: MongoDB database instance
         report_lat: Report latitude
         report_lng: Report longitude
         station_type: Type of station (police, hospital, fire, rescue)
@@ -397,15 +451,37 @@ def get_nearest_station(report_lat, report_lng, station_type):
     Returns:
         Nearest station dict with name, lat, lon
     """
-    stations = RESOURCE_STATIONS.get(station_type, [])
+    # Get registered stations from database
+    registered_stations = get_registered_stations(db)
+    stations = registered_stations.get(station_type, [])
+    
+    # If no stations of the exact type, try related types
+    if not stations:
+        # Fallback mapping: try related station types
+        fallback_types = {
+            'hospital': ['ambulance', 'rescue'],
+            'ambulance': ['hospital', 'rescue'],
+            'fire': ['rescue'],
+            'police': ['rescue'],
+            'rescue': ['fire', 'hospital', 'police'],
+        }
+        for fallback_type in fallback_types.get(station_type, []):
+            stations = registered_stations.get(fallback_type, [])
+            if stations:
+                print(f"[Logistics]    No {station_type.upper()} stations, using {fallback_type.upper()} instead")
+                break
     
     if not stations:
+        print(f"[Logistics]    ⚠️ No registered stations available for {station_type.upper()}")
         return DEFAULT_DEPOT
     
     nearest = None
     min_distance = float('inf')
     
     for station in stations:
+        # Skip stations without valid coordinates
+        if station.get('lat') is None or station.get('lon') is None:
+            continue
         dist = haversine(report_lat, report_lng, station['lat'], station['lon'])
         if dist < min_distance:
             min_distance = dist
@@ -528,11 +604,18 @@ def run_logistics_agent():
         print(f"[Logistics] ❌ Failed to connect to MongoDB: {e}")
         return
     
-    # Print available stations
-    print(f"[Logistics] 🏥 Resource Stations:")
-    for station_type, stations in RESOURCE_STATIONS.items():
-        for s in stations:
-            print(f"[Logistics]    {station_type.upper()}: {s['name']} ({s['lat']}, {s['lon']})")
+    # Print registered stations from database
+    print(f"[Logistics] 🏥 Loading Registered Stations from Database...")
+    registered_stations = get_registered_stations(db)
+    total_stations = sum(len(stations) for stations in registered_stations.values())
+    
+    if total_stations == 0:
+        print(f"[Logistics] ⚠️ No registered stations found! Please register stations at /emergency-stations")
+    else:
+        for station_type, stations in registered_stations.items():
+            for s in stations:
+                print(f"[Logistics]    {station_type.upper()}: {s['name']} ({s.get('lat', 'N/A')}, {s.get('lon', 'N/A')})")
+        print(f"[Logistics] ✅ Loaded {total_stations} registered stations")
     
     print(f"[Logistics] 🔄 Polling every {POLL_INTERVAL_SECONDS} seconds...")
     print("-" * 60)
@@ -574,8 +657,8 @@ def run_logistics_agent():
                                 'type': rerouted.get('type')
                             }
                         else:
-                            # Find nearest station of that type
-                            station = get_nearest_station(report_lat, report_lng, station_type)
+                            # Find nearest registered station of that type
+                            station = get_nearest_station(db, report_lat, report_lng, station_type)
                         
                         print(f"[Logistics] 📍 Report: {report_uuid}")
                         print(f"[Logistics]    Need type: {station_type.upper()}")
@@ -648,8 +731,8 @@ def run_logistics_agent():
                                 'type': rerouted.get('type')
                             }
                         else:
-                            # Find nearest station of that type
-                            station = get_nearest_station(need_lat, need_lon, station_type)
+                            # Find nearest registered station of that type
+                            station = get_nearest_station(db, need_lat, need_lon, station_type)
                         
                         need_type = need.get('triageData', {}).get('needType', 'Unknown')
                         print(f"[Logistics] 📋 Verified Need: {need_id}")

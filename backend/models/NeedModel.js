@@ -56,6 +56,38 @@ const NeedSchema = new mongoose.Schema(
       default: "Unverified",
     },
     /**
+     * Emergency status tracking for station dispatch
+     */
+    emergencyStatus: {
+      type: String,
+      enum: [
+        "none",
+        "pending",
+        "assigned",
+        "dispatched",
+        "rejected",
+        "resolved",
+      ],
+      default: "none",
+    },
+    emergencyType: {
+      type: String,
+      default: "general",
+    },
+    emergencyAlertId: {
+      type: String,
+    },
+    assignedStation: {
+      stationId: mongoose.Schema.Types.ObjectId,
+      stationName: String,
+      stationType: String,
+      assignedAt: Date,
+      dispatchedAt: Date,
+      rejectedAt: Date,
+      resolvedAt: Date,
+      rejectionReason: String,
+    },
+    /**
      * Stores the structured data from the Gemini AI triage.
      */
     triageData: TriageDataSchema,

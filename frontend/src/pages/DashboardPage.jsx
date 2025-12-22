@@ -174,7 +174,8 @@ function DashboardPage() {
         (need) =>
           typeof need.lat === "number" &&
           typeof need.lon === "number" &&
-          need.status !== "Completed"
+          need.status !== "Completed" &&
+          need.emergencyStatus !== "resolved" // Exclude resolved emergencies
       ),
     [needsData]
   );
@@ -208,7 +209,8 @@ function DashboardPage() {
             report.status === "Clustered" ||
             report.status === "InProgress") &&
           typeof report.lat === "number" &&
-          typeof report.lon === "number"
+          typeof report.lon === "number" &&
+          report.emergencyStatus !== "resolved" // Exclude resolved emergencies
       ),
     [reportsData]
   );

@@ -3,6 +3,7 @@ import { asyncHandler, ApiError } from "../middleware/index.js";
 import { sendSuccess } from "../utils/apiResponse.js";
 import { logger } from "../utils/appLogger.js";
 import { STATUS } from "../constants/index.js";
+import { dispatchEmergencyAlert } from "../services/emergencyAlertService.js";
 
 const MAX_UNVERIFIED = 50;
 const MAX_VERIFIED = 100;
@@ -40,6 +41,10 @@ const toMapNeedDto = (need) => ({
   lat: need.coordinates?.lat,
   lon: need.coordinates?.lon,
   status: need.status,
+  emergencyStatus: need.emergencyStatus || "none",
+  emergencyType: need.emergencyType || "general",
+  emergencyAlertId: need.emergencyAlertId,
+  assignedStation: need.assignedStation,
   description: describeNeed(need),
   needType: need.triageData?.needType,
   urgency: need.triageData?.urgency,
@@ -92,6 +97,30 @@ export const verifyTask = asyncHandler(async (req, res) => {
   }
 
   logger.info(`Task ${taskId} verified successfully`);
+
+  // Dispatch emergency alert to appropriate stations
+  if (updatedNeed.coordinates?.lat && updatedNeed.coordinates?.lon) {
+    try {
+      logger.info(`Dispatching emergency alert for verified task ${taskId}`);
+      const alertResult = await dispatchEmergencyAlert(updatedNeed, "Need");
+
+      if (alertResult.success) {
+        logger.info(`Emergency alert dispatched: ${alertResult.alertId}`, {
+          stationsNotified: alertResult.stationsNotified,
+          emergencyType: alertResult.emergencyType,
+        });
+      } else {
+        logger.warn(`Failed to dispatch emergency alert: ${alertResult.error}`);
+      }
+    } catch (alertError) {
+      // Don't fail the verification if alert dispatch fails
+      logger.error("Error dispatching emergency alert:", alertError);
+    }
+  } else {
+    logger.warn(
+      `Task ${taskId} verified but has no coordinates for alert dispatch`
+    );
+  }
 
   sendSuccess(
     res,

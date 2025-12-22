@@ -28,6 +28,7 @@ import {
   requestLogger,
 } from "./middleware/index.js";
 import { initializeDefaultManager } from "./controllers/authController.js";
+import { dispatchEmergencyAlert } from "./services/emergencyAlertService.js";
 
 // ES Module directory resolution
 const __filename = fileURLToPath(import.meta.url);
@@ -399,6 +400,63 @@ app.patch("/api/reports/:id/update-agent", async (req, res) => {
     if (!updatedReport) {
       return res.status(404).json({ message: "Report not found" });
     }
+
+    // Dispatch emergency alert when report is fully analyzed
+    const analyzedStatuses = ["Analyzed", "Analyzed_Full"];
+    if (status && analyzedStatuses.includes(status)) {
+      try {
+        console.log(
+          `📢 Report ${id} analyzed, checking for emergency dispatch...`
+        );
+
+        // Only dispatch if we have location and a valid disaster detection
+        if (updatedReport.location?.lat && updatedReport.location?.lng) {
+          // Check if it's a valid disaster (high confidence or high severity)
+          const confidence = updatedReport.sentinelData?.confidence || 0;
+          const severity = updatedReport.oracleData?.severity || 0;
+          const tag = updatedReport.sentinelData?.tag || "";
+
+          // Dispatch if: high confidence detection OR high severity OR has specific disaster tags
+          const disasterTags = [
+            "fire",
+            "flood",
+            "earthquake",
+            "accident",
+            "collapse",
+            "rescue",
+          ];
+          const isDisaster =
+            confidence >= 0.6 ||
+            severity >= 5 ||
+            disasterTags.some((t) => tag.toLowerCase().includes(t));
+
+          if (isDisaster) {
+            console.log(`🚨 Dispatching emergency alert for report ${id}`);
+            const alertResult = await dispatchEmergencyAlert(
+              updatedReport,
+              "Report"
+            );
+
+            if (alertResult.success) {
+              console.log(
+                `✅ Alert dispatched: ${alertResult.alertId} to ${alertResult.stationsNotified} stations`
+              );
+            } else {
+              console.warn(`⚠️ Alert dispatch failed: ${alertResult.error}`);
+            }
+          } else {
+            console.log(
+              `ℹ️ Report ${id} not classified as emergency (confidence: ${confidence}, severity: ${severity})`
+            );
+          }
+        }
+      } catch (alertError) {
+        console.error("Error dispatching emergency alert:", alertError);
+        // Don't fail the update if alert dispatch fails
+      }
+    }
+
+    res.json(updatedReport);
 
     res.json(updatedReport);
   } catch (error) {
