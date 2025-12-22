@@ -118,7 +118,7 @@ const AudioReporter = () => {
     } catch (err) {
       console.error("Error accessing microphone:", err);
       setPermissionStatus("denied");
-      setError(t("audio.micError"));
+      setError(t("audio.permissionDenied"));
     }
   };
 
@@ -197,23 +197,23 @@ const AudioReporter = () => {
         {uploadSuccess ? (
           <div className="success-message">
             <CheckCircle className="success-icon" />
-            <h3>{t("audio.successTitle")}</h3>
-            <p>{t("audio.successMessage")}</p>
+            <h3>{t("audio.uploadSuccess")}</h3>
+            <p>{t("audio.transcriptionPending")}</p>
             <button
               className="btn-action btn-primary btn-full"
               onClick={() => setUploadSuccess(null)}
             >
-              {t("audio.recordNew")}
+              {t("audio.holdToRecord")}
             </button>
           </div>
         ) : (
           <>
             <p className="audio-reporter-subtitle">
               {isRecording
-                ? t("audio.recordingMessage")
+                ? t("audio.recording")
                 : audioUrl
-                ? t("audio.reviewMessage")
-                : t("audio.instruction")}
+                ? t("audio.preview")
+                : t("audio.recordingHint")}
             </p>
 
             {error && (
@@ -231,7 +231,7 @@ const AudioReporter = () => {
                     className={`mic-button ${isRecording ? "recording" : ""}`}
                     onClick={handleToggleRecording}
                     aria-label={
-                      isRecording ? t("audio.stop") : t("audio.start")
+                      isRecording ? "Stop" : "Start"
                     }
                   >
                     {isRecording ? (
@@ -255,7 +255,7 @@ const AudioReporter = () => {
                       {formatTime(recordingTime)}
                     </span>
                   ) : (
-                    <span>{t("audio.tapToRecord")}</span>
+                    <span>{t("audio.holdToRecord")}</span>
                   )}
                 </div>
               </div>
@@ -283,12 +283,12 @@ const AudioReporter = () => {
                     {isUploading ? (
                       <>
                         <Hourglass size={18} className="animate-spin" />
-                        {t("audio.sending")}
+                        {t("audio.uploading")}
                       </>
                     ) : (
                       <>
                         <Upload size={18} />
-                        {t("audio.send")}
+                        {t("audio.upload")}
                       </>
                     )}
                   </button>

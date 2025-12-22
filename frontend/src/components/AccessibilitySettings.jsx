@@ -1,6 +1,6 @@
 import { useState, useEffect, createContext, useContext } from "react";
 import { useTranslation } from "react-i18next";
-import { Sun, Type, Globe, Settings, X, RotateCcw } from "lucide-react";
+import { Sun, Moon, Globe, Settings, X, RotateCcw } from "lucide-react";
 import { languages } from "../i18n";
 import "./AccessibilitySettings.css";
 
@@ -25,8 +25,7 @@ export function AccessibilityProvider({ children }) {
     return saved
       ? JSON.parse(saved)
       : {
-          highContrast: false,
-          largeText: false,
+          darkMode: true,
         };
   });
 
@@ -34,36 +33,13 @@ export function AccessibilityProvider({ children }) {
   useEffect(() => {
     const root = document.documentElement;
 
-    // High contrast - apply CSS variable overrides
-    if (settings.highContrast) {
-      root.style.setProperty("--text-primary", "#ffffff");
-      root.style.setProperty("--text-secondary", "#e2e8f0");
-      root.style.setProperty("--text-muted", "#cbd5e1");
-      root.style.setProperty("--background", "#000000");
-      root.style.setProperty("--surface", "#0f172a");
-      root.style.setProperty("--border-color", "#475569");
-      root.classList.add("high-contrast");
+    // Dark/Light mode
+    if (settings.darkMode) {
+      root.classList.add("dark-mode");
+      root.classList.remove("light-mode");
     } else {
-      root.style.removeProperty("--text-primary");
-      root.style.removeProperty("--text-secondary");
-      root.style.removeProperty("--text-muted");
-      root.style.removeProperty("--background");
-      root.style.removeProperty("--surface");
-      root.style.removeProperty("--border-color");
-      root.classList.remove("high-contrast");
-    }
-
-    // Large text - scale up font sizes
-    if (settings.largeText) {
-      root.style.setProperty("--font-size-base", "18px");
-      root.style.setProperty("--font-size-sm", "16px");
-      root.style.setProperty("--font-size-lg", "22px");
-      root.classList.add("large-text");
-    } else {
-      root.style.removeProperty("--font-size-base");
-      root.style.removeProperty("--font-size-sm");
-      root.style.removeProperty("--font-size-lg");
-      root.classList.remove("large-text");
+      root.classList.add("light-mode");
+      root.classList.remove("dark-mode");
     }
 
     // Persist settings
@@ -79,8 +55,7 @@ export function AccessibilityProvider({ children }) {
 
   const resetSettings = () => {
     setSettings({
-      highContrast: false,
-      largeText: false,
+      darkMode: true,
     });
   };
 
@@ -157,28 +132,13 @@ export default function AccessibilitySettings({ isOpen, onClose }) {
 
             <div className="setting-item">
               <div className="setting-info">
-                <Type size={18} />
-                <span>{t("settings.largeText")}</span>
+                {settings.darkMode ? <Moon size={18} /> : <Sun size={18} />}
+                <span>{settings.darkMode ? t("settings.darkMode") : t("settings.lightMode")}</span>
               </div>
               <button
-                className={`toggle ${settings.largeText ? "on" : ""}`}
-                onClick={() => toggleSetting("largeText")}
-                aria-pressed={settings.largeText}
-                role="switch"
-              >
-                <span className="toggle-thumb" />
-              </button>
-            </div>
-
-            <div className="setting-item">
-              <div className="setting-info">
-                <Sun size={18} />
-                <span>{t("settings.highContrast")}</span>
-              </div>
-              <button
-                className={`toggle ${settings.highContrast ? "on" : ""}`}
-                onClick={() => toggleSetting("highContrast")}
-                aria-pressed={settings.highContrast}
+                className={`toggle ${settings.darkMode ? "on" : ""}`}
+                onClick={() => toggleSetting("darkMode")}
+                aria-pressed={settings.darkMode}
                 role="switch"
               >
                 <span className="toggle-thumb" />

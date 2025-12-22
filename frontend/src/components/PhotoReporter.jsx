@@ -124,13 +124,13 @@ const PhotoReporter = () => {
 
     // Validate file type
     if (!file.type.startsWith("image/")) {
-      setError(t("photo.invalidType"));
+      setError(t("photo.invalidFile"));
       return;
     }
 
     // Validate file size (max 10MB)
     if (file.size > 10 * 1024 * 1024) {
-      setError(t("photo.tooLarge"));
+      setError(t("photo.tooLarge", "File too large (max 10MB)"));
       return;
     }
 
@@ -201,14 +201,14 @@ const PhotoReporter = () => {
         {uploadSuccess ? (
           <div className="success-message">
             <CheckCircle className="success-icon" />
-            <h3>{t("photo.successTitle")}</h3>
-            <p>{t("photo.successMessage")}</p>
+            <h3>{t("photo.uploadSuccess")}</h3>
+            <p>{t("photo.uploadSuccess")}</p>
             <button
               className="btn-submit"
               onClick={() => setUploadSuccess(null)}
               style={{ marginTop: "1rem" }}
             >
-              {t("photo.takeAnother")}
+              {t("photo.takePhoto")}
             </button>
           </div>
         ) : (
@@ -262,7 +262,7 @@ const PhotoReporter = () => {
                   onClick={() => fileInputRef.current?.click()}
                 >
                   <Upload className="photo-input-icon" />
-                  <span className="photo-input-label">{t("photo.upload")}</span>
+                  <span className="photo-input-label">{t("photo.chooseFile")}</span>
                 </button>
 
                 <input
@@ -291,14 +291,11 @@ const PhotoReporter = () => {
 
                 <div className="photo-caption-container">
                   <label className="photo-caption-label">
-                    {t("photo.descriptionLabel", "Description")}
+                    {t("photo.caption")}
                   </label>
                   <textarea
                     className="photo-caption-input"
-                    placeholder={t(
-                      "photo.captionPlaceholder",
-                      "Add a description of the situation..."
-                    )}
+                    placeholder={t("photo.captionPlaceholder")}
                     value={caption}
                     onChange={(e) => setCaption(e.target.value)}
                   />
@@ -313,12 +310,12 @@ const PhotoReporter = () => {
                     {isUploading ? (
                       <>
                         <Loader2 size={20} className="animate-spin" />
-                        {t("photo.sending")}
+                        {t("photo.uploading")}
                       </>
                     ) : (
                       <>
                         <Send size={20} />
-                        {t("photo.send")}
+                        {t("photo.upload")}
                       </>
                     )}
                   </button>

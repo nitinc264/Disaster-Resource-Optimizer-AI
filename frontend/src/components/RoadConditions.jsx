@@ -12,7 +12,6 @@ import {
   Droplets,
   Construction,
   Trash2,
-  ThumbsUp,
   ChevronDown,
   ChevronUp,
   Plus,
@@ -54,7 +53,7 @@ const SeverityBadge = ({ severity }) => {
   );
 };
 
-const RoadConditionCard = ({ condition, onVerify, onResolve }) => {
+const RoadConditionCard = ({ condition, onResolve }) => {
   const [expanded, setExpanded] = useState(false);
   const { t } = useTranslation();
 
@@ -125,33 +124,14 @@ const RoadConditionCard = ({ condition, onVerify, onResolve }) => {
               </div>
             )}
 
-            <div className="detail-item">
-              <span className="detail-label">{t("roads.verification")}</span>
-              <div className="detail-value">
-                <ThumbsUp size={14} />
-                <span>
-                  {condition.verification?.count || 0} {t("roads.verified")}
-                </span>
-              </div>
-            </div>
           </div>
 
           <div className="condition-actions">
             <button
-              className="btn-verify"
-              onClick={(e) => {
-                e.stopPropagation();
-                onVerify(condition._id);
-              }}
-            >
-              <CheckCircle size={14} />
-              {t("roads.verify")}
-            </button>
-            <button
               className="btn-resolve"
               onClick={(e) => {
                 e.stopPropagation();
-                onResolve(condition._id);
+                onResolve(condition.conditionId || condition._id);
               }}
             >
               <Navigation size={14} />
@@ -164,7 +144,7 @@ const RoadConditionCard = ({ condition, onVerify, onResolve }) => {
   );
 };
 
-const ReportConditionForm = ({ onSubmit, onCancel, currentLocation }) => {
+const ReportConditionForm = ({ onSubmit, onCancel, currentLocation, isSubmitting }) => {
   const { t } = useTranslation();
   const [formData, setFormData] = useState({
     conditionType: "blocked",
@@ -180,11 +160,14 @@ const ReportConditionForm = ({ onSubmit, onCancel, currentLocation }) => {
       conditionType: formData.conditionType,
       severity: formData.severity,
       description: formData.description,
+      // Backend expects simple lat/lng fields, not GeoJSON
       startPoint: {
-        type: "Point",
-        coordinates: currentLocation
-          ? [currentLocation.lng, currentLocation.lat]
-          : [0, 0],
+        lat: currentLocation?.lat ?? 0,
+        lng: currentLocation?.lng ?? 0,
+      },
+      endPoint: {
+        lat: currentLocation?.lat ?? 0,
+        lng: currentLocation?.lng ?? 0,
       },
     };
 
@@ -230,7 +213,7 @@ const ReportConditionForm = ({ onSubmit, onCancel, currentLocation }) => {
       </div>
 
       <div className="form-group">
-        <label>{t("roads.description")}</label>
+        <label>{t("roads.description")} *</label>
         <textarea
           value={formData.description}
           onChange={(e) =>
@@ -238,6 +221,7 @@ const ReportConditionForm = ({ onSubmit, onCancel, currentLocation }) => {
           }
           placeholder={t("roads.description")}
           rows={3}
+          required
         />
       </div>
 
@@ -259,10 +243,10 @@ const ReportConditionForm = ({ onSubmit, onCancel, currentLocation }) => {
         <button
           type="submit"
           className="btn-submit"
-          disabled={!currentLocation}
+          disabled={!currentLocation || !formData.description.trim() || isSubmitting}
         >
           <AlertTriangle size={14} />
-          {t("roads.reportBtn")}
+          {isSubmitting ? t("common.loading") : t("roads.reportBtn")}
         </button>
       </div>
     </form>
@@ -274,6 +258,10 @@ export default function RoadConditions({ currentLocation, onConditionClick }) {
   const queryClient = useQueryClient();
   const [showReportForm, setShowReportForm] = useState(false);
   const [filter, setFilter] = useState("all");
+  const invalidateRoadQueries = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: ["roadConditions"] });
+    queryClient.invalidateQueries({ queryKey: ["road-conditions-map"] });
+  }, [queryClient]);
 
   // Fetch road conditions
   const {
@@ -294,16 +282,13 @@ export default function RoadConditions({ currentLocation, onConditionClick }) {
   const createMutation = useMutation({
     mutationFn: (data) => roadConditionsAPI.create(data),
     onSuccess: () => {
-      queryClient.invalidateQueries(["roadConditions"]);
+      invalidateRoadQueries();
       setShowReportForm(false);
     },
-  });
-
-  // Verify mutation
-  const verifyMutation = useMutation({
-    mutationFn: (id) => roadConditionsAPI.verify(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries(["roadConditions"]);
+    onError: (error) => {
+      console.error("Failed to report condition:", error);
+      const message = error?.response?.data?.message || error.message || "Failed to submit report";
+      alert(message);
     },
   });
 
@@ -311,7 +296,7 @@ export default function RoadConditions({ currentLocation, onConditionClick }) {
   const resolveMutation = useMutation({
     mutationFn: (id) => roadConditionsAPI.resolve(id),
     onSuccess: () => {
-      queryClient.invalidateQueries(["roadConditions"]);
+      invalidateRoadQueries();
     },
   });
 
@@ -360,11 +345,12 @@ export default function RoadConditions({ currentLocation, onConditionClick }) {
           onSubmit={handleReportSubmit}
           onCancel={() => setShowReportForm(false)}
           currentLocation={currentLocation}
+          isSubmitting={createMutation.isPending}
         />
       )}
 
       <div className="filter-tabs">
-        {["all", "active", "verified", "resolved"].map((f) => (
+        {["all", "active", "verified", "cleared"].map((f) => (
           <button
             key={f}
             className={`filter-tab ${filter === f ? "active" : ""}`}
@@ -390,9 +376,8 @@ export default function RoadConditions({ currentLocation, onConditionClick }) {
         ) : (
           conditions.map((condition) => (
             <RoadConditionCard
-              key={condition._id}
+              key={condition.conditionId || condition._id}
               condition={condition}
-              onVerify={(id) => verifyMutation.mutate(id)}
               onResolve={(id) => resolveMutation.mutate(id)}
             />
           ))

@@ -83,6 +83,25 @@ const ShelterCard = ({ shelter, onEdit, onUpdate }) => {
     ((shelter.capacity?.current || 0) / (shelter.capacity?.total || 1)) * 100
   );
 
+  // Helper to get facilities array
+  const facilitiesList = Array.isArray(shelter.facilities)
+    ? shelter.facilities
+    : Object.keys(shelter.facilities || {}).reduce((acc, key) => {
+        if (key === "hasWater" && shelter.facilities[key]) acc.push("water");
+        if (key === "hasElectricity" && shelter.facilities[key])
+          acc.push("electricity");
+        if (key === "hasInternet" && shelter.facilities[key]) acc.push("wifi");
+        if (key === "hasMedicalFacility" && shelter.facilities[key])
+          acc.push("medical");
+        if (key === "hasKitchen" && shelter.facilities[key]) acc.push("kitchen");
+        if (key === "hasShowers" && shelter.facilities[key] > 0)
+          acc.push("showers");
+        return acc;
+      }, []);
+
+  const contact = shelter.contact || shelter.contactInfo || {};
+  const managerName = contact.managerName || contact.manager;
+
   return (
     <div className={`shelter-card ${shelter.status}`}>
       <div className="shelter-header" onClick={() => setExpanded(!expanded)}>
@@ -132,11 +151,11 @@ const ShelterCard = ({ shelter, onEdit, onUpdate }) => {
 
       {expanded && (
         <div className="shelter-details">
-          {shelter.facilities && shelter.facilities.length > 0 && (
+          {facilitiesList.length > 0 && (
             <div className="detail-section">
               <h5>{t("shelter.facilitiesAvailable")}</h5>
               <div className="facilities-list">
-                {shelter.facilities.map((facility, index) => (
+                {facilitiesList.map((facility, index) => (
                   <span key={index} className="facility-tag">
                     <FacilityIcon facility={facility} />
                     {facility}
@@ -196,17 +215,14 @@ const ShelterCard = ({ shelter, onEdit, onUpdate }) => {
             </div>
           )}
 
-          {shelter.contactInfo && (
+          {(contact.phone || managerName) && (
             <div className="detail-section">
               <h5>{t("shelter.contact")}</h5>
               <div className="contact-info">
-                {shelter.contactInfo.phone && (
-                  <a
-                    href={`tel:${shelter.contactInfo.phone}`}
-                    className="contact-link"
-                  >
+                {contact.phone && (
+                  <a href={`tel:${contact.phone}`} className="contact-link">
                     <Phone size={14} />
-                    {shelter.contactInfo.phone}
+                    {contact.phone}
                   </a>
                 )}
                 {shelter.contactInfo.manager && (
@@ -289,12 +305,8 @@ const AddShelterForm = ({ onSubmit, onCancel, currentLocation }) => {
       name: formData.name,
       location: {
         address: formData.address,
-        point: currentLocation
-          ? {
-              type: "Point",
-              coordinates: [currentLocation.lng, currentLocation.lat],
-            }
-          : undefined,
+        lat: currentLocation?.lat || 0,
+        lng: currentLocation?.lng || 0,
       },
       capacity: {
         total: parseInt(formData.totalCapacity),
@@ -303,10 +315,20 @@ const AddShelterForm = ({ onSubmit, onCancel, currentLocation }) => {
         children: 0,
         elderly: 0,
       },
-      facilities: formData.facilities,
-      contactInfo: {
+      facilities: {
+        hasWater: formData.facilities.includes("water"),
+        hasElectricity: formData.facilities.includes("electricity"),
+        hasInternet: formData.facilities.includes("wifi"),
+        hasMedicalFacility: formData.facilities.includes("medical"),
+        hasKitchen: formData.facilities.includes("kitchen"),
+        hasShowers: formData.facilities.includes("showers") ? 1 : 0,
+        hasToilets: 0,
+        isAccessible: false,
+        hasPetArea: false,
+      },
+      contact: {
         phone: formData.phone,
-        manager: formData.manager,
+        managerName: formData.manager,
       },
       status: "open",
     };

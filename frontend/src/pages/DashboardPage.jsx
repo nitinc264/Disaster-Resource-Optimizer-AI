@@ -15,6 +15,7 @@ import {
   ShelterManagement,
   VolunteerManagement,
 } from "../components";
+import { ResourcesPage } from "./index";
 import { useAuth, useVolunteerRoute } from "../contexts";
 import {
   getNeedsForMap,
@@ -23,9 +24,17 @@ import {
   completeMission,
   rerouteMission,
   getUnverifiedTasks,
+  getRoadConditions,
 } from "../services";
 import { SYNC_COMPLETE_EVENT } from "../services/syncService";
 import "./DashboardPage.css";
+
+const severityScoreMap = {
+  low: 3,
+  medium: 5,
+  high: 7,
+  critical: 10,
+};
 
 function DashboardPage() {
   const { t } = useTranslation();
@@ -117,6 +126,14 @@ function DashboardPage() {
     refetchInterval: 10000,
     enabled: isVolunteer, // Only fetch for volunteers
   });
+
+  const { data: roadConditions = [], isLoading: isRoadConditionsLoading } =
+    useQuery({
+      queryKey: ["road-conditions-map"],
+      queryFn: () => getRoadConditions({ status: "active" }),
+      refetchInterval: 30000,
+      enabled: isManager || isVolunteer,
+    });
 
   // Fetch reports
   const {
@@ -235,11 +252,32 @@ function DashboardPage() {
       }));
   }, [volunteerTasks]);
 
+  const roadConditionMapItems = useMemo(() => {
+    return (roadConditions || [])
+      .filter(
+        (condition) =>
+          typeof condition?.startPoint?.lat === "number" &&
+          typeof condition?.startPoint?.lng === "number"
+      )
+      .map((condition) => ({
+        id: condition.conditionId || condition._id,
+        lat: condition.startPoint.lat,
+        lon: condition.startPoint.lng,
+        status: "Report",
+        category: condition.conditionType || "Road",
+        severity: severityScoreMap[condition.severity] ?? 5,
+        needs: condition.roadName ? [condition.roadName] : [],
+        text: condition.description,
+        description: condition.description,
+        isReport: true,
+      }));
+  }, [roadConditions]);
+
   // Combine needs and analyzed reports for the map (manager view)
   const allMapItems = useMemo(() => {
     // For volunteers, only show their assigned tasks
     if (isVolunteer) {
-      return volunteerMapItems;
+      return [...volunteerMapItems, ...roadConditionMapItems];
     }
     // For managers, show all needs, reports, and SOS alerts
     const reportItems = analyzedReports.map((report) => ({
@@ -253,8 +291,15 @@ function DashboardPage() {
       text: report.text || report.transcription,
       isReport: true,
     }));
-    return [...needs, ...reportItems, ...sosMapItems];
-  }, [needs, analyzedReports, sosMapItems, isVolunteer, volunteerMapItems]);
+    return [...needs, ...reportItems, ...sosMapItems, ...roadConditionMapItems];
+  }, [
+    needs,
+    analyzedReports,
+    sosMapItems,
+    roadConditionMapItems,
+    isVolunteer,
+    volunteerMapItems,
+  ]);
 
   const handleReportClick = (report) => {
     setSelectedReportId(report.id);
@@ -516,7 +561,10 @@ function DashboardPage() {
                   volunteerRoute={activeRoute}
                   isRouteFallback={routeInfo?.isFallback || false}
                 />
-                {(isNeedsLoading || isReportsLoading) && !isVolunteer && (
+                {(isNeedsLoading ||
+                  isReportsLoading ||
+                  isRoadConditionsLoading) &&
+                  !isVolunteer && (
                   <div className="map-loading-overlay">
                     <div className="spinner"></div>
                     <span>{t("common.loading")}</span>
@@ -611,9 +659,8 @@ function DashboardPage() {
           )}
 
           {activeTab === "resources" && isManager && (
-            <div className="dashboard-fullwidth">
-              <ResourceTracker />
-              <ResourceInventory />
+            <div className="dashboard-fullwidth" style={{ padding: 0 }}>
+              <ResourcesPage />
             </div>
           )}
 

@@ -133,12 +133,12 @@ function MissingPersonReport() {
     return (
       <div className="missing-success">
         <CheckCircle size={48} />
-        <h3>Report Submitted Successfully</h3>
+        <h3>{t("missingPerson.success.title")}</h3>
         <p>
-          Thank you for reporting. Our team will start searching immediately.
+          {t("missingPerson.success.message")}
         </p>
         <button onClick={() => setSuccess(false)} className="btn-primary">
-          Report Another
+          {t("missingPerson.success.button")}
         </button>
       </div>
     );

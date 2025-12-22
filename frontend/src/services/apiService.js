@@ -206,7 +206,8 @@ export async function reportRoadCondition(condition) {
     const response = await apiClient.post("/roads", condition);
     return response.data.data;
   } catch (error) {
-    console.error("Error reporting road condition:", error);
+    const message = error?.response?.data?.message || error.message;
+    console.error("Error reporting road condition:", message, error?.response?.data);
     throw error;
   }
 }
@@ -251,7 +252,7 @@ export const roadConditionsAPI = {
   }),
   create: (payload) => reportRoadCondition(payload),
   verify: (id, verifiedBy = "dashboard") => verifyRoadCondition(id, verifiedBy),
-  resolve: (id) => updateRoadConditionStatus(id, "resolved"),
+  resolve: (id) => updateRoadConditionStatus(id, "cleared"),
 };
 
 // ============================================

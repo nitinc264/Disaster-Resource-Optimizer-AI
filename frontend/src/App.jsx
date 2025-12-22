@@ -16,7 +16,7 @@ import {
   EmergencyStations,
 } from "./components";
 import { AuthProvider, useAuth, VolunteerRouteProvider } from "./contexts";
-import { VolunteerPage, DashboardPage } from "./pages";
+import { VolunteerPage, DashboardPage, ResourcesPage } from "./pages";
 import { LogOut, Globe, Settings, Shield, AlertTriangle } from "lucide-react";
 import { initSyncListeners } from "./services/syncService";
 import "./App.css";
@@ -95,6 +95,14 @@ function AuthenticatedApp() {
               >
                 {t("nav.tasks")}
               </NavLink>
+              <NavLink
+                to="/resources"
+                className={({ isActive }) =>
+                  `nav-tab ${isActive ? "active" : ""}`
+                }
+              >
+                {t("nav.resources", "Resources")}
+              </NavLink>
               {isManager && (
                 <NavLink
                   to="/emergency-stations"
@@ -136,6 +144,7 @@ function AuthenticatedApp() {
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
             <Route path="/tasks" element={<VolunteerPage />} />
             <Route path="/dashboard" element={<DashboardPage />} />
+            <Route path="/resources" element={<ResourcesPage />} />
             <Route path="/emergency-stations" element={<EmergencyStations />} />
             <Route path="*" element={<Navigate to="/dashboard" replace />} />
           </Routes>
@@ -152,6 +161,7 @@ function AuthenticatedApp() {
 
 function App() {
   const { isAuthenticated, loading } = useAuth();
+  const { t } = useTranslation();
 
   // Initialize sync listeners when authenticated
   useEffect(() => {
@@ -165,7 +175,7 @@ function App() {
     return (
       <div className="app-loading">
         <div className="loading-spinner" />
-        <p>Loading...</p>
+        <p>{t("common.loading")}</p>
       </div>
     );
   }

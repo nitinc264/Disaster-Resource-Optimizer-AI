@@ -37,6 +37,13 @@
   "header": {
     "brand": "FieldPulse"
   },
+  "auth": {
+    "logout": "Logout"
+  },
+  "roles": {
+    "manager": "MANAGER",
+    "volunteer": "VOLUNTEER"
+  },
   "sync": {
     "pendingSingle": "{{count}} verification pending sync",
     "pendingPlural": "{{count}} verifications pending sync",
@@ -50,6 +57,49 @@
     "photoReport": "Photo Report",
     "myTasks": "My Tasks",
     "missingPerson": "Missing Person"
+  },
+  "fieldOperations": {
+    "title": "🚨 Field Operations",
+    "subtitle": "Report incidents and manage your assigned tasks",
+    "tabs": {
+      "myTasks": "My Tasks",
+      "voiceReport": "Voice Report",
+      "photoReport": "Photo Report",
+      "missingPerson": "Missing Person"
+    }
+  },
+  "missingPerson": {
+    "success": {
+      "title": "Report Submitted Successfully",
+      "message": "Thank you for reporting. Our team will start searching immediately.",
+      "button": "Report Another"
+    },
+    "form": {
+      "title": "Report Missing Person",
+      "subtitle": "Help reunite families by reporting missing persons",
+      "personInfo": "Person Information",
+      "fullName": "Full Name *",
+      "fullNamePlaceholder": "Enter the person's full name",
+      "age": "Age",
+      "gender": "Gender",
+      "description": "Description",
+      "descriptionPlaceholder": "Physical description, clothing, distinguishing features...",
+      "lastSeenLocation": "Last Seen Location",
+      "locationAddress": "Location / Address",
+      "locationPlaceholder": "Where was the person last seen?",
+      "locationDetected": "Your location detected:",
+      "contactInfo": "Your Contact Information",
+      "yourName": "Your Name *",
+      "yourNamePlaceholder": "Your name",
+      "phoneNumber": "Phone Number *",
+      "submitButton": "Submit Missing Person Report"
+    }
+  },
+  "gender": {
+    "unknown": "Unknown",
+    "male": "Male",
+    "female": "Female",
+    "other": "Other"
   },
   "tasks": {
     "title": "Unverified Tasks",
@@ -576,14 +626,30 @@
     "settings": {
       "sound": "Sound",
       "push": "Push Notifications"
+    },
+    "flood": {
+      "title": "Critical Flood Alert",
+      "message": "Water levels rising rapidly in Dharavi area. Immediate evacuation recommended."
+    },
+    "medical": {
+      "title": "Medical Emergency",
+      "message": "Multiple casualties reported at Kurla West junction. Medical teams needed."
+    },
+    "road": {
+      "title": "Road Closure",
+      "message": "Western Express Highway blocked due to waterlogging. Use alternate routes."
+    },
+    "new": {
+      "title": "New Incident Report",
+      "message": "New incident detected in your assigned area. Please review."
     }
   },
   "settings": {
     "title": "Settings",
     "language": "Language",
     "display": "Display",
-    "largeText": "Large Text",
-    "highContrast": "High Contrast",
+    "darkMode": "Dark Mode",
+    "lightMode": "Light Mode",
     "reset": "Reset to Default"
   },
   "taskList": {

@@ -283,34 +283,34 @@
   color: var(--text-secondary);
 }
 
-/* High Contrast Mode Overrides */
-.high-contrast {
-  --text-primary: #ffffff !important;
-  --text-secondary: #e2e8f0 !important;
-  --background: #000000 !important;
-  --surface: #0f172a !important;
+/* Light Mode */
+.light-mode {
+  --background: #f8fafc !important;
+  --background-subtle: #f1f5f9 !important;
+  --surface: #ffffff !important;
+  --surface-elevated: #f1f5f9 !important;
+  --surface-muted: #e2e8f0 !important;
+  --surface-hover: #e2e8f0 !important;
+  --text-primary: #0f172a !important;
+  --text-secondary: #475569 !important;
+  --text-muted: #64748b !important;
+  --border-color: #cbd5e1 !important;
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.08) !important;
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12) !important;
 }
 
-/* Large Text Mode */
-.large-text {
-  font-size: 18px !important;
-}
-
-.large-text .nav-link {
-  font-size: 0.9rem !important;
-  padding: var(--space-2) var(--space-3) !important;
-}
-
-.large-text .header-content {
-  min-height: 72px !important;
-}
-
-.large-text .brand-text {
-  font-size: 1.2rem !important;
-}
-
-.large-text .setting-info,
-.large-text .lang-btn,
-.large-text .settings-header h2 {
-  font-size: 1.1rem !important;
+/* Dark Mode (default) */
+.dark-mode {
+  --background: #0f172a;
+  --background-subtle: #1e293b;
+  --surface: #1e293b;
+  --surface-elevated: #334155;
+  --surface-muted: #0f172a;
+  --surface-hover: #334155;
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  --border-color: #334155;
 }

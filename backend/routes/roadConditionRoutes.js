@@ -9,6 +9,7 @@ import RoadCondition from "../models/RoadConditionModel.js";
 import { sendSuccess, sendError } from "../utils/apiResponse.js";
 import { HTTP_STATUS } from "../constants/index.js";
 import { requireAuth, requireManager } from "../middleware/authMiddleware.js";
+import { body, validationResult } from "express-validator";
 
 const router = express.Router();
 
@@ -72,61 +73,61 @@ router.get("/roads/:id", requireAuth, async (req, res) => {
  * POST /api/roads
  * Report a new road condition
  */
-router.post("/roads", requireAuth, async (req, res) => {
-  try {
-    const {
-      startPoint,
-      endPoint,
-      roadName,
-      description,
-      conditionType,
-      severity,
-      reportedBy,
-      reporterType,
-      photos,
-      estimatedClearTime,
-    } = req.body;
-
-    if (
-      !startPoint?.lat ||
-      !startPoint?.lng ||
-      !description ||
-      !conditionType
-    ) {
-      return sendError(
-        res,
-        "Start point, description, and condition type are required",
-        HTTP_STATUS.BAD_REQUEST
-      );
+router.post(
+  "/roads",
+  requireAuth,
+  body("startPoint.lat").isFloat().withMessage("startPoint.lat is required"),
+  body("startPoint.lng").isFloat().withMessage("startPoint.lng is required"),
+  body("description").isLength({ min: 1 }).withMessage("Description is required"),
+  body("conditionType").isLength({ min: 1 }).withMessage("Condition type is required"),
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return sendError(res, errors.array()[0].msg, HTTP_STATUS.BAD_REQUEST);
     }
 
-    const condition = new RoadCondition({
-      conditionId: `ROAD-${uuidv4().slice(0, 8).toUpperCase()}`,
-      startPoint,
-      endPoint: endPoint || startPoint,
-      roadName,
-      description,
-      conditionType,
-      severity: severity || "medium",
-      reportedBy: reportedBy || "anonymous",
-      reporterType: reporterType || "public",
-      photos: photos || [],
-      estimatedClearTime: estimatedClearTime
-        ? new Date(estimatedClearTime)
-        : null,
-    });
+    try {
+      const {
+        startPoint,
+        endPoint,
+        roadName,
+        description,
+        conditionType,
+        severity,
+        reportedBy,
+        reporterType,
+        photos,
+        estimatedClearTime,
+      } = req.body;
 
-    await condition.save();
-    sendSuccess(res, condition, "Road condition reported successfully");
-  } catch (error) {
-    console.error("Error reporting road condition:", error);
-    sendError(
-      res,
-      "Failed to report road condition",
-      HTTP_STATUS.INTERNAL_SERVER_ERROR
-    );
+      const condition = new RoadCondition({
+        conditionId: `ROAD-${uuidv4().slice(0, 8).toUpperCase()}`,
+        startPoint,
+        endPoint: endPoint || startPoint,
+        roadName,
+        description,
+        conditionType,
+        severity: severity || "medium",
+        reportedBy: reportedBy || "anonymous",
+        reporterType: reporterType || "public",
+        photos: photos || [],
+        estimatedClearTime: estimatedClearTime
+          ? new Date(estimatedClearTime)
+          : null,
+      });
+
+      await condition.save();
+      sendSuccess(res, condition, "Road condition reported successfully");
+    } catch (error) {
+      console.error("Error reporting road condition:", error.message, error);
+      sendError(
+        res,
+        error?.message || "Failed to report road condition",
+        HTTP_STATUS.INTERNAL_SERVER_ERROR
+      );
+    }
   }
-});
+);
 
 /**
  * PATCH /api/roads/:id/verify

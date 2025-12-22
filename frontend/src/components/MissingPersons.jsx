@@ -24,6 +24,104 @@ import {
 import { missingPersonsAPI } from "../services/apiService";
 import "./MissingPersons.css";
 
+const PersonDetailModal = ({ person, onClose, onMarkFound }) => {
+  const { t } = useTranslation();
+
+  if (!person) return null;
+
+  const timeAgo = (date) => {
+    const seconds = Math.floor((new Date() - new Date(date)) / 1000);
+    const days = Math.floor(seconds / 86400);
+    const hours = Math.floor(seconds / 3600);
+
+    if (days > 0)
+      return t("reports.daysAgo", {
+        count: days,
+        defaultValue: `${days} day${days > 1 ? "s" : ""} ago`,
+      });
+    if (hours > 0)
+      return t("reports.hoursAgo", {
+        count: hours,
+        defaultValue: `${hours} hour${hours > 1 ? "s" : ""} ago`,
+      });
+    return t("reports.justNow");
+  };
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-header">
+          <h3>{person.fullName}</h3>
+          <button className="modal-close-btn" onClick={onClose}>
+            <X size={20} />
+          </button>
+        </div>
+        <div className="modal-body">
+          {person.photos && person.photos.length > 0 && (
+            <div className="modal-photo">
+              <img src={person.photos[0].url || person.photos[0]} alt={person.fullName} />
+            </div>
+          )}
+          <div className="modal-details">
+            <div className="detail-row">
+              <strong>{t("family.status")}:</strong>
+              <StatusBadge status={person.status} t={t} />
+            </div>
+            <div className="detail-row">
+              <strong>{t("family.age")}:</strong>
+              <span>{person.age} {t("missingPerson.years")}</span>
+            </div>
+            <div className="detail-row">
+              <strong>{t("family.gender")}:</strong>
+              <span className="capitalize">{person.gender}</span>
+            </div>
+            <div className="detail-row">
+              <strong>{t("family.lastSeenLocation")}:</strong>
+              <span>{person.lastSeenLocation?.address || t("tasks.noLocation")}</span>
+            </div>
+            <div className="detail-row">
+              <strong>{t("family.reported")}:</strong>
+              <span>{timeAgo(person.createdAt)}</span>
+            </div>
+            {person.description && (
+              <div className="detail-row">
+                <strong>{t("family.description")}:</strong>
+                <p>{typeof person.description === "string" ? person.description : person.description.physical || ""}</p>
+              </div>
+            )}
+            {person.medicalInfo && (
+              <div className="detail-row alert">
+                <strong>{t("family.medicalInfo")}:</strong>
+                <p>{person.medicalInfo}</p>
+              </div>
+            )}
+            {person.reporterInfo && (
+              <div className="detail-row">
+                <strong>{t("family.contact")}:</strong>
+                <span>{person.reporterInfo.phone || t("family.noPhone")}</span>
+              </div>
+            )}
+          </div>
+          {person.status === "missing" && (
+            <div className="modal-actions">
+              <button
+                className="btn-found"
+                onClick={() => {
+                  onMarkFound(person._id);
+                  onClose();
+                }}
+              >
+                <CheckCircle size={16} />
+                {t("family.markFound")}
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const StatusBadge = ({ status, t }) => {
   const statusConfig = {
     missing: {
@@ -62,6 +160,32 @@ const StatusBadge = ({ status, t }) => {
 const PersonCard = ({ person, onView, onMarkFound }) => {
   const [expanded, setExpanded] = useState(false);
   const { t } = useTranslation();
+
+  const handleShare = async () => {
+    const shareText = `${t("family.missing")}: ${person.fullName}, ${person.age} ${t("missingPerson.years")}, ${person.gender}. ${t("family.lastSeenLocation")}: ${person.lastSeenLocation?.address || t("tasks.noLocation")}. ${t("family.contact")}: ${person.reporterInfo?.phone || ""}`;
+    const shareUrl = window.location.href;
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: `${t("family.missing")}: ${person.fullName}`,
+          text: shareText,
+          url: shareUrl,
+        });
+      } catch (err) {
+        if (err.name !== "AbortError") {
+          console.error("Share failed:", err);
+        }
+      }
+    } else {
+      try {
+        await navigator.clipboard.writeText(`${shareText}\n${shareUrl}`);
+        alert(t("family.copiedToClipboard") || "Copied to clipboard!");
+      } catch (err) {
+        console.error("Clipboard copy failed:", err);
+      }
+    }
+  };
 
   const timeAgo = (date) => {
     const seconds = Math.floor((new Date() - new Date(date)) / 1000);
@@ -191,6 +315,7 @@ const PersonCard = ({ person, onView, onMarkFound }) => {
               className="btn-share"
               onClick={(e) => {
                 e.stopPropagation();
+                handleShare();
               }}
             >
               <Share2 size={14} />
@@ -596,9 +721,18 @@ export default function MissingPersons({ currentLocation }) {
 
   // Update status mutation
   const updateStatusMutation = useMutation({
-    mutationFn: ({ id, status }) => missingPersonsAPI.updateStatus(id, status),
-    onSuccess: () => {
+    mutationFn: ({ id, status }) => {
+      console.log("Marking person as found:", id, status);
+      return missingPersonsAPI.updateStatus(id, status);
+    },
+    onSuccess: (data) => {
+      console.log("Successfully marked as found:", data);
       queryClient.invalidateQueries(["missingPersons"]);
+      alert(t("family.markedAsFound") || "Person marked as found!");
+    },
+    onError: (error) => {
+      console.error("Error marking as found:", error);
+      alert(t("family.errorMarkingFound") || `Error: ${error.message || "Failed to mark as found"}`);
     },
   });
 
@@ -607,6 +741,11 @@ export default function MissingPersons({ currentLocation }) {
   };
 
   const handleMarkFound = (id) => {
+    if (!id) {
+      console.error("No ID provided to handleMarkFound");
+      return;
+    }
+    console.log("handleMarkFound called with id:", id);
     updateStatusMutation.mutate({ id, status: "found" });
   };
 
@@ -709,6 +848,14 @@ export default function MissingPersons({ currentLocation }) {
             )}
           </div>
         </>
+      )}
+
+      {selectedPerson && (
+        <PersonDetailModal
+          person={selectedPerson}
+          onClose={() => setSelectedPerson(null)}
+          onMarkFound={handleMarkFound}
+        />
       )}
     </div>
   );

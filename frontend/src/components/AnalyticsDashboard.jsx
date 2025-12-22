@@ -12,9 +12,22 @@ import {
   Activity,
   Calendar,
   Filter,
+  Flame,
+  Droplets,
+  Stethoscope,
+  Car,
+  HelpCircle,
 } from "lucide-react";
 import { getAnalytics } from "../services";
 import "./AnalyticsDashboard.css";
+
+const ICON_MAP = {
+  fire: <Flame size={14} />,
+  flood: <Droplets size={14} />,
+  medical: <Stethoscope size={14} />,
+  accident: <Car size={14} />,
+  default: <AlertTriangle size={14} />,
+};
 
 /**
  * Analytics Dashboard with metrics, trends, and heatmap data
@@ -123,7 +136,9 @@ export default function AnalyticsDashboard() {
             {(analytics.incidentTypes || []).map((type) => (
               <div key={type.name} className="distribution-bar">
                 <div className="bar-label">
-                  <span className="bar-icon">{type.icon}</span>
+                  <span className="bar-icon">
+                    {ICON_MAP[type.name.toLowerCase()] || ICON_MAP.default}
+                  </span>
                   <span>{type.name}</span>
                 </div>
                 <div className="bar-container">

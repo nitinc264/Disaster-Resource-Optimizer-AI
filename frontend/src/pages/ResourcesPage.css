@@ -1,0 +1,20 @@
+/* Resources Page Styles - Tailwind-based dark theme */
+
+/* Hover effect for table rows */
+.hover\:bg-slate-750:hover {
+  background-color: rgb(30 41 59 / 0.5);
+}
+
+/* Custom animations */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}

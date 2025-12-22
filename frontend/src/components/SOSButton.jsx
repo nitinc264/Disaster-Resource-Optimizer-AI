@@ -146,7 +146,7 @@ export default function SOSButton({
         onMouseLeave={handlePressEnd}
         onTouchStart={handlePressStart}
         onTouchEnd={handlePressEnd}
-        aria-label="SOS Emergency Button - Hold to activate"
+        aria-label={t("sos.holdToActivate")}
         style={{
           "--hold-progress": `${holdProgress}%`,
         }}
@@ -164,13 +164,12 @@ export default function SOSButton({
               <div className="sos-modal-icon">
                 <AlertTriangle size={28} />
               </div>
-              <h2>🚨 Emergency Alert Sent</h2>
+              <h2>🚨 {t("sos.confirmTitle")}</h2>
             </div>
 
             <div className="sos-modal-body">
               <p>
-                Your location has been shared with the rescue team. Help is on
-                the way.
+                {t("sos.confirmMessage")}
               </p>
 
               <div
@@ -180,19 +179,19 @@ export default function SOSButton({
                   <>
                     <MapPin size={18} />
                     <span>
-                      Location: {location.lat.toFixed(4)},{" "}
+                      {t("sos.locationAttached")}: {location.lat.toFixed(4)},{" "}
                       {location.lng.toFixed(4)}
                     </span>
                   </>
                 ) : isLocating ? (
                   <>
                     <Loader2 size={18} className="spin" />
-                    <span>Detecting your location...</span>
+                    <span>{t("common.loading")}...</span>
                   </>
                 ) : (
                   <>
                     <MapPin size={18} />
-                    <span>Location unavailable</span>
+                    <span>{t("sos.locationFailed")}</span>
                   </>
                 )}
               </div>
@@ -200,10 +199,10 @@ export default function SOSButton({
               <div className="sos-actions">
                 <a href="tel:112" className="sos-btn sos-btn-confirm">
                   <Phone size={20} />
-                  Call Emergency (112)
+                  {t("sos.callEmergency")} (112)
                 </a>
                 <button className="sos-btn sos-btn-cancel" onClick={cancelSOS}>
-                  Cancel - I'm Safe
+                  {t("sos.dismiss")}
                 </button>
               </div>
             </div>

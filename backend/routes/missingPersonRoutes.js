@@ -199,8 +199,8 @@ router.patch("/missing-persons/:id/found", requireAuth, async (req, res) => {
     const { foundLocation, foundBy, currentShelter, condition, notes } =
       req.body;
 
-    const person = await MissingPerson.findOneAndUpdate(
-      { caseId: req.params.id },
+    const person = await MissingPerson.findByIdAndUpdate(
+      req.params.id,
       {
         $set: {
           status: "found",
@@ -235,8 +235,8 @@ router.patch("/missing-persons/:id/found", requireAuth, async (req, res) => {
  */
 router.patch("/missing-persons/:id/reunited", requireAuth, async (req, res) => {
   try {
-    const person = await MissingPerson.findOneAndUpdate(
-      { caseId: req.params.id },
+    const person = await MissingPerson.findByIdAndUpdate(
+      req.params.id,
       {
         $set: {
           status: "reunited",
@@ -266,8 +266,8 @@ router.post("/missing-persons/:id/match", requireAuth, async (req, res) => {
   try {
     const { matchedPersonId, matchConfidence, matchType } = req.body;
 
-    const person = await MissingPerson.findOneAndUpdate(
-      { caseId: req.params.id },
+    const person = await MissingPerson.findByIdAndUpdate(
+      req.params.id,
       {
         $push: {
           potentialMatches: {
