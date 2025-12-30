@@ -95,14 +95,7 @@ function AuthenticatedApp() {
               >
                 {t("nav.tasks")}
               </NavLink>
-              <NavLink
-                to="/resources"
-                className={({ isActive }) =>
-                  `nav-tab ${isActive ? "active" : ""}`
-                }
-              >
-                {t("nav.resources", "Resources")}
-              </NavLink>
+              {/* Resources tab hidden per request */}
               {isManager && (
                 <NavLink
                   to="/emergency-stations"

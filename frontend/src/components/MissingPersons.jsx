@@ -809,7 +809,7 @@ export default function MissingPersons({ currentLocation }) {
           </div>
 
           <div className="filter-tabs">
-            {["all", "missing", "found", "reunited"].map((f) => (
+            {["all", "missing", "found"].map((f) => (
               <button
                 key={f}
                 className={`filter-tab ${filter === f ? "active" : ""}`}

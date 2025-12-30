@@ -79,9 +79,11 @@ const ShelterCard = ({ shelter, onEdit, onUpdate }) => {
   const [expanded, setExpanded] = useState(false);
   const { t } = useTranslation();
 
-  const occupancyPercentage = Math.round(
-    ((shelter.capacity?.current || 0) / (shelter.capacity?.total || 1)) * 100
-  );
+  // Normalize capacity numbers to avoid NaN/0% display when values are strings or missing
+  const currentNum = Number(shelter.capacity?.current) || 0;
+  const totalNumRaw = Number(shelter.capacity?.total);
+  const totalNum = Number.isFinite(totalNumRaw) && totalNumRaw > 0 ? totalNumRaw : 100;
+  const occupancyPercentage = Math.round((currentNum / totalNum) * 100);
 
   // Helper to get facilities array
   const facilitiesList = Array.isArray(shelter.facilities)
@@ -103,8 +105,16 @@ const ShelterCard = ({ shelter, onEdit, onUpdate }) => {
   const managerName = contact.managerName || contact.manager;
 
   return (
-    <div className={`shelter-card ${shelter.status}`}>
-      <div className="shelter-header" onClick={() => setExpanded(!expanded)}>
+    <div
+      className={`shelter-card ${shelter.status}`}
+      onClick={() => setExpanded(!expanded)}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") setExpanded(!expanded);
+      }}
+    >
+      <div className="shelter-header">
         <div className="shelter-icon">
           <Home size={20} />
         </div>
@@ -301,6 +311,12 @@ const AddShelterForm = ({ onSubmit, onCancel, currentLocation }) => {
   const handleSubmit = (e) => {
     e.preventDefault();
 
+    const trimmedName = (formData.name || "").trim();
+    if (!trimmedName) {
+      alert(t("shelter.nameRequired") || "Shelter name is required");
+      return;
+    }
+
     const shelter = {
       name: formData.name,
       location: {
@@ -333,7 +349,8 @@ const AddShelterForm = ({ onSubmit, onCancel, currentLocation }) => {
       status: "open",
     };
 
-    onSubmit(shelter);
+    // Ensure name is trimmed when submitting
+    onSubmit({ ...shelter, name: trimmedName });
   };
 
   return (
@@ -435,7 +452,7 @@ const AddShelterForm = ({ onSubmit, onCancel, currentLocation }) => {
         <button type="button" className="btn-cancel" onClick={onCancel}>
           {t("common.cancel")}
         </button>
-        <button type="submit" className="btn-submit" disabled={!formData.name}>
+        <button type="submit" className="btn-submit" disabled={!formData.name || (formData.name || "").trim().length === 0}>
           <Home size={14} />
           {t("shelter.register")}
         </button>
@@ -603,7 +620,14 @@ export default function ShelterManagement({ currentLocation }) {
   });
 
   const handleAddShelter = (data) => {
-    createMutation.mutate(data);
+    // Use mutate with onError to surface errors; onSuccess is handled by mutation config
+    createMutation.mutate(data, {
+      onError: (err) => {
+        console.error("Error registering shelter:", err);
+        const message = err?.response?.data?.message || t("shelter.errorRegister");
+        alert(message || "Failed to register shelter");
+      },
+    });
   };
 
   const handleUpdateCapacity = (id, data) => {

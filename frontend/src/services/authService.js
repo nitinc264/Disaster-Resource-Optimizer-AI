@@ -121,6 +121,17 @@ export const deactivateVolunteer = async (id) => {
 };
 
 /**
+ * Send a message to a volunteer (managers only)
+ */
+export const sendVolunteerMessage = async (volunteerId, text) => {
+  const response = await apiClient.post("/volunteer-messages", {
+    volunteerId,
+    text,
+  });
+  return response.data;
+};
+
+/**
  * Initialize auth from stored data
  */
 export const initializeAuth = () => {

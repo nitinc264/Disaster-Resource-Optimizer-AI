@@ -83,6 +83,22 @@ function DashboardPage() {
     return () => window.removeEventListener("sos-alert", handleSosAlert);
   }, []);
 
+  useEffect(() => {
+    const hideTarget = () => {
+      const elements = document.querySelectorAll('*');
+      elements.forEach(el => {
+        if (el.textContent === "Report Missing Person") {
+          el.style.display = "none";
+        }
+      });
+    };
+
+    hideTarget();
+    const observer = new MutationObserver(hideTarget);
+    observer.observe(document.body, { childList: true, subtree: true });
+    return () => observer.disconnect();
+  }, []);
+
   // Listen for sync complete events to refresh manager map when volunteers sync offline verifications
   useEffect(() => {
     if (!isManager) return;
