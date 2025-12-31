@@ -133,7 +133,7 @@ export default function EmergencyStations() {
               </select>
             </div>
             <button
-              className="es-btn es-btn-primary"
+              className="btn btn-primary"
               onClick={() => setShowRegisterForm(true)}
             >
               + Register Station
@@ -148,7 +148,7 @@ export default function EmergencyStations() {
               <h3>No Stations Registered</h3>
               <p>Register emergency stations to receive alerts</p>
               <button
-                className="es-btn es-btn-primary"
+                className="btn btn-primary"
                 onClick={() => setShowRegisterForm(true)}
               >
                 Register First Station
@@ -226,13 +226,13 @@ export default function EmergencyStations() {
                     </div>
                     <div className="station-actions">
                       <button
-                        className="es-btn es-btn-secondary"
+                        className="btn btn-secondary"
                         onClick={() => handlePing(station._id)}
                       >
                         📡 Ping
                       </button>
                       <button
-                        className="es-btn es-btn-danger"
+                        className="btn es-btn-danger"
                         onClick={() => handleDelete(station._id, station.name)}
                       >
                         🗑️ Delete
@@ -276,7 +276,7 @@ export default function EmergencyStations() {
               </button>
             </div>
             <button
-              className="es-btn es-btn-primary"
+              className="btn btn-primary"
               onClick={() => setShowDispatchForm(true)}
             >
               + Manual Alert
@@ -378,7 +378,7 @@ export default function EmergencyStations() {
                     {alert.status !== "resolved" && (
                       <div className="alert-actions">
                         <button
-                          className="es-btn es-btn-success"
+                          className="btn es-btn-success"
                           onClick={() =>
                             handleAlertStatusUpdate(alert.alertId, "resolved")
                           }
@@ -592,14 +592,14 @@ function RegisterStationModal({ onClose, onSuccess }) {
           <div className="form-actions">
             <button
               type="button"
-              className="es-btn es-btn-secondary"
+              className="btn btn-secondary"
               onClick={onClose}
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="es-btn es-btn-primary"
+              className="btn btn-primary"
               disabled={submitting}
             >
               {submitting ? "Registering..." : "Register Station"}
@@ -741,14 +741,14 @@ function DispatchAlertModal({ onClose, onSuccess }) {
           <div className="form-actions">
             <button
               type="button"
-              className="es-btn es-btn-secondary"
+              className="btn btn-secondary"
               onClick={onClose}
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="es-btn es-btn-danger"
+              className="btn es-btn-danger"
               disabled={submitting}
             >
               {submitting ? "Dispatching..." : "🚨 Dispatch Alert"}
