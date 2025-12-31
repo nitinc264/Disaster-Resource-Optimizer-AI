@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import {
@@ -17,8 +17,11 @@ import {
   Plus,
   RefreshCw,
   Navigation,
+  Shield,
+  Loader2,
 } from "lucide-react";
 import { roadConditionsAPI } from "../services/apiService";
+import Modal from "./Modal";
 import "./RoadConditions.css";
 
 const ConditionTypeIcon = ({ type }) => {
@@ -53,7 +56,7 @@ const SeverityBadge = ({ severity }) => {
   );
 };
 
-const RoadConditionCard = ({ condition, onResolve }) => {
+const RoadConditionCard = ({ condition, onResolve, onVerify, isVerifying }) => {
   const [expanded, setExpanded] = useState(false);
   const { t } = useTranslation();
 
@@ -80,7 +83,7 @@ const RoadConditionCard = ({ condition, onResolve }) => {
     <div
       className={`road-condition-card ${condition.severity} ${
         expanded ? "expanded" : ""
-      }`}
+      } ${condition.verified ? "verified" : ""}`}
       onClick={() => setExpanded(!expanded)}
     >
       <div className="condition-header">
@@ -88,6 +91,11 @@ const RoadConditionCard = ({ condition, onResolve }) => {
           <div className="condition-type-badge">
             <ConditionTypeIcon type={condition.conditionType} />
             <span>{getConditionTypeLabel(condition.conditionType)}</span>
+            {condition.verified && (
+              <span className="verified-badge">
+                <CheckCircle size={12} />
+              </span>
+            )}
           </div>
           <span className="condition-time">
             {timeAgo(condition.reportedAt || condition.createdAt)}
@@ -127,6 +135,19 @@ const RoadConditionCard = ({ condition, onResolve }) => {
           </div>
 
           <div className="condition-actions">
+            {!condition.verified && (
+              <button
+                className="btn-verify"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onVerify(condition.conditionId || condition._id);
+                }}
+                disabled={isVerifying}
+              >
+                {isVerifying ? <Loader2 size={14} className="spin" /> : <Shield size={14} />}
+                {t("roads.verify")}
+              </button>
+            )}
             <button
               className="btn-resolve"
               onClick={(e) => {
@@ -144,17 +165,80 @@ const RoadConditionCard = ({ condition, onResolve }) => {
   );
 };
 
-const ReportConditionForm = ({ onSubmit, onCancel, currentLocation, isSubmitting }) => {
+// Default fallback location (Pune, India)
+const DEFAULT_LOCATION = { lat: 18.5204, lng: 73.8567 };
+
+const ReportConditionForm = ({ onSubmit, onCancel, currentLocation: externalLocation, isSubmitting }) => {
   const { t } = useTranslation();
   const [formData, setFormData] = useState({
     conditionType: "blocked",
     severity: "medium",
     description: "",
-    useCurrentLocation: true,
   });
+  const [location, setLocation] = useState(externalLocation || null);
+  const [locationStatus, setLocationStatus] = useState("idle"); // idle, loading, success, error
+  const [locationError, setLocationError] = useState(null);
+
+  // Fetch location when form opens
+  useEffect(() => {
+    // If external location is provided, use it
+    if (externalLocation?.lat && externalLocation?.lng) {
+      setLocation(externalLocation);
+      setLocationStatus("success");
+      return;
+    }
+
+    // Otherwise, try to fetch location
+    fetchLocation();
+  }, [externalLocation]);
+
+  const fetchLocation = () => {
+    if (!navigator.geolocation) {
+      setLocationStatus("error");
+      setLocationError("Geolocation not supported");
+      setLocation(DEFAULT_LOCATION);
+      return;
+    }
+
+    setLocationStatus("loading");
+    setLocationError(null);
+
+    const timeoutId = setTimeout(() => {
+      // If location takes too long, use default
+      setLocationStatus("error");
+      setLocationError("Location timeout - using default");
+      setLocation(DEFAULT_LOCATION);
+    }, 10000); // 10 second timeout
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        clearTimeout(timeoutId);
+        setLocation({
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+        });
+        setLocationStatus("success");
+        setLocationError(null);
+      },
+      (error) => {
+        clearTimeout(timeoutId);
+        console.warn("Geolocation error:", error.message);
+        setLocationStatus("error");
+        setLocationError(error.message);
+        setLocation(DEFAULT_LOCATION); // Use fallback
+      },
+      {
+        enableHighAccuracy: false, // Faster response
+        timeout: 8000,
+        maximumAge: 60000, // Cache for 1 minute
+      }
+    );
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
+
+    const finalLocation = location || DEFAULT_LOCATION;
 
     const report = {
       conditionType: formData.conditionType,
@@ -162,12 +246,12 @@ const ReportConditionForm = ({ onSubmit, onCancel, currentLocation, isSubmitting
       description: formData.description,
       // Backend expects simple lat/lng fields, not GeoJSON
       startPoint: {
-        lat: currentLocation?.lat ?? 0,
-        lng: currentLocation?.lng ?? 0,
+        lat: finalLocation.lat,
+        lng: finalLocation.lng,
       },
       endPoint: {
-        lat: currentLocation?.lat ?? 0,
-        lng: currentLocation?.lng ?? 0,
+        lat: finalLocation.lat,
+        lng: finalLocation.lng,
       },
     };
 
@@ -225,15 +309,35 @@ const ReportConditionForm = ({ onSubmit, onCancel, currentLocation, isSubmitting
         />
       </div>
 
-      <div className="form-group location-info">
-        <MapPin size={14} />
+      <div className={`form-group location-info ${locationStatus}`}>
+        {locationStatus === "loading" ? (
+          <Loader2 size={14} className="spin" />
+        ) : (
+          <MapPin size={14} />
+        )}
         <span>
-          {currentLocation
-            ? `${t("tasks.location")}: ${currentLocation.lat.toFixed(
-                5
-              )}, ${currentLocation.lng.toFixed(5)}`
-            : t("map.locationError")}
+          {locationStatus === "loading" && "Fetching location..."}
+          {locationStatus === "success" && location &&
+            `${t("tasks.location")}: ${location.lat.toFixed(5)}, ${location.lng.toFixed(5)}`}
+          {locationStatus === "error" && (
+            <>
+              {locationError || "Location unavailable"} - using default location
+            </>
+          )}
+          {locationStatus === "idle" && "Waiting for location..."}
         </span>
+        {locationStatus === "error" && (
+          <button
+            type="button"
+            className="btn-retry-location"
+            onClick={(e) => {
+              e.preventDefault();
+              fetchLocation();
+            }}
+          >
+            <RefreshCw size={12} />
+          </button>
+        )}
       </div>
 
       <div className="form-actions">
@@ -243,7 +347,7 @@ const ReportConditionForm = ({ onSubmit, onCancel, currentLocation, isSubmitting
         <button
           type="submit"
           className="btn-submit"
-          disabled={!currentLocation || !formData.description.trim() || isSubmitting}
+          disabled={!formData.description.trim() || isSubmitting || locationStatus === "loading"}
         >
           <AlertTriangle size={14} />
           {isSubmitting ? t("common.loading") : t("roads.reportBtn")}
@@ -272,9 +376,18 @@ export default function RoadConditions({ currentLocation, onConditionClick }) {
     queryKey: ["roadConditions", filter],
     queryFn: () =>
       roadConditionsAPI.getAll({
-        status: filter !== "all" ? filter : undefined,
+        // For "verified" filter, fetch all and filter client-side by verified field
+        // For other filters, use status parameter
+        status: filter === "verified" ? undefined : (filter !== "all" ? filter : undefined),
       }),
-    select: (response) => response?.data?.data || [],
+    select: (response) => {
+      const data = response?.data?.data || [];
+      // Client-side filter for verified tab
+      if (filter === "verified") {
+        return data.filter((c) => c.verified === true);
+      }
+      return data;
+    },
     refetchInterval: 30000, // Refresh every 30 seconds
   });
 
@@ -297,6 +410,17 @@ export default function RoadConditions({ currentLocation, onConditionClick }) {
     mutationFn: (id) => roadConditionsAPI.resolve(id),
     onSuccess: () => {
       invalidateRoadQueries();
+    },
+  });
+
+  // Verify mutation
+  const verifyMutation = useMutation({
+    mutationFn: (id) => roadConditionsAPI.verify(id),
+    onSuccess: () => {
+      invalidateRoadQueries();
+    },
+    onError: (error) => {
+      console.error("Failed to verify condition:", error);
     },
   });
 
@@ -340,17 +464,22 @@ export default function RoadConditions({ currentLocation, onConditionClick }) {
         </div>
       </div>
 
-      {showReportForm && (
+      <Modal
+        isOpen={showReportForm}
+        onClose={() => setShowReportForm(false)}
+        title={t("roads.reportCondition")}
+        hideFooter
+      >
         <ReportConditionForm
           onSubmit={handleReportSubmit}
           onCancel={() => setShowReportForm(false)}
           currentLocation={currentLocation}
           isSubmitting={createMutation.isPending}
         />
-      )}
+      </Modal>
 
       <div className="filter-tabs">
-        {["all", "active", "verified", "cleared"].map((f) => (
+        {["all", "active", "verified"].map((f) => (
           <button
             key={f}
             className={`filter-tab ${filter === f ? "active" : ""}`}
@@ -379,6 +508,8 @@ export default function RoadConditions({ currentLocation, onConditionClick }) {
               key={condition.conditionId || condition._id}
               condition={condition}
               onResolve={(id) => resolveMutation.mutate(id)}
+              onVerify={(id) => verifyMutation.mutate(id)}
+              isVerifying={verifyMutation.isPending}
             />
           ))
         )}

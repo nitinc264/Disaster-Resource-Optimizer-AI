@@ -16,7 +16,7 @@ import {
   EmergencyStations,
 } from "./components";
 import { AuthProvider, useAuth, VolunteerRouteProvider } from "./contexts";
-import { VolunteerPage, DashboardPage, ResourcesPage } from "./pages";
+import { VolunteerPage, DashboardPage, ResourcesPage, AddShelterPage } from "./pages";
 import { LogOut, Globe, Settings, Shield, AlertTriangle } from "lucide-react";
 import { initSyncListeners } from "./services/syncService";
 import "./App.css";
@@ -138,6 +138,7 @@ function AuthenticatedApp() {
             <Route path="/tasks" element={<VolunteerPage />} />
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/resources" element={<ResourcesPage />} />
+            <Route path="/add-shelter" element={<AddShelterPage />} />
             <Route path="/emergency-stations" element={<EmergencyStations />} />
             <Route path="*" element={<Navigate to="/dashboard" replace />} />
           </Routes>

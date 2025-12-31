@@ -1,0 +1,287 @@
+/* Modal Overlay - Full page backdrop */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: var(--space-4);
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Modal Container - Centered rectangular layout */
+.modal-container {
+  background: var(--surface);
+  border-radius: var(--radius-xl);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  width: fit-content;
+  min-width: 400px;
+  max-width: min(90vw, 520px);
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  animation: slideUp 0.3s ease-out;
+  overflow: hidden;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Modal Header */
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-5) var(--space-6);
+  border-bottom: 1px solid var(--border-color);
+  background: var(--surface-elevated);
+  flex-shrink: 0;
+}
+
+.modal-title {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.modal-close-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  background: transparent;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.modal-close-btn:hover {
+  background: var(--error-light);
+  border-color: var(--error);
+  color: var(--error);
+}
+
+.modal-close-btn:focus {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* Modal Content - Scrollable area */
+.modal-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--space-6);
+  overscroll-behavior: contain;
+}
+
+/* Custom scrollbar for modal content */
+.modal-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.modal-content::-webkit-scrollbar-track {
+  background: var(--background);
+  border-radius: 4px;
+}
+
+.modal-content::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 4px;
+}
+
+.modal-content::-webkit-scrollbar-thumb:hover {
+  background: var(--text-secondary);
+}
+
+/* Modal Footer */
+.modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: var(--space-4) var(--space-6);
+  border-top: 1px solid var(--border-color);
+  background: var(--surface-elevated);
+  flex-shrink: 0;
+  gap: var(--space-3);
+}
+
+.modal-cancel-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-3) var(--space-6);
+  background: var(--background);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-height: var(--touch-target-min);
+}
+
+.modal-cancel-btn:hover {
+  background: var(--surface-elevated);
+  border-color: var(--text-secondary);
+  color: var(--text-primary);
+}
+
+.modal-cancel-btn:focus {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* Mobile Responsive - Full width on mobile */
+@media (max-width: 768px) {
+  .modal-overlay {
+    padding: var(--space-3);
+  }
+
+  .modal-container {
+    width: 100%;
+    min-width: unset;
+    max-width: 100%;
+    max-height: 95vh;
+    border-radius: var(--radius-lg);
+  }
+
+  .modal-header {
+    padding: var(--space-4);
+  }
+
+  .modal-title {
+    font-size: 1.1rem;
+  }
+
+  .modal-close-btn {
+    width: 36px;
+    height: 36px;
+  }
+
+  .modal-content {
+    padding: var(--space-4);
+  }
+
+  .modal-footer {
+    padding: var(--space-3) var(--space-4);
+  }
+
+  .modal-cancel-btn {
+    padding: var(--space-3) var(--space-4);
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .modal-overlay {
+    padding: 0;
+  }
+
+  .modal-container {
+    max-height: 100vh;
+    border-radius: 0;
+  }
+
+  .modal-header {
+    padding: var(--space-3) var(--space-4);
+  }
+
+  .modal-content {
+    padding: var(--space-3);
+  }
+
+  .modal-footer {
+    padding: var(--space-3);
+  }
+}
+
+/* Ensure modal works well with form content */
+.modal-content .missing-report-form {
+  max-width: 100%;
+  width: 100%;
+}
+
+.modal-content .missing-report-form .form-header {
+  display: none; /* Hide duplicate header since modal has its own */
+}
+
+.modal-content .missing-success {
+  padding: var(--space-8) var(--space-4);
+}
+
+/* Hide duplicate headers in modal forms */
+.modal-content .report-condition-form h4,
+.modal-content .add-shelter-form h4,
+.modal-content .volunteer-form h3 {
+  display: none; /* Hide duplicate header since modal has its own */
+}
+
+/* Ensure forms have proper spacing and fill width in modal */
+.modal-content .report-condition-form,
+.modal-content .add-shelter-form,
+.modal-content .volunteer-form,
+.modal-content .missing-report-form {
+  width: 100%;
+  max-width: 100%;
+  padding: 0;
+  border: none;
+  background: transparent;
+  max-height: none;
+  overflow: visible;
+}
+
+/* Ensure form inputs fill available width */
+.modal-content .form-group {
+  width: 100%;
+}
+
+.modal-content .form-group input,
+.modal-content .form-group select,
+.modal-content .form-group textarea {
+  width: 100%;
+}
+
+/* Ensure form rows use full width */
+.modal-content .form-row {
+  width: 100%;
+}
+
+/* Ensure form actions are properly styled */
+.modal-content .form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--border-color);
+  width: 100%;
+}

@@ -201,6 +201,18 @@
   text-transform: capitalize;
 }
 
+.verified-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--success);
+  margin-left: var(--space-1);
+}
+
+.road-condition-card.verified {
+  border-left: 3px solid var(--success);
+}
+
 .condition-time {
   font-size: 0.8rem;
   color: var(--text-muted);
@@ -512,6 +524,41 @@
   border-radius: var(--radius-md);
   font-size: 0.75rem;
   color: var(--text-muted);
+}
+
+.location-info.loading {
+  color: var(--primary);
+  border-color: var(--primary);
+}
+
+.location-info.success {
+  color: var(--success);
+  border-color: var(--success);
+}
+
+.location-info.error {
+  color: var(--warning);
+  border-color: var(--warning);
+  background: var(--warning-light);
+}
+
+.btn-retry-location {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: auto;
+  padding: 4px;
+  background: transparent;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.btn-retry-location:hover {
+  background: var(--surface);
+  color: var(--primary);
 }
 
 .form-actions {

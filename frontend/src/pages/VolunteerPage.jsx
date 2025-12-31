@@ -18,6 +18,7 @@ import {
   PhotoReporter,
   VolunteerTaskList,
   FloatingSOSButton,
+  Modal,
 } from "../components";
 import { missingPersonsAPI } from "../services/apiService";
 import "./VolunteerPage.css";
@@ -343,7 +344,8 @@ function MissingPersonReport() {
 
 function VolunteerPage() {
   const { t } = useTranslation();
-  const [viewMode, setViewMode] = useState("tasks"); // 'tasks' | 'voice' | 'photo' | 'missing'
+  const [viewMode, setViewMode] = useState("tasks"); // 'tasks' | 'voice' | 'photo'
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
 
   const tabs = [
     { id: "tasks", icon: ClipboardList, label: t("volunteer.myTasks") },
@@ -351,6 +353,18 @@ function VolunteerPage() {
     { id: "photo", icon: Camera, label: t("volunteer.photoReport") },
     { id: "missing", icon: Search, label: t("volunteer.missingPerson") },
   ];
+
+  const handleTabClick = (tabId) => {
+    if (tabId === "missing") {
+      setIsReportModalOpen(true);
+    } else {
+      setViewMode(tabId);
+    }
+  };
+
+  const closeReportModal = () => {
+    setIsReportModalOpen(false);
+  };
 
   return (
     <div className="volunteer-page">
@@ -365,7 +379,7 @@ function VolunteerPage() {
         {tabs.map((tab) => (
           <button
             key={tab.id}
-            onClick={() => setViewMode(tab.id)}
+            onClick={() => handleTabClick(tab.id)}
             className={`action-tab ${viewMode === tab.id ? "active" : ""}`}
           >
             <tab.icon size={24} />
@@ -379,8 +393,16 @@ function VolunteerPage() {
         {viewMode === "tasks" && <VolunteerTaskList />}
         {viewMode === "voice" && <AudioReporter />}
         {viewMode === "photo" && <PhotoReporter />}
-        {viewMode === "missing" && <MissingPersonReport />}
       </main>
+
+      {/* Missing Person Report Modal */}
+      <Modal
+        isOpen={isReportModalOpen}
+        onClose={closeReportModal}
+        title={t("missingPerson.title")}
+      >
+        <MissingPersonReport />
+      </Modal>
 
       {/* Floating SOS Button - always visible */}
       <FloatingSOSButton volunteerId="current-volunteer" />

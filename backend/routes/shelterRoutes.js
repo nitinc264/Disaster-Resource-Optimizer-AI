@@ -149,6 +149,71 @@ router.post("/shelters", requireManager, async (req, res) => {
 });
 
 /**
+ * PATCH /api/shelters/:id
+ * Update shelter details (general update)
+ */
+router.patch("/shelters/:id", requireManager, async (req, res) => {
+  try {
+    const { name, location, contact, capacity, facilities, status, type, notes } = req.body;
+
+    const shelter = await Shelter.findById(req.params.id);
+    if (!shelter) {
+      return sendError(res, "Shelter not found", HTTP_STATUS.NOT_FOUND);
+    }
+
+    // Update fields if provided
+    if (name) shelter.name = name;
+    if (type) shelter.type = type;
+    if (status) shelter.status = status;
+    if (notes !== undefined) shelter.notes = notes;
+
+    // Update location
+    if (location) {
+      shelter.location = {
+        ...shelter.location,
+        ...location,
+      };
+    }
+
+    // Update contact
+    if (contact) {
+      shelter.contact = {
+        ...shelter.contact,
+        ...contact,
+      };
+    }
+
+    // Update capacity (preserve current occupancy if not specified)
+    if (capacity) {
+      shelter.capacity = {
+        ...shelter.capacity,
+        ...capacity,
+      };
+    }
+
+    // Update facilities
+    if (facilities) {
+      shelter.facilities = {
+        ...shelter.facilities,
+        ...facilities,
+      };
+    }
+
+    shelter.updatedAt = new Date();
+    await shelter.save();
+
+    sendSuccess(res, shelter, "Shelter updated successfully");
+  } catch (error) {
+    console.error("Error updating shelter:", error);
+    sendError(
+      res,
+      "Failed to update shelter",
+      HTTP_STATUS.INTERNAL_SERVER_ERROR
+    );
+  }
+});
+
+/**
  * PATCH /api/shelters/:id/capacity
  * Update shelter capacity
  */

@@ -7,7 +7,6 @@ import {
   AlertTriangle,
   RefreshCw,
   TrendingUp,
-  TrendingDown,
   Activity,
 } from "lucide-react";
 import "./ResourcesPage.css";
@@ -86,27 +85,23 @@ export default function ResourcesPage() {
     return Math.round((available / total) * 100);
   };
 
-  const getStatusColor = (percentage) => {
-    if (percentage >= 70) return "text-green-400";
-    if (percentage >= 40) return "text-yellow-400";
-    return "text-red-400";
+  const getStatusClass = (percentage) => {
+    if (percentage >= 70) return "good";
+    if (percentage >= 40) return "warning";
+    return "critical";
   };
 
   return (
-    <div className="min-h-screen bg-slate-900 p-6">
-      <div className="max-w-7xl mx-auto">
+    <div className="resources-page">
+      <div className="resources-container">
         {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between">
+        <div className="resources-header">
+          <div className="resources-header-content">
             <div>
-              <h1 className="text-3xl font-bold text-white mb-2">
-                Resource Management
-              </h1>
-              <p className="text-slate-400">
-                Monitor and manage all disaster response resources
-              </p>
+              <h1>Resource Management</h1>
+              <p>Monitor and manage all disaster response resources</p>
             </div>
-            <button className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg transition-colors">
+            <button className="btn-refresh">
               <RefreshCw size={18} />
               Refresh
             </button>
@@ -114,81 +109,52 @@ export default function ResourcesPage() {
         </div>
 
         {/* Resource Availability Section */}
-        <section className="mb-8">
-          <h2 className="text-2xl font-semibold text-white mb-4 flex items-center gap-2">
-            <Activity size={24} className="text-blue-400" />
+        <section>
+          <h2 className="section-title">
+            <Activity size={24} />
             Resource Availability
           </h2>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="resources-grid">
             {/* Fleet Vehicles Card */}
-            <div className="bg-slate-800 rounded-lg border border-slate-700 p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-3">
-                  <div className="p-3 bg-blue-500/10 rounded-lg">
-                    <Truck size={24} className="text-blue-400" />
+            <div className="resource-card">
+              <div className="resource-card-header">
+                <div className="resource-card-icon-group">
+                  <div className="resource-card-icon blue">
+                    <Truck size={24} />
                   </div>
                   <div>
-                    <h3 className="text-lg font-semibold text-white">
-                      Fleet Vehicles
-                    </h3>
-                    <p className="text-sm text-slate-400">All vehicle types</p>
+                    <h3 className="resource-card-title">Fleet Vehicles</h3>
+                    <p className="resource-card-subtitle">All vehicle types</p>
                   </div>
                 </div>
-                <div className="text-right">
-                  <div className="text-3xl font-bold text-white">
+                <div className="resource-card-stats">
+                  <div className="resource-card-count">
                     {stats.fleet.available}
-                    <span className="text-slate-400 text-lg">
-                      /{stats.fleet.total}
-                    </span>
+                    <span>/{stats.fleet.total}</span>
                   </div>
-                  <div
-                    className={`text-sm font-medium ${getStatusColor(
-                      getAvailabilityPercentage(
-                        stats.fleet.available,
-                        stats.fleet.total
-                      )
-                    )}`}
-                  >
-                    {getAvailabilityPercentage(
-                      stats.fleet.available,
-                      stats.fleet.total
-                    )}
-                    % Available
+                  <div className={`resource-card-percentage ${getStatusClass(
+                    getAvailabilityPercentage(stats.fleet.available, stats.fleet.total)
+                  )}`}>
+                    {getAvailabilityPercentage(stats.fleet.available, stats.fleet.total)}% Available
                   </div>
                 </div>
               </div>
 
-              <div className="space-y-3">
+              <div className="resource-items-list">
                 {resources.fleet.map((vehicle) => {
-                  const percentage = getAvailabilityPercentage(
-                    vehicle.available,
-                    vehicle.total
-                  );
+                  const percentage = getAvailabilityPercentage(vehicle.available, vehicle.total);
                   return (
-                    <div
-                      key={vehicle.id}
-                      className="flex items-center justify-between p-3 bg-slate-900 rounded-lg"
-                    >
-                      <span className="text-slate-300">{vehicle.type}</span>
-                      <div className="flex items-center gap-3">
-                        <div className="text-sm">
-                          <span className="text-white font-medium">
-                            {vehicle.available}
-                          </span>
-                          <span className="text-slate-400">
-                            /{vehicle.total}
-                          </span>
+                    <div key={vehicle.id} className="resource-item">
+                      <span className="resource-item-name">{vehicle.type}</span>
+                      <div className="resource-item-stats">
+                        <div className="resource-item-count">
+                          <strong>{vehicle.available}</strong>
+                          <span>/{vehicle.total}</span>
                         </div>
-                        <div className="w-24 h-2 bg-slate-700 rounded-full overflow-hidden">
+                        <div className="progress-bar">
                           <div
-                            className={`h-full ${
-                              percentage >= 70
-                                ? "bg-green-500"
-                                : percentage >= 40
-                                ? "bg-yellow-500"
-                                : "bg-red-500"
-                            }`}
+                            className={`progress-bar-fill ${getStatusClass(percentage)}`}
                             style={{ width: `${percentage}%` }}
                           />
                         </div>
@@ -200,73 +166,44 @@ export default function ResourcesPage() {
             </div>
 
             {/* Personnel Card */}
-            <div className="bg-slate-800 rounded-lg border border-slate-700 p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-3">
-                  <div className="p-3 bg-purple-500/10 rounded-lg">
-                    <Users size={24} className="text-purple-400" />
+            <div className="resource-card">
+              <div className="resource-card-header">
+                <div className="resource-card-icon-group">
+                  <div className="resource-card-icon purple">
+                    <Users size={24} />
                   </div>
                   <div>
-                    <h3 className="text-lg font-semibold text-white">
-                      Personnel
-                    </h3>
-                    <p className="text-sm text-slate-400">All roles</p>
+                    <h3 className="resource-card-title">Personnel</h3>
+                    <p className="resource-card-subtitle">All roles</p>
                   </div>
                 </div>
-                <div className="text-right">
-                  <div className="text-3xl font-bold text-white">
+                <div className="resource-card-stats">
+                  <div className="resource-card-count">
                     {stats.personnel.available}
-                    <span className="text-slate-400 text-lg">
-                      /{stats.personnel.total}
-                    </span>
+                    <span>/{stats.personnel.total}</span>
                   </div>
-                  <div
-                    className={`text-sm font-medium ${getStatusColor(
-                      getAvailabilityPercentage(
-                        stats.personnel.available,
-                        stats.personnel.total
-                      )
-                    )}`}
-                  >
-                    {getAvailabilityPercentage(
-                      stats.personnel.available,
-                      stats.personnel.total
-                    )}
-                    % Available
+                  <div className={`resource-card-percentage ${getStatusClass(
+                    getAvailabilityPercentage(stats.personnel.available, stats.personnel.total)
+                  )}`}>
+                    {getAvailabilityPercentage(stats.personnel.available, stats.personnel.total)}% Available
                   </div>
                 </div>
               </div>
 
-              <div className="space-y-3">
+              <div className="resource-items-list">
                 {resources.personnel.map((person) => {
-                  const percentage = getAvailabilityPercentage(
-                    person.available,
-                    person.total
-                  );
+                  const percentage = getAvailabilityPercentage(person.available, person.total);
                   return (
-                    <div
-                      key={person.id}
-                      className="flex items-center justify-between p-3 bg-slate-900 rounded-lg"
-                    >
-                      <span className="text-slate-300">{person.role}</span>
-                      <div className="flex items-center gap-3">
-                        <div className="text-sm">
-                          <span className="text-white font-medium">
-                            {person.available}
-                          </span>
-                          <span className="text-slate-400">
-                            /{person.total}
-                          </span>
+                    <div key={person.id} className="resource-item">
+                      <span className="resource-item-name">{person.role}</span>
+                      <div className="resource-item-stats">
+                        <div className="resource-item-count">
+                          <strong>{person.available}</strong>
+                          <span>/{person.total}</span>
                         </div>
-                        <div className="w-24 h-2 bg-slate-700 rounded-full overflow-hidden">
+                        <div className="progress-bar">
                           <div
-                            className={`h-full ${
-                              percentage >= 70
-                                ? "bg-green-500"
-                                : percentage >= 40
-                                ? "bg-yellow-500"
-                                : "bg-red-500"
-                            }`}
+                            className={`progress-bar-fill ${getStatusClass(percentage)}`}
                             style={{ width: `${percentage}%` }}
                           />
                         </div>
@@ -280,78 +217,59 @@ export default function ResourcesPage() {
         </section>
 
         {/* Resource Inventory Section */}
-        <section>
-          <h2 className="text-2xl font-semibold text-white mb-4 flex items-center gap-2">
-            <Package size={24} className="text-green-400" />
+        <section className="inventory-section">
+          <h2 className="section-title">
+            <Package size={24} />
             Resource Inventory
           </h2>
 
-          <div className="bg-slate-800 rounded-lg border border-slate-700 overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-slate-900 border-b border-slate-700">
-                  <tr>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">
-                      Item Name
-                    </th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">
-                      Available Stock
-                    </th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">
-                      Unit
-                    </th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">
-                      Status
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-700">
-                  {inventoryList.map((item) => {
-                    const isLowStock = item.available < 10;
-                    return (
-                      <tr
-                        key={item.id}
-                        className="hover:bg-slate-750 transition-colors"
-                      >
-                        <td className="px-6 py-4">
-                          <div className="flex items-center gap-2">
-                            <Package size={16} className="text-slate-400" />
-                            <span className="text-white font-medium">
-                              {item.name}
-                            </span>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4">
-                          <span
-                            className={`text-lg font-semibold ${
-                              isLowStock ? "text-red-400" : "text-white"
-                            }`}
-                          >
-                            {item.available}
+          <div className="inventory-card">
+            <table className="inventory-table">
+              <thead>
+                <tr>
+                  <th>Item Name</th>
+                  <th>Available Stock</th>
+                  <th>Unit</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {inventoryList.map((item) => {
+                  const isLowStock = item.available < 10;
+                  return (
+                    <tr key={item.id}>
+                      <td>
+                        <div className="inventory-item-name">
+                          <Package size={16} />
+                          {item.name}
+                        </div>
+                      </td>
+                      <td>
+                        <span className={`inventory-stock ${isLowStock ? 'low' : 'normal'}`}>
+                          {item.available}
+                        </span>
+                      </td>
+                      <td>
+                        <span className="inventory-unit">{item.unit}</span>
+                      </td>
+                      <td>
+                        {isLowStock ? (
+                          <span className="status-badge low-stock">
+                            <AlertTriangle size={14} />
+                            Low Stock
                           </span>
-                        </td>
-                        <td className="px-6 py-4">
-                          <span className="text-slate-400">{item.unit}</span>
-                        </td>
-                        <td className="px-6 py-4">
-                          {isLowStock ? (
-                            <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-red-500/10 border border-red-500/20 rounded-full text-red-400 text-sm font-medium">
-                              <AlertTriangle size={14} />
-                              Low Stock
-                            </span>
-                          ) : (
-                            <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-green-500/10 border border-green-500/20 rounded-full text-green-400 text-sm font-medium">
-                              <TrendingUp size={14} />
-                              In Stock
-                            </span>
-                          )}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+                        ) : (
+                          <span className="status-badge in-stock">
+                            <TrendingUp size={14} />
+                            In Stock
+                          </span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
           </div>
         </section>
       </div>

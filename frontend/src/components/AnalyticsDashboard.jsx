@@ -49,8 +49,9 @@ export default function AnalyticsDashboard() {
     const previous = analytics.previous || {};
 
     const calcTrend = (curr, prev) => {
-      if (!prev || prev === 0) return 0;
-      return Math.round(((curr - prev) / prev) * 100);
+      if (!prev || prev === 0) return null; // Return null instead of 0 for no comparison
+      const trend = Math.round(((curr - prev) / prev) * 100);
+      return isNaN(trend) ? null : trend;
     };
 
     return {
@@ -107,7 +108,7 @@ export default function AnalyticsDashboard() {
         <MetricCard
           title={t("analytics.avgResponseTime")}
           value={formatDuration(analytics.current?.avgResponseTime || 0)}
-          trend={-trends.responseTime} // Negative is good for response time
+          trend={trends.responseTime !== null ? -trends.responseTime : null} // Negative is good for response time
           trendInverted
           icon={Clock}
           color="#3b82f6"
@@ -133,56 +134,72 @@ export default function AnalyticsDashboard() {
         <div className="chart-card">
           <h3>{t("analytics.incidentTypes")}</h3>
           <div className="distribution-chart">
-            {(analytics.incidentTypes || []).map((type) => (
-              <div key={type.name} className="distribution-bar">
-                <div className="bar-label">
-                  <span className="bar-icon">
-                    {ICON_MAP[type.name.toLowerCase()] || ICON_MAP.default}
-                  </span>
-                  <span>{type.name}</span>
+            {(analytics.incidentTypes || []).length > 0 ? (
+              (analytics.incidentTypes || []).map((type) => (
+                <div key={type.name} className="distribution-bar">
+                  <div className="bar-label">
+                    <span className="bar-icon">
+                      {ICON_MAP[type.name.toLowerCase()] || ICON_MAP.default}
+                    </span>
+                    <span>{type.name}</span>
+                  </div>
+                  <div className="bar-container">
+                    <div
+                      className="bar-fill"
+                      style={{
+                        width: `${type.percentage}%`,
+                        background: type.color,
+                      }}
+                    />
+                    <span className="bar-value">{type.count}</span>
+                  </div>
                 </div>
-                <div className="bar-container">
-                  <div
-                    className="bar-fill"
-                    style={{
-                      width: `${type.percentage}%`,
-                      background: type.color,
-                    }}
-                  />
-                  <span className="bar-value">{type.count}</span>
-                </div>
+              ))
+            ) : (
+              <div className="empty-chart-state">
+                <AlertTriangle size={32} />
+                <p>{t("analytics.noIncidents", "No incidents reported in this period")}</p>
               </div>
-            ))}
+            )}
           </div>
         </div>
 
         {/* Response Time Trend */}
         <div className="chart-card">
           <h3>{t("analytics.responseTimeTrend")}</h3>
-          <div className="sparkline-chart">
-            {(analytics.responseTimeTrend || []).map((point, idx) => (
-              <div
-                key={idx}
-                className="sparkline-bar"
-                style={{
-                  height: `${Math.min(100, (point.value / 60) * 100)}%`,
-                }}
-                title={`${point.label}: ${formatDuration(point.value)}`}
-              />
-            ))}
-          </div>
-          <div className="sparkline-labels">
-            {(analytics.responseTimeTrend || [])
-              .filter(
-                (_, i, arr) =>
-                  i === 0 ||
-                  i === arr.length - 1 ||
-                  i === Math.floor(arr.length / 2)
-              )
-              .map((point, idx) => (
-                <span key={idx}>{point.label}</span>
-              ))}
-          </div>
+          {(analytics.responseTimeTrend || []).length > 0 ? (
+            <>
+              <div className="sparkline-chart">
+                {(analytics.responseTimeTrend || []).map((point, idx) => (
+                  <div
+                    key={idx}
+                    className="sparkline-bar"
+                    style={{
+                      height: `${Math.min(100, (point.value / 60) * 100)}%`,
+                    }}
+                    title={`${point.label}: ${formatDuration(point.value)}`}
+                  />
+                ))}
+              </div>
+              <div className="sparkline-labels">
+                {(analytics.responseTimeTrend || [])
+                  .filter(
+                    (_, i, arr) =>
+                      i === 0 ||
+                      i === arr.length - 1 ||
+                      i === Math.floor(arr.length / 2)
+                  )
+                  .map((point, idx) => (
+                    <span key={idx}>{point.label}</span>
+                  ))}
+              </div>
+            </>
+          ) : (
+            <div className="empty-chart-state">
+              <Clock size={32} />
+              <p>{t("analytics.noResponseData", "No response time data available")}</p>
+            </div>
+          )}
         </div>
       </div>
 
@@ -190,21 +207,28 @@ export default function AnalyticsDashboard() {
       <div className="chart-card full-width">
         <h3>{t("analytics.severityDistribution")}</h3>
         <div className="severity-chart">
-          {(analytics.severityDistribution || []).map((level) => (
-            <div key={level.severity} className="severity-item">
-              <div className="severity-bar-wrapper">
-                <div
-                  className="severity-bar"
-                  style={{
-                    height: `${level.percentage}%`,
-                    background: getSeverityColor(level.severity),
-                  }}
-                />
+          {(analytics.severityDistribution || []).length > 0 ? (
+            (analytics.severityDistribution || []).map((level) => (
+              <div key={level.severity} className="severity-item">
+                <div className="severity-bar-wrapper">
+                  <div
+                    className="severity-bar"
+                    style={{
+                      height: `${level.percentage}%`,
+                      background: getSeverityColor(level.severity),
+                    }}
+                  />
+                </div>
+                <span className="severity-label">{level.severity}</span>
+                <span className="severity-count">{level.count}</span>
               </div>
-              <span className="severity-label">{level.severity}</span>
-              <span className="severity-count">{level.count}</span>
+            ))
+          ) : (
+            <div className="empty-chart-state">
+              <Activity size={32} />
+              <p>{t("analytics.noSeverityData", "No severity data available")}</p>
             </div>
-          ))}
+          )}
         </div>
       </div>
 
@@ -215,36 +239,43 @@ export default function AnalyticsDashboard() {
           {t("analytics.incidentHotspots")}
         </h3>
         <div className="hotspots-list">
-          {(analytics.hotspots || []).slice(0, 5).map((spot, idx) => (
-            <div key={idx} className="hotspot-item">
-              <span className="hotspot-rank">#{idx + 1}</span>
-              <div className="hotspot-info">
-                <span className="hotspot-name">{spot.name}</span>
-                <span className="hotspot-coords">
-                  {spot.lat?.toFixed(4)}, {spot.lon?.toFixed(4)}
-                </span>
+          {(analytics.hotspots || []).length > 0 ? (
+            (analytics.hotspots || []).slice(0, 5).map((spot, idx) => (
+              <div key={idx} className="hotspot-item">
+                <span className="hotspot-rank">#{idx + 1}</span>
+                <div className="hotspot-info">
+                  <span className="hotspot-name">{spot.name}</span>
+                  <span className="hotspot-coords">
+                    {spot.lat?.toFixed(4)}, {spot.lon?.toFixed(4)}
+                  </span>
+                </div>
+                <div className="hotspot-stats">
+                  <span className="hotspot-count">{spot.count}</span>
+                  <span className="hotspot-label">
+                    {t("analytics.incidents")}
+                  </span>
+                </div>
+                <div
+                  className="hotspot-intensity"
+                  style={{
+                    background: `linear-gradient(90deg, #fef3c7, ${
+                      spot.count > 10
+                        ? "#dc2626"
+                        : spot.count > 5
+                        ? "#f59e0b"
+                        : "#fbbf24"
+                    })`,
+                    width: `${Math.min(100, spot.count * 10)}%`,
+                  }}
+                />
               </div>
-              <div className="hotspot-stats">
-                <span className="hotspot-count">{spot.count}</span>
-                <span className="hotspot-label">
-                  {t("analytics.incidents")}
-                </span>
-              </div>
-              <div
-                className="hotspot-intensity"
-                style={{
-                  background: `linear-gradient(90deg, #fef3c7, ${
-                    spot.count > 10
-                      ? "#dc2626"
-                      : spot.count > 5
-                      ? "#f59e0b"
-                      : "#fbbf24"
-                  })`,
-                  width: `${Math.min(100, spot.count * 10)}%`,
-                }}
-              />
+            ))
+          ) : (
+            <div className="empty-chart-state">
+              <MapPin size={32} />
+              <p>{t("analytics.noHotspots", "No incident hotspots identified")}</p>
             </div>
-          ))}
+          )}
         </div>
       </div>
 
@@ -255,17 +286,24 @@ export default function AnalyticsDashboard() {
           {t("analytics.recentActivity")}
         </h3>
         <div className="activity-timeline">
-          {(analytics.recentActivity || []).slice(0, 8).map((activity, idx) => (
-            <div key={idx} className="activity-item">
-              <div className={`activity-dot ${activity.type}`} />
-              <div className="activity-content">
-                <span className="activity-text">{activity.description}</span>
-                <span className="activity-time">
-                  {formatTime(activity.timestamp)}
-                </span>
+          {(analytics.recentActivity || []).length > 0 ? (
+            (analytics.recentActivity || []).slice(0, 8).map((activity, idx) => (
+              <div key={idx} className="activity-item">
+                <div className={`activity-dot ${activity.type}`} />
+                <div className="activity-content">
+                  <span className="activity-text">{activity.description}</span>
+                  <span className="activity-time">
+                    {formatTime(activity.timestamp)}
+                  </span>
+                </div>
               </div>
+            ))
+          ) : (
+            <div className="empty-chart-state">
+              <Calendar size={32} />
+              <p>{t("analytics.noRecentActivity", "No recent activity to display")}</p>
             </div>
-          ))}
+          )}
         </div>
       </div>
     </div>
@@ -276,7 +314,7 @@ export default function AnalyticsDashboard() {
  * Metric Card Component
  */
 function MetricCard({ title, value, trend, trendInverted, icon: Icon, color }) {
-  const showTrend = typeof trend === "number";
+  const showTrend = typeof trend === "number" && !isNaN(trend);
   const isPositive = trendInverted ? trend < 0 : trend > 0;
 
   return (

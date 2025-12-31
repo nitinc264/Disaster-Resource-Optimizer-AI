@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import Report from "../models/ReportModel.js";
+import Need from "../models/NeedModel.js";
 import { sendSuccess, sendError } from "../utils/apiResponse.js";
 import { HTTP_STATUS } from "../constants/index.js";
 
@@ -40,17 +41,25 @@ export const getAnalytics = async (req, res) => {
         break;
     }
 
-    // Parallelize queries for performance
+    // Parallelize queries for performance - now querying both Report and Need models
     const [
-      currentStats,
-      previousStats,
-      incidentTypes,
-      severityDistribution,
-      hotspots,
+      // Report model queries
+      currentReportStats,
+      previousReportStats,
+      reportIncidentTypes,
+      reportSeverityDistribution,
+      reportHotspots,
       recentReports,
+      // Need model queries
+      currentNeedStats,
+      previousNeedStats,
+      needIncidentTypes,
+      needHotspots,
+      recentNeeds,
+      // Other
       activeMissionsCount,
     ] = await Promise.all([
-      // 1. Current Period Stats
+      // 1. Current Period Report Stats
       Report.aggregate([
         { $match: { createdAt: { $gte: startDate } } },
         {
@@ -73,7 +82,7 @@ export const getAnalytics = async (req, res) => {
         },
       ]),
 
-      // 2. Previous Period Stats
+      // 2. Previous Period Report Stats
       Report.aggregate([
         {
           $match: {
@@ -100,7 +109,7 @@ export const getAnalytics = async (req, res) => {
         },
       ]),
 
-      // 3. Incident Types Distribution
+      // 3. Report Incident Types Distribution
       Report.aggregate([
         { $match: { createdAt: { $gte: startDate } } },
         {
@@ -112,7 +121,7 @@ export const getAnalytics = async (req, res) => {
         { $sort: { count: -1 } },
       ]),
 
-      // 4. Severity Distribution
+      // 4. Report Severity Distribution
       Report.aggregate([
         {
           $match: {
@@ -129,7 +138,7 @@ export const getAnalytics = async (req, res) => {
         { $sort: { _id: 1 } },
       ]),
 
-      // 5. Hotspots (Cluster by rounding coordinates)
+      // 5. Report Hotspots (Cluster by rounding coordinates)
       Report.aggregate([
         { $match: { createdAt: { $gte: startDate } } },
         {
@@ -139,7 +148,6 @@ export const getAnalytics = async (req, res) => {
               lng: { $round: ["$location.lng", 3] },
             },
             count: { $sum: 1 },
-            // Get the first location name/address if available, or just use coords
             name: { $first: "$location.address" }, 
           },
         },
@@ -147,26 +155,113 @@ export const getAnalytics = async (req, res) => {
         { $limit: 10 },
       ]),
 
-      // 6. Recent Activity (Reports)
+      // 6. Recent Reports
       Report.find({ createdAt: { $gte: startDate } })
         .sort({ createdAt: -1 })
-        .limit(10)
+        .limit(5)
         .select("status sentinelData createdAt location"),
 
-      // 7. Active Missions Count
+      // 7. Current Period Need Stats
+      Need.aggregate([
+        { $match: { createdAt: { $gte: startDate } } },
+        {
+          $group: {
+            _id: null,
+            total: { $sum: 1 },
+            resolved: {
+              $sum: { $cond: [{ $eq: ["$status", "Completed"] }, 1, 0] },
+            },
+            avgResolutionTime: {
+              $avg: {
+                $cond: [
+                  { $eq: ["$status", "Completed"] },
+                  { $subtract: ["$updatedAt", "$createdAt"] },
+                  null,
+                ],
+              },
+            },
+          },
+        },
+      ]),
+
+      // 8. Previous Period Need Stats
+      Need.aggregate([
+        {
+          $match: {
+            createdAt: { $gte: previousStartDate, $lt: startDate },
+          },
+        },
+        {
+          $group: {
+            _id: null,
+            total: { $sum: 1 },
+            resolved: {
+              $sum: { $cond: [{ $eq: ["$status", "Completed"] }, 1, 0] },
+            },
+          },
+        },
+      ]),
+
+      // 9. Need Incident Types Distribution (using triageData.needType)
+      Need.aggregate([
+        { $match: { createdAt: { $gte: startDate } } },
+        {
+          $group: {
+            _id: "$triageData.needType",
+            count: { $sum: 1 },
+          },
+        },
+        { $sort: { count: -1 } },
+      ]),
+
+      // 10. Need Hotspots (Cluster by rounding coordinates)
+      Need.aggregate([
+        { 
+          $match: { 
+            createdAt: { $gte: startDate },
+            "coordinates.lat": { $ne: null },
+            "coordinates.lon": { $ne: null }
+          } 
+        },
+        {
+          $group: {
+            _id: {
+              lat: { $round: ["$coordinates.lat", 3] },
+              lon: { $round: ["$coordinates.lon", 3] },
+            },
+            count: { $sum: 1 },
+            name: { $first: "$coordinates.formattedAddress" }, 
+          },
+        },
+        { $sort: { count: -1 } },
+        { $limit: 10 },
+      ]),
+
+      // 11. Recent Needs
+      Need.find({ createdAt: { $gte: startDate } })
+        .sort({ createdAt: -1 })
+        .limit(5)
+        .select("status triageData createdAt coordinates rawMessage"),
+
+      // 12. Active Missions Count
       mongoose.connection.db.collection("missions").countDocuments({ status: "Active" }),
     ]);
 
-    // Process Results
-    const current = currentStats[0] || {
-      total: 0,
-      resolved: 0,
-      avgResolutionTime: 0,
+    // Process Results - Combine Report and Need data
+    const currentReport = currentReportStats[0] || { total: 0, resolved: 0, avgResolutionTime: 0 };
+    const previousReport = previousReportStats[0] || { total: 0, resolved: 0, avgResolutionTime: 0 };
+    const currentNeed = currentNeedStats[0] || { total: 0, resolved: 0, avgResolutionTime: 0 };
+    const previousNeed = previousNeedStats[0] || { total: 0, resolved: 0 };
+
+    // Combined stats
+    const current = {
+      total: currentReport.total + currentNeed.total,
+      resolved: currentReport.resolved + currentNeed.resolved,
+      avgResolutionTime: currentReport.avgResolutionTime || currentNeed.avgResolutionTime || 0,
     };
-    const previous = previousStats[0] || {
-      total: 0,
-      resolved: 0,
-      avgResolutionTime: 0,
+    const previous = {
+      total: previousReport.total + previousNeed.total,
+      resolved: previousReport.resolved + previousNeed.resolved,
     };
 
     // Helper to get color for incident type
@@ -177,43 +272,102 @@ export const getAnalytics = async (req, res) => {
         medical: "#10b981",
         earthquake: "#8b5cf6",
         accident: "#f59e0b",
+        rescue: "#f97316",
+        water: "#0ea5e9",
+        food: "#84cc16",
         other: "#6b7280",
       };
       return colors[type?.toLowerCase()] || colors.other;
     };
 
-    // Format Incident Types
-    const totalIncidents = current.total || 1;
-    const formattedIncidentTypes = incidentTypes.map((type) => ({
-      name: type._id || "Unknown",
-      count: type.count,
-      percentage: Math.round((type.count / totalIncidents) * 100),
-      color: getTypeColor(type._id),
-      icon: "AlertTriangle", // Frontend maps this string to icon component
-    }));
+    // Combine Incident Types from both Report and Need
+    const incidentTypeMap = new Map();
+    
+    // Add report incident types
+    reportIncidentTypes.forEach((type) => {
+      const name = type._id || "Unknown";
+      incidentTypeMap.set(name, (incidentTypeMap.get(name) || 0) + type.count);
+    });
+    
+    // Add need incident types
+    needIncidentTypes.forEach((type) => {
+      const name = type._id || "Unknown";
+      incidentTypeMap.set(name, (incidentTypeMap.get(name) || 0) + type.count);
+    });
 
-    // Format Severity
-    const formattedSeverity = severityDistribution.map((sev) => ({
+    // Format combined Incident Types
+    const totalIncidents = current.total || 1;
+    const formattedIncidentTypes = Array.from(incidentTypeMap.entries())
+      .map(([name, count]) => ({
+        name,
+        count,
+        percentage: Math.round((count / totalIncidents) * 100),
+        color: getTypeColor(name),
+        icon: "AlertTriangle",
+      }))
+      .sort((a, b) => b.count - a.count);
+
+    // Format Severity from reports (Needs don't have severity, they have urgency)
+    const formattedSeverity = reportSeverityDistribution.map((sev) => ({
       severity: sev._id,
       count: sev.count,
       percentage: Math.round((sev.count / totalIncidents) * 100),
     }));
 
-    // Format Hotspots
-    const formattedHotspots = hotspots.map((spot) => ({
-      name: spot.name || `Area ${spot._id.lat}, ${spot._id.lng}`,
-      lat: spot._id.lat,
-      lon: spot._id.lng,
-      count: spot.count,
-    }));
+    // Combine Hotspots from both Report and Need
+    const hotspotMap = new Map();
+    
+    // Add report hotspots
+    reportHotspots.forEach((spot) => {
+      const key = `${spot._id?.lat},${spot._id?.lng}`;
+      const existing = hotspotMap.get(key);
+      if (existing) {
+        existing.count += spot.count;
+      } else {
+        hotspotMap.set(key, {
+          name: spot.name || `Area ${spot._id?.lat}, ${spot._id?.lng}`,
+          lat: spot._id?.lat,
+          lon: spot._id?.lng,
+          count: spot.count,
+        });
+      }
+    });
+    
+    // Add need hotspots
+    needHotspots.forEach((spot) => {
+      const key = `${spot._id?.lat},${spot._id?.lon}`;
+      const existing = hotspotMap.get(key);
+      if (existing) {
+        existing.count += spot.count;
+      } else {
+        hotspotMap.set(key, {
+          name: spot.name || `Area ${spot._id?.lat}, ${spot._id?.lon}`,
+          lat: spot._id?.lat,
+          lon: spot._id?.lon,
+          count: spot.count,
+        });
+      }
+    });
 
-    // Format Recent Activity
-    const formattedActivity = recentReports.map((report) => ({
-      type: "report",
-      description: `New ${report.sentinelData?.tag || "incident"} reported`,
-      timestamp: report.createdAt,
-      status: report.status,
-    }));
+    const formattedHotspots = Array.from(hotspotMap.values())
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 10);
+
+    // Combine and format Recent Activity from both sources
+    const allActivity = [
+      ...recentReports.map((report) => ({
+        type: "report",
+        description: `Voice report: ${report.sentinelData?.tag || "incident"}`,
+        timestamp: report.createdAt,
+        status: report.status,
+      })),
+      ...recentNeeds.map((need) => ({
+        type: "need",
+        description: `SMS report: ${need.triageData?.needType || "general"} - ${(need.rawMessage || "").substring(0, 50)}...`,
+        timestamp: need.createdAt,
+        status: need.status,
+      })),
+    ].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)).slice(0, 10);
 
     // Response Object
     const responseData = {
@@ -225,7 +379,7 @@ export const getAnalytics = async (req, res) => {
       },
       previous: {
         incidents: previous.total,
-        avgResponseTime: Math.round((previous.avgResolutionTime || 0) / 60000),
+        avgResponseTime: Math.round((previousReport.avgResolutionTime || 0) / 60000),
         resolved: previous.resolved,
       },
       historical: true,
@@ -241,7 +395,7 @@ export const getAnalytics = async (req, res) => {
       ],
       severityDistribution: formattedSeverity,
       hotspots: formattedHotspots,
-      recentActivity: formattedActivity,
+      recentActivity: allActivity,
     };
 
     sendSuccess(res, responseData);

@@ -11,6 +11,7 @@ import authRoutes from "./authRoutes.js";
 import routeRoutes from "./routeRoutes.js";
 import emergencyStationRoutes from "./emergencyStationRoutes.js";
 import volunteerMessageRoutes from "./volunteerMessageRoutes.js";
+import analyticsRoutes from "./analyticsRoutes.js";
 
 const router = express.Router();
 
@@ -26,5 +27,6 @@ router.use(shelterRoutes);
 router.use(routeRoutes);
 router.use("/emergency-stations", emergencyStationRoutes);
 router.use(volunteerMessageRoutes);
+router.use(analyticsRoutes);
 
 export default router;

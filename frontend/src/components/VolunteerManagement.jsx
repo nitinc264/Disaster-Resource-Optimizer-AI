@@ -22,6 +22,7 @@ import {
   Send,
   X,
 } from "lucide-react";
+import Modal from "./Modal";
 import "./VolunteerManagement.css";
 
 const SKILL_OPTIONS = [
@@ -232,10 +233,13 @@ export default function VolunteerManagement() {
         </div>
       )}
 
-      {showForm && (
+      <Modal
+        isOpen={showForm}
+        onClose={() => setShowForm(false)}
+        title={t("volunteer.registerNew")}
+        hideFooter
+      >
         <form className="volunteer-form" onSubmit={handleSubmit}>
-          <h3>{t("volunteer.registerNew")}</h3>
-
           <div className="form-group">
             <label htmlFor="name">{t("volunteer.fullName")} *</label>
             <input
@@ -297,20 +301,25 @@ export default function VolunteerManagement() {
             </div>
           </div>
 
-          <button type="submit" className="btn-submit" disabled={submitting}>
-            {submitting ? (
-              <>
-                <Loader2 size={18} className="spin" />{" "}
-                {t("volunteer.registering")}
-              </>
-            ) : (
-              <>
-                <UserPlus size={18} /> {t("volunteer.register")}
-              </>
-            )}
-          </button>
+          <div className="form-actions">
+            <button type="button" className="btn-cancel" onClick={() => setShowForm(false)}>
+              {t("common.cancel")}
+            </button>
+            <button type="submit" className="btn-submit" disabled={submitting}>
+              {submitting ? (
+                <>
+                  <Loader2 size={18} className="spin" />{" "}
+                  {t("volunteer.registering")}
+                </>
+              ) : (
+                <>
+                  <UserPlus size={18} /> {t("volunteer.register")}
+                </>
+              )}
+            </button>
+          </div>
         </form>
-      )}
+      </Modal>
 
       <div className="volunteers-list">
         <h3>

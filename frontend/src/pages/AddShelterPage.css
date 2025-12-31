@@ -1,0 +1,139 @@
+/* Add Shelter Page - Full Page Layout */
+.add-shelter-page {
+  min-height: 100vh;
+  background: var(--background);
+  padding: var(--space-6);
+}
+
+.add-shelter-page .page-container {
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.add-shelter-page .page-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  margin-bottom: var(--space-6);
+  padding-bottom: var(--space-4);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.add-shelter-page .btn-back {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  background: var(--surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.add-shelter-page .btn-back:hover {
+  background: var(--surface-elevated);
+  color: var(--text-primary);
+  border-color: var(--primary);
+}
+
+.add-shelter-page .header-title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex: 1;
+}
+
+.add-shelter-page .header-title h1 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.add-shelter-page .header-title svg {
+  color: var(--primary);
+}
+
+.add-shelter-page .page-content {
+  display: flex;
+  justify-content: center;
+}
+
+.add-shelter-page .form-container {
+  width: 100%;
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-color);
+  padding: var(--space-6);
+  box-shadow: var(--shadow-md);
+}
+
+/* Override form styles for full-page layout */
+.add-shelter-page .add-shelter-form {
+  max-width: 100%;
+}
+
+.add-shelter-page .add-shelter-form h4 {
+  display: none; /* Hide the form title since we have page header */
+}
+
+.add-shelter-page .form-actions {
+  margin-top: var(--space-6);
+  padding-top: var(--space-4);
+}
+
+.add-shelter-page .btn-submit,
+.add-shelter-page .btn-cancel {
+  padding: var(--space-3) var(--space-6);
+  font-size: 0.9375rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .add-shelter-page {
+    padding: var(--space-4);
+  }
+
+  .add-shelter-page .page-container {
+    max-width: 100%;
+  }
+
+  .add-shelter-page .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-3);
+  }
+
+  .add-shelter-page .form-container {
+    padding: var(--space-4);
+  }
+
+  .add-shelter-page .header-title h1 {
+    font-size: 1.25rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .add-shelter-page {
+    padding: var(--space-3);
+  }
+
+  .add-shelter-page .form-container {
+    padding: var(--space-3);
+    border-radius: var(--radius-md);
+  }
+
+  .add-shelter-page .form-actions {
+    flex-direction: column;
+  }
+
+  .add-shelter-page .btn-submit,
+  .add-shelter-page .btn-cancel {
+    width: 100%;
+    justify-content: center;
+  }
+}

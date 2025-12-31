@@ -610,6 +610,11 @@
   background: var(--background);
 }
 
+/* Hide h4 when inside modal since modal has its own title */
+.modal-content .add-shelter-form h4 {
+  display: none;
+}
+
 .add-shelter-form h4 {
   margin: 0 0 var(--space-4) 0;
   font-size: 1rem;
@@ -639,6 +644,24 @@
 }
 
 .add-shelter-form .form-group input:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+.add-shelter-form .form-group select,
+.add-shelter-form .status-select {
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  font-size: 0.875rem;
+  background: var(--surface);
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+.add-shelter-form .form-group select:focus,
+.add-shelter-form .status-select:focus {
   outline: none;
   border-color: var(--primary);
 }
@@ -697,6 +720,40 @@
   margin-bottom: var(--space-4);
 }
 
+.add-shelter-form .location-info.loading {
+  background: var(--info-light);
+  color: var(--info);
+}
+
+.add-shelter-form .location-info.success {
+  background: var(--success-light, rgba(16, 185, 129, 0.1));
+  color: var(--success, #10b981);
+}
+
+.add-shelter-form .location-info.error {
+  background: var(--warning-light, rgba(245, 158, 11, 0.1));
+  color: var(--warning, #f59e0b);
+}
+
+.add-shelter-form .btn-retry-location {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 2px 6px;
+  margin-left: auto;
+  background: transparent;
+  border: 1px solid currentColor;
+  border-radius: var(--radius-sm);
+  font-size: 0.7rem;
+  color: inherit;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.add-shelter-form .btn-retry-location:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
 /* Form Actions */
 .add-shelter-form .form-actions {
   display: flex;
@@ -735,8 +792,8 @@
   cursor: not-allowed;
 }
 
-/* Modal */
-.modal-overlay {
+/* Capacity Modal - scoped styles to avoid conflict with global Modal component */
+.capacity-modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
@@ -746,7 +803,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 2000;
+  z-index: 9999;
 }
 
 .capacity-modal {
@@ -758,7 +815,7 @@
   overflow: hidden;
 }
 
-.modal-header {
+.capacity-modal .capacity-modal-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -767,7 +824,7 @@
   background: var(--background);
 }
 
-.modal-header h4 {
+.capacity-modal .capacity-modal-header h4 {
   margin: 0;
   font-size: 1rem;
   color: var(--text-primary);
@@ -830,7 +887,7 @@
   color: var(--text-muted);
 }
 
-.modal-actions {
+.capacity-modal-actions {
   display: flex;
   gap: var(--space-2);
   justify-content: flex-end;
@@ -838,7 +895,7 @@
   border-top: 1px solid var(--border-color);
 }
 
-.modal-actions .btn-cancel {
+.capacity-modal-actions .btn-cancel {
   padding: var(--space-2) var(--space-4);
   background: var(--surface);
   border: 1px solid var(--border-color);
@@ -848,7 +905,7 @@
   cursor: pointer;
 }
 
-.modal-actions .btn-submit {
+.capacity-modal-actions .btn-submit {
   display: flex;
   align-items: center;
   gap: var(--space-1);

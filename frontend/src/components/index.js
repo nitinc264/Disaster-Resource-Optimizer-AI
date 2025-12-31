@@ -5,6 +5,7 @@ export { default as Map } from "./Map.jsx";
 export { default as VolunteerTaskList } from "./VolunteerTaskList.jsx";
 export { default as ReportsList } from "./ReportsList.jsx";
 export { default as MissionPanel } from "./MissionPanel.jsx";
+export { default as Modal } from "./Modal.jsx";
 
 // New feature components
 export {
