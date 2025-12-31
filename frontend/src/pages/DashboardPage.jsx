@@ -433,7 +433,6 @@ function DashboardPage() {
             <div className="header-title">
               <h1>
                 <span className="desktop-title">{t("dashboard.title")}</span>
-                <span className="mobile-title">{t("dashboard.title")}</span>
               </h1>
               <span className="pill pill-critical">
                 {criticalItems.length} {t("triage.critical").toLowerCase()}
