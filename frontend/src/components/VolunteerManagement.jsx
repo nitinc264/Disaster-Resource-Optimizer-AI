@@ -5,6 +5,7 @@ import {
   registerVolunteer,
   getVolunteers,
   deactivateVolunteer,
+  sendVolunteerMessage,
 } from "../services/authService";
 import {
   UserPlus,
@@ -154,15 +155,17 @@ export default function VolunteerManagement() {
 
     setSendingMessage(true);
     try {
-      // TODO: Replace with actual API call when backend is ready
-      console.log("Sending message to:", messageModal.volunteer.name);
-      console.log("Message:", messageText);
+      const result = await sendVolunteerMessage(
+        messageModal.volunteer._id,
+        messageText
+      );
 
-      // Simulate sending
-      await new Promise((resolve) => setTimeout(resolve, 500));
-
-      setSuccess(`Message sent to ${messageModal.volunteer.name}`);
-      handleCloseMessage();
+      if (result.success) {
+        setSuccess(`Message sent to ${messageModal.volunteer.name}`);
+        handleCloseMessage();
+      } else {
+        setError("Failed to send message");
+      }
     } catch (err) {
       setError("Failed to send message");
     } finally {

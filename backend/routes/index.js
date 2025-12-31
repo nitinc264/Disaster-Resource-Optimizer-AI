@@ -10,6 +10,7 @@ import shelterRoutes from "./shelterRoutes.js";
 import authRoutes from "./authRoutes.js";
 import routeRoutes from "./routeRoutes.js";
 import emergencyStationRoutes from "./emergencyStationRoutes.js";
+import volunteerMessageRoutes from "./volunteerMessageRoutes.js";
 
 const router = express.Router();
 
@@ -24,5 +25,6 @@ router.use(missingPersonRoutes);
 router.use(shelterRoutes);
 router.use(routeRoutes);
 router.use("/emergency-stations", emergencyStationRoutes);
+router.use(volunteerMessageRoutes);
 
 export default router;
