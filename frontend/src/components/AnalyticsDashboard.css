@@ -25,6 +25,52 @@
   color: var(--primary);
 }
 
+.analytics-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+  padding: var(--space-12);
+  color: var(--text-secondary);
+  text-align: center;
+  height: 100%;
+}
+
+.analytics-error svg {
+  color: var(--danger, #ef4444);
+}
+
+.analytics-error h3 {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 1.125rem;
+}
+
+.analytics-error p {
+  margin: 0;
+  max-width: 400px;
+}
+
+.analytics-error .retry-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  background: var(--primary);
+  color: white;
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: background 0.2s;
+}
+
+.analytics-error .retry-btn:hover {
+  background: var(--primary-dark, #2563eb);
+}
+
 @keyframes pulse {
   0%,
   100% {

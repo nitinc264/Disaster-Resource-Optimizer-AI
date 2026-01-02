@@ -60,6 +60,8 @@ export const getAnalytics = async (req, res) => {
       activeMissionsCount,
       // Response time stats
       responseTimeStats,
+      responseTimeTrendData,
+      needResponseTimeTrendData,
     ] = await Promise.all([
       // 1. Current Period Report Stats - count resolved from both status and emergencyStatus
       Report.aggregate([
@@ -280,23 +282,111 @@ export const getAnalytics = async (req, res) => {
       // 12. Active Missions Count
       mongoose.connection.db.collection("missions").countDocuments({ status: "Active" }),
 
-      // 13. Response Time Stats - time from creation to dispatch
+      // 13. Response Time Stats - time from creation to resolution/dispatch/update
+      // Uses multiple fallbacks: dispatchedAt > assignedAt > updatedAt for resolved reports
       Report.aggregate([
         {
           $match: {
             createdAt: { $gte: startDate },
-            "assignedStation.dispatchedAt": { $ne: null },
+            $or: [
+              { "assignedStation.dispatchedAt": { $ne: null } },
+              { "assignedStation.assignedAt": { $ne: null } },
+              { status: { $in: ["Resolved", "Analyzed", "Analyzed_Full"] } },
+            ],
+          },
+        },
+        {
+          $addFields: {
+            responseEndTime: {
+              $ifNull: [
+                "$assignedStation.dispatchedAt",
+                { $ifNull: ["$assignedStation.assignedAt", "$updatedAt"] },
+              ],
+            },
           },
         },
         {
           $group: {
             _id: null,
             avgResponseTime: {
-              $avg: { $subtract: ["$assignedStation.dispatchedAt", "$createdAt"] },
+              $avg: { $subtract: ["$responseEndTime", "$createdAt"] },
             },
             count: { $sum: 1 },
           },
         },
+      ]),
+
+      // 14. Response Time Trend - shows processing time by hour/day
+      // For reports that have been processed (any status beyond Pending)
+      Report.aggregate([
+        {
+          $match: {
+            createdAt: { $gte: startDate },
+            status: { $nin: ["Pending", "Error"] },
+          },
+        },
+        {
+          $addFields: {
+            responseEndTime: {
+              $ifNull: [
+                "$assignedStation.dispatchedAt",
+                { $ifNull: ["$assignedStation.assignedAt", "$updatedAt"] },
+              ],
+            },
+          },
+        },
+        {
+          $group: {
+            _id: {
+              $dateToString: {
+                format: timeRange === "7d" || timeRange === "30d" ? "%Y-%m-%d" : "%H:00",
+                date: "$createdAt",
+              },
+            },
+            avgTime: {
+              $avg: { $divide: [{ $subtract: ["$responseEndTime", "$createdAt"] }, 60000] },
+            },
+            count: { $sum: 1 },
+          },
+        },
+        { $sort: { _id: 1 } },
+        { $limit: 24 },
+      ]),
+
+      // 15. Need Response Time Trend
+      Need.aggregate([
+        {
+          $match: {
+            createdAt: { $gte: startDate },
+            status: { $nin: ["Unverified"] },
+          },
+        },
+        {
+          $addFields: {
+            responseEndTime: {
+              $ifNull: [
+                "$assignedStation.dispatchedAt",
+                { $ifNull: ["$assignedStation.assignedAt", "$updatedAt"] },
+              ],
+            },
+          },
+        },
+        {
+          $group: {
+            _id: {
+              $dateToString: {
+                format: timeRange === "7d" || timeRange === "30d" ? "%Y-%m-%d" : "%H:00",
+                date: "$createdAt",
+              },
+            },
+            avgTime: {
+              $avg: { $divide: [{ $subtract: ["$responseEndTime", "$createdAt"] }, 60000] },
+            },
+            count: { $sum: 1 },
+          },
+        },
+        { $sort: { _id: 1 } },
+        { $limit: 24 },
       ]),
     ]);
 
@@ -307,13 +397,18 @@ export const getAnalytics = async (req, res) => {
     const previousNeed = previousNeedStats[0] || { total: 0, resolved: 0 };
     const responseTime = responseTimeStats[0] || { avgResponseTime: 0, count: 0 };
 
+    // Calculate effective avg response time with fallbacks
+    // Priority: actual response time > report resolution time > need resolution time
+    const effectiveResponseTimeMs = responseTime.avgResponseTime || 
+                                     currentReport.avgResolutionTime || 
+                                     currentNeed.avgResolutionTime || 0;
+
     // Combined stats
     const current = {
       total: currentReport.total + currentNeed.total,
       resolved: currentReport.resolved + currentNeed.resolved,
       avgResolutionTime: currentReport.avgResolutionTime || currentNeed.avgResolutionTime || 0,
-      // Use actual response time (dispatch time) if available, otherwise fall back to resolution time
-      avgResponseTime: responseTime.avgResponseTime || currentReport.avgResolutionTime || 0,
+      avgResponseTime: effectiveResponseTimeMs,
     };
     const previous = {
       total: previousReport.total + previousNeed.total,
@@ -425,7 +520,45 @@ export const getAnalytics = async (req, res) => {
       })),
     ].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)).slice(0, 10);
 
-    // Response Object
+    // Combine response time trend data from Reports and Needs
+    const trendMap = new Map();
+    
+    // Add Report response times
+    (responseTimeTrendData || []).forEach((item) => {
+      if (item._id) {
+        const existing = trendMap.get(item._id);
+        if (existing) {
+          // Weighted average
+          const totalCount = existing.count + item.count;
+          existing.avgTime = ((existing.avgTime * existing.count) + ((item.avgTime || 0) * item.count)) / totalCount;
+          existing.count = totalCount;
+        } else {
+          trendMap.set(item._id, { avgTime: item.avgTime || 0, count: item.count });
+        }
+      }
+    });
+    
+    // Add Need response times
+    (needResponseTimeTrendData || []).forEach((item) => {
+      if (item._id) {
+        const existing = trendMap.get(item._id);
+        if (existing) {
+          const totalCount = existing.count + item.count;
+          existing.avgTime = ((existing.avgTime * existing.count) + ((item.avgTime || 0) * item.count)) / totalCount;
+          existing.count = totalCount;
+        } else {
+          trendMap.set(item._id, { avgTime: item.avgTime || 0, count: item.count });
+        }
+      }
+    });
+
+    // Format combined response time trend
+    const formattedResponseTimeTrend = Array.from(trendMap.entries())
+      .map(([label, data]) => ({
+        label,
+        value: Math.round(data.avgTime || 0),
+      }))
+      .sort((a, b) => a.label.localeCompare(b.label));
     const responseData = {
       current: {
         incidents: current.total,
@@ -440,15 +573,7 @@ export const getAnalytics = async (req, res) => {
       },
       historical: true,
       incidentTypes: formattedIncidentTypes,
-      responseTimeTrend: [
-        // Mock trend data for now as it requires complex time-series aggregation
-        { label: "00:00", value: 15 },
-        { label: "04:00", value: 20 },
-        { label: "08:00", value: 12 },
-        { label: "12:00", value: 18 },
-        { label: "16:00", value: 25 },
-        { label: "20:00", value: 10 },
-      ],
+      responseTimeTrend: formattedResponseTimeTrend,
       severityDistribution: formattedSeverity,
       hotspots: formattedHotspots,
       recentActivity: allActivity,

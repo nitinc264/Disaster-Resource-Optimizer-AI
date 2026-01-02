@@ -16,10 +16,12 @@ import {
   EmergencyStations,
   RoleSelector,
 } from "./components";
+import MessagingModal from "./components/MessagingModal";
 import { AuthProvider, useAuth, VolunteerRouteProvider } from "./contexts";
 import { VolunteerPage, DashboardPage, ResourcesPage, AddShelterPage, PublicDashboard } from "./pages";
-import { LogOut, Globe, Settings, Shield, AlertTriangle } from "lucide-react";
+import { LogOut, Globe, Settings, Shield, AlertTriangle, MessageSquare } from "lucide-react";
 import { initSyncListeners } from "./services/syncService";
+import { getUnreadCount } from "./services/messagingService";
 import "./App.css";
 
 // Create a react-query client
@@ -58,6 +60,42 @@ function AuthenticatedApp() {
   const { t } = useTranslation();
   const { logout, isManager } = useAuth();
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [messagingOpen, setMessagingOpen] = useState(false);
+  const [unreadMessages, setUnreadMessages] = useState(0);
+
+  // Poll for unread message count
+  useEffect(() => {
+    const fetchUnread = async () => {
+      try {
+        const result = await getUnreadCount();
+        if (result.success) {
+          setUnreadMessages(result.data.unreadCount);
+        }
+      } catch (err) {
+        // Silently fail
+      }
+    };
+
+    fetchUnread();
+    const interval = setInterval(fetchUnread, 10000); // Poll every 10 seconds
+
+    return () => clearInterval(interval);
+  }, []);
+
+  // Reset unread count when opening messaging modal
+  const handleOpenMessaging = () => {
+    setMessagingOpen(true);
+  };
+
+  const handleCloseMessaging = () => {
+    setMessagingOpen(false);
+    // Refresh unread count
+    getUnreadCount().then((result) => {
+      if (result.success) {
+        setUnreadMessages(result.data.unreadCount);
+      }
+    }).catch(() => {});
+  };
 
   return (
     <BrowserRouter>
@@ -115,6 +153,17 @@ function AuthenticatedApp() {
               <LanguageSwitcher />
 
               <button
+                className="icon-btn messaging-btn"
+                onClick={handleOpenMessaging}
+                title={t("messaging.messages") || "Messages"}
+              >
+                <MessageSquare size={18} />
+                {unreadMessages > 0 && (
+                  <span className="unread-indicator">{unreadMessages > 9 ? "9+" : unreadMessages}</span>
+                )}
+              </button>
+
+              <button
                 className="icon-btn"
                 onClick={() => setSettingsOpen(true)}
                 title={t("settings.title")}
@@ -149,6 +198,11 @@ function AuthenticatedApp() {
       <AccessibilitySettings
         isOpen={settingsOpen}
         onClose={() => setSettingsOpen(false)}
+      />
+
+      <MessagingModal
+        isOpen={messagingOpen}
+        onClose={handleCloseMessaging}
       />
     </BrowserRouter>
   );

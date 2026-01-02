@@ -17,6 +17,7 @@ import {
   Stethoscope,
   Car,
   HelpCircle,
+  RefreshCw,
 } from "lucide-react";
 import { getAnalytics } from "../services";
 import "./AnalyticsDashboard.css";
@@ -36,10 +37,11 @@ export default function AnalyticsDashboard() {
   const { t } = useTranslation();
   const [timeRange, setTimeRange] = useState("24h");
 
-  const { data: analytics = {}, isLoading } = useQuery({
+  const { data: analytics = {}, isLoading, isError, error, refetch } = useQuery({
     queryKey: ["analytics", timeRange],
     queryFn: () => getAnalytics({ timeRange }),
     refetchInterval: 60000, // Refresh every minute
+    retry: 2,
   });
 
   // Calculate trends
@@ -69,6 +71,20 @@ export default function AnalyticsDashboard() {
       <div className="analytics-loading">
         <Activity size={24} className="pulse" />
         <span>{t("analytics.loading")}</span>
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="analytics-error">
+        <AlertTriangle size={32} />
+        <h3>{t("analytics.errorTitle", "Failed to load analytics")}</h3>
+        <p>{error?.message || t("analytics.errorMessage", "Unable to fetch analytics data. Please try again.")}</p>
+        <button className="retry-btn" onClick={() => refetch()}>
+          <RefreshCw size={16} />
+          {t("common.retry", "Retry")}
+        </button>
       </div>
     );
   }
@@ -170,16 +186,20 @@ export default function AnalyticsDashboard() {
           {(analytics.responseTimeTrend || []).length > 0 ? (
             <>
               <div className="sparkline-chart">
-                {(analytics.responseTimeTrend || []).map((point, idx) => (
-                  <div
-                    key={idx}
-                    className="sparkline-bar"
-                    style={{
-                      height: `${Math.min(100, (point.value / 60) * 100)}%`,
-                    }}
-                    title={`${point.label}: ${formatDuration(point.value)}`}
-                  />
-                ))}
+                {(analytics.responseTimeTrend || []).map((point, idx) => {
+                  const value = point.value || 0;
+                  const maxValue = Math.max(...(analytics.responseTimeTrend || []).map(p => p.value || 0), 1);
+                  return (
+                    <div
+                      key={idx}
+                      className="sparkline-bar"
+                      style={{
+                        height: `${Math.min(100, Math.max(5, (value / maxValue) * 100))}%`,
+                      }}
+                      title={`${point.label}: ${formatDuration(value)}`}
+                    />
+                  );
+                })}
               </div>
               <div className="sparkline-labels">
                 {(analytics.responseTimeTrend || [])
@@ -338,6 +358,8 @@ function MetricCard({ title, value, trend, trendInverted, icon: Icon, color }) {
 
 // Helper functions
 function formatDuration(minutes) {
+  if (minutes === null || minutes === undefined || isNaN(minutes)) return "N/A";
+  if (minutes <= 0) return "0m";
   if (minutes < 60) return `${Math.round(minutes)}m`;
   const hours = Math.floor(minutes / 60);
   const mins = Math.round(minutes % 60);
@@ -345,7 +367,9 @@ function formatDuration(minutes) {
 }
 
 function formatTime(timestamp) {
+  if (!timestamp) return "N/A";
   const date = new Date(timestamp);
+  if (isNaN(date.getTime())) return "N/A";
   const now = new Date();
   const diffMs = now - date;
   const diffMins = Math.floor(diffMs / 60000);
