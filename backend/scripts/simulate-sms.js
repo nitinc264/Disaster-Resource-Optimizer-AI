@@ -5,7 +5,7 @@ const API_URL = "http://localhost:3000/api/sms";
 const SAMPLE_MESSAGES = [
   {
     from: "+919800000001",
-    body: "Help",
+    body: "Building collapse near Datta Mandir Chowk, people trapped at Wakad",
   },
   {
     from: "+919800000002",

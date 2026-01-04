@@ -7,15 +7,28 @@ import { apiClient } from "./api";
  * @param {string} message - Optional caption/description
  * @returns {Promise<Object>} Backend response payload
  */
+// Default location: Pune city center (used when geolocation is unavailable)
+const DEFAULT_LOCATION = {
+  lat: 18.5204,
+  lng: 73.8567,
+};
+
 export async function uploadPhotoReport(imageFile, location, message = "") {
   const formData = new FormData();
 
   formData.append("image", imageFile);
-  // Use default location if not available
-  const lat = location?.lat ?? 0;
-  const lng = location?.lng ?? 0;
+  // Use provided location, or fall back to Pune city center if unavailable
+  // Avoid using 0,0 as it places markers in the Atlantic Ocean
+  const hasValidLocation = location && 
+    typeof location.lat === 'number' && 
+    typeof location.lng === 'number' &&
+    !(location.lat === 0 && location.lng === 0);
+  
+  const lat = hasValidLocation ? location.lat : DEFAULT_LOCATION.lat;
+  const lng = hasValidLocation ? location.lng : DEFAULT_LOCATION.lng;
   formData.append("lat", lat.toString());
   formData.append("lng", lng.toString());
+  formData.append("usedDefaultLocation", (!hasValidLocation).toString());
 
   if (message) {
     formData.append("message", message);

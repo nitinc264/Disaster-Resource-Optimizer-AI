@@ -307,14 +307,26 @@ app.post(
         });
       }
 
-      const latNum = parseFloat(lat);
-      const lngNum = parseFloat(lng);
+      let latNum = parseFloat(lat);
+      let lngNum = parseFloat(lng);
 
       if (Number.isNaN(latNum) || Number.isNaN(lngNum)) {
         return res.status(400).json({
           error: "Invalid location",
           message: "Latitude and longitude must be valid numbers",
         });
+      }
+
+      // Default to Pune city center if coordinates are 0,0 (invalid/unset)
+      const DEFAULT_LAT = 18.5204;
+      const DEFAULT_LNG = 73.8567;
+      let usedDefaultLocation = false;
+      
+      if (latNum === 0 && lngNum === 0) {
+        console.log("[WARN] Received 0,0 coordinates, using Pune default location");
+        latNum = DEFAULT_LAT;
+        lngNum = DEFAULT_LNG;
+        usedDefaultLocation = true;
       }
 
       let uploadResult;
@@ -342,21 +354,29 @@ app.post(
         location: {
           lat: latNum,
           lng: lngNum,
+          isApproximate: usedDefaultLocation,
         },
         status: "Pending",
         timestamp: new Date(),
       });
 
       const savedReport = await report.save();
+      
+      if (usedDefaultLocation) {
+        console.log(`[INFO] Report ${savedReport._id} created with default location (Pune)`);
+      }
 
       return res.status(201).json({
         success: true,
-        message: "Photo report saved successfully",
+        message: usedDefaultLocation 
+          ? "Photo report saved with approximate location (Pune city center)" 
+          : "Photo report saved successfully",
         data: {
           id: savedReport._id,
           imageUrl: savedReport.imageUrl,
           status: savedReport.status,
           location: savedReport.location,
+          usedDefaultLocation,
         },
       });
     } catch (error) {

@@ -10,6 +10,7 @@
     "sms:simulate": "node scripts/simulate-sms.js",
     "sms:simulate2": "node scripts/simulate-sms2.js",
     "db:clear": "node scripts/clear-db.js --confirm",
+    "monitor": "node scripts/monitor-data-changes.js",
     "agent:oracle": "node agents/oracle_agent.js",
     "agent:sentinel": "cd agents && venv/Scripts/python sentinel_agent.py",
     "agent:logistics": "cd agents && venv/Scripts/python logistics_agent.py"
@@ -19,6 +20,7 @@
   "license": "ISC",
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
+    "chalk": "^5.6.2",
     "cloudinary": "^1.41.3",
     "connect-mongo": "^6.0.0",
     "cors": "^2.8.5",

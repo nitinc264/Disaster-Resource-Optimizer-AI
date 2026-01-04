@@ -200,6 +200,11 @@
   font-size: 0.95rem;
 }
 
+.photo-caption-label .required-indicator {
+  color: #ef4444;
+  font-weight: 700;
+}
+
 .photo-caption-input {
   width: 100%;
   padding: var(--space-3);
@@ -211,6 +216,10 @@
   resize: vertical;
   min-height: 80px;
   margin-bottom: var(--space-4);
+}
+
+.photo-caption-input.input-required {
+  border-color: #f97316;
 }
 
 .photo-caption-input:focus {

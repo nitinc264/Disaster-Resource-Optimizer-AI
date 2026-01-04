@@ -996,6 +996,17 @@
         alerts = initialAlerts;
         renderAlerts();
         updateMarkers();
+        
+        // Play sound if there are any active/received alerts on load
+        // This ensures sound plays even if dashboard was opened after alerts arrived
+        const activeAlerts = initialAlerts.filter(a => 
+          a.status === 'received' || a.status === 'acknowledged'
+        );
+        if (activeAlerts.length > 0 && soundEnabled) {
+          const hasCritical = activeAlerts.some(a => a.severity >= 7);
+          playAlertSound(hasCritical);
+          console.log(`Playing alert sound for ${activeAlerts.length} active alerts`);
+        }
       });
 
       socket.on("newAlert", (alert) => {
@@ -1637,11 +1648,11 @@
         audio.currentTime = 0;
         audio.play().catch((err) => console.log("Audio play failed:", err));
 
-        if (isCritical) {
-          // Play multiple times for critical alerts
-          setTimeout(() => audio.play().catch(() => {}), 500);
-          setTimeout(() => audio.play().catch(() => {}), 1000);
-        }
+        // Stop audio after 3 seconds
+        setTimeout(() => {
+          audio.pause();
+          audio.currentTime = 0;
+        }, 3000);
       }
 
       // Browser notification

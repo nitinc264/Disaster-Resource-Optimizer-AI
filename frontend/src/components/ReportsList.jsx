@@ -5,8 +5,10 @@ import "./ReportsList.css";
 const STATUS_COLORS = {
   Pending: "#f59e0b",
   Processing_Audio: "#3b82f6",
+  Processing_Visual: "#3b82f6",
   Pending_Transcription: "#8b5cf6",
   Analyzed: "#10b981",
+  Analyzed_Visual: "#22c55e",
   Analyzed_Full: "#10b981",
   Clustered: "#8b5cf6",
   Resolved: "#6b7280",

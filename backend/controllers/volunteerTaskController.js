@@ -2,7 +2,7 @@ import Need from "../models/NeedModel.js";
 import { asyncHandler, ApiError } from "../middleware/index.js";
 import { sendSuccess } from "../utils/apiResponse.js";
 import { logger } from "../utils/appLogger.js";
-import { STATUS } from "../constants/index.js";
+import { STATUS, GEOCODE_DEFAULTS } from "../constants/index.js";
 import { dispatchEmergencyAlert } from "../services/emergencyAlertService.js";
 
 const MAX_UNVERIFIED = 50;
@@ -35,23 +35,47 @@ const toTaskDto = (need) => ({
 
 /**
  * Convert Need model to Map DTO
+ * Uses fallback coordinates if not available, with small offset to prevent overlapping
  */
-const toMapNeedDto = (need) => ({
-  id: need._id.toString(),
-  lat: need.coordinates?.lat,
-  lon: need.coordinates?.lon,
-  status: need.status,
-  emergencyStatus: need.emergencyStatus || "none",
-  emergencyType: need.emergencyType || "general",
-  emergencyAlertId: need.emergencyAlertId,
-  assignedStation: need.assignedStation,
-  description: describeNeed(need),
-  needType: need.triageData?.needType,
-  urgency: need.triageData?.urgency,
-  location: need.triageData?.location || need.coordinates?.formattedAddress,
-  verifiedAt: need.verifiedAt,
-  createdAt: need.createdAt,
-});
+const toMapNeedDto = (need, index = 0) => {
+  // Check if need has valid coordinates
+  const hasValidCoordinates =
+    typeof need.coordinates?.lat === "number" &&
+    typeof need.coordinates?.lon === "number";
+
+  // For needs without coordinates, add a small offset based on index
+  // This prevents multiple pins from overlapping at the exact same location
+  // Creates a spiral pattern around the default location
+  let lat, lon;
+  if (hasValidCoordinates) {
+    lat = need.coordinates.lat;
+    lon = need.coordinates.lon;
+  } else {
+    // Create a small offset in a spiral pattern (max ~500m radius)
+    const angle = index * 137.5 * (Math.PI / 180); // Golden angle for even distribution
+    const radius = 0.002 + (index * 0.0008); // Start at ~200m, increase by ~80m per point
+    lat = GEOCODE_DEFAULTS.DEFAULT_LAT + (radius * Math.cos(angle));
+    lon = GEOCODE_DEFAULTS.DEFAULT_LON + (radius * Math.sin(angle));
+  }
+
+  return {
+    id: need._id.toString(),
+    lat,
+    lon,
+    status: need.status,
+    emergencyStatus: need.emergencyStatus || "none",
+    emergencyType: need.emergencyType || "general",
+    emergencyAlertId: need.emergencyAlertId,
+    assignedStation: need.assignedStation,
+    description: describeNeed(need),
+    needType: need.triageData?.needType,
+    urgency: need.triageData?.urgency,
+    location: need.triageData?.location || need.coordinates?.formattedAddress,
+    verifiedAt: need.verifiedAt,
+    createdAt: need.createdAt,
+    hasExactLocation: hasValidCoordinates, // Flag for UI to show approximate location indicator
+  };
+};
 
 /**
  * GET /api/tasks/unverified
@@ -99,27 +123,43 @@ export const verifyTask = asyncHandler(async (req, res) => {
   logger.info(`Task ${taskId} verified successfully`);
 
   // Dispatch emergency alert to appropriate stations
-  if (updatedNeed.coordinates?.lat && updatedNeed.coordinates?.lon) {
-    try {
-      logger.info(`Dispatching emergency alert for verified task ${taskId}`);
-      const alertResult = await dispatchEmergencyAlert(updatedNeed, "Need");
+  // Use fallback coordinates if not available
+  try {
+    const hasValidCoordinates =
+      typeof updatedNeed.coordinates?.lat === "number" &&
+      typeof updatedNeed.coordinates?.lon === "number";
 
-      if (alertResult.success) {
-        logger.info(`Emergency alert dispatched: ${alertResult.alertId}`, {
-          stationsNotified: alertResult.stationsNotified,
-          emergencyType: alertResult.emergencyType,
-        });
-      } else {
-        logger.warn(`Failed to dispatch emergency alert: ${alertResult.error}`);
-      }
-    } catch (alertError) {
-      // Don't fail the verification if alert dispatch fails
-      logger.error("Error dispatching emergency alert:", alertError);
+    // Create a copy with fallback coordinates if needed
+    const needForAlert = hasValidCoordinates
+      ? updatedNeed
+      : {
+          ...updatedNeed.toObject(),
+          coordinates: {
+            lat: GEOCODE_DEFAULTS.DEFAULT_LAT,
+            lon: GEOCODE_DEFAULTS.DEFAULT_LON,
+            formattedAddress: updatedNeed.triageData?.location || "Pune, India (approximate)",
+          },
+        };
+
+    if (!hasValidCoordinates) {
+      logger.info(`Task ${taskId} has no coordinates, using fallback location for alert dispatch`);
     }
-  } else {
-    logger.warn(
-      `Task ${taskId} verified but has no coordinates for alert dispatch`
-    );
+
+    logger.info(`Dispatching emergency alert for verified task ${taskId}`);
+    const alertResult = await dispatchEmergencyAlert(needForAlert, "Need");
+
+    if (alertResult.success) {
+      logger.info(`Emergency alert dispatched: ${alertResult.alertId}`, {
+        stationsNotified: alertResult.stationsNotified,
+        emergencyType: alertResult.emergencyType,
+        usedFallbackLocation: !hasValidCoordinates,
+      });
+    } else {
+      logger.warn(`Failed to dispatch emergency alert: ${alertResult.error}`);
+    }
+  } catch (alertError) {
+    // Don't fail the verification if alert dispatch fails
+    logger.error("Error dispatching emergency alert:", alertError);
   }
 
   sendSuccess(
@@ -154,20 +194,26 @@ export const getVerifiedTasks = asyncHandler(async (req, res) => {
 
 /**
  * GET /api/needs/map
- * Get all needs with coordinates for map display
+ * Get all needs for map display
+ * Needs without coordinates will use fallback location with offset
  */
 export const getNeedsForMap = asyncHandler(async (req, res) => {
-  const needs = await Need.find({ "coordinates.lat": { $exists: true } })
+  // Fetch ALL needs, not just those with coordinates
+  // The toMapNeedDto function will assign fallback coordinates if needed
+  const needs = await Need.find({})
     .sort({ createdAt: -1 })
     .limit(MAX_MAP_NEEDS);
 
-  const mapReadyNeeds = needs
-    .map(toMapNeedDto)
-    .filter(
-      (need) => typeof need.lat === "number" && typeof need.lon === "number"
-    );
+  // Track index for needs without coordinates to create offset
+  let noCoordIndex = 0;
+  const mapReadyNeeds = needs.map((need) => {
+    const hasCoords = typeof need.coordinates?.lat === "number" && typeof need.coordinates?.lon === "number";
+    const dto = toMapNeedDto(need, hasCoords ? 0 : noCoordIndex);
+    if (!hasCoords) noCoordIndex++;
+    return dto;
+  });
 
-  logger.debug(`Found ${mapReadyNeeds.length} needs for map display`);
+  logger.debug(`Found ${mapReadyNeeds.length} needs for map display (including ${mapReadyNeeds.filter(n => !n.hasExactLocation).length} with approximate location)`);
 
   sendSuccess(res, mapReadyNeeds, "Map needs retrieved successfully");
 });

@@ -157,6 +157,12 @@ const PhotoReporter = () => {
   const handleSubmit = async () => {
     if (!imageFile) return;
 
+    // Validate description is provided
+    if (!caption.trim()) {
+      setError(t("photo.descriptionRequired", "Please provide a description of the incident"));
+      return;
+    }
+
     setIsUploading(true);
     setError(null);
 
@@ -291,13 +297,14 @@ const PhotoReporter = () => {
 
                 <div className="photo-caption-container">
                   <label className="photo-caption-label">
-                    {t("photo.caption")}
+                    {t("photo.captionRequired", "Add a description")} <span className="required-indicator">*</span>
                   </label>
                   <textarea
-                    className="photo-caption-input"
+                    className={`photo-caption-input ${!caption.trim() ? 'input-required' : ''}`}
                     placeholder={t("photo.captionPlaceholder")}
                     value={caption}
                     onChange={(e) => setCaption(e.target.value)}
+                    required
                   />
                 </div>
 
@@ -305,7 +312,7 @@ const PhotoReporter = () => {
                   <button
                     className="btn-submit"
                     onClick={handleSubmit}
-                    disabled={isUploading}
+                    disabled={isUploading || !caption.trim()}
                   >
                     {isUploading ? (
                       <>

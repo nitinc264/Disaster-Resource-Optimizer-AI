@@ -370,7 +370,8 @@ export async function dispatchEmergencyAlert(
 
     logger.info(`Created emergency alert: ${alert.alertId}`);
 
-    // Find nearest stations for each service type
+    // TARGETED ROUTING: Send alerts only to the appropriate station type
+    // based on the emergency type (fire -> fire station, medical -> hospital, etc.)
     const stationsToAlert = [];
 
     for (const serviceType of serviceTypes) {
@@ -415,6 +416,8 @@ export async function dispatchEmergencyAlert(
         }
       }
     }
+
+    logger.info(`Routing alert to ${stationsToAlert.length} station(s) for emergency type: ${emergencyType}`);
 
     if (stationsToAlert.length === 0) {
       logger.warn("No active emergency stations found for alert", {
@@ -577,24 +580,24 @@ export async function dispatchAlertToStation(
     logger.info(`Created emergency alert for reroute: ${alert.alertId}`);
 
     // Find the target station by name and type
-    const station = await EmergencyStation.findOne({
+    let targetStationDoc = await EmergencyStation.findOne({
       name: targetStation.name,
       type: targetStation.type,
       status: "active",
     });
 
-    if (!station) {
+    if (!targetStationDoc) {
       logger.warn(
         `Target station not found: ${targetStation.name} (${targetStation.type})`
       );
 
       // Try to find any active station of this type
-      const fallbackStation = await EmergencyStation.findOne({
+      targetStationDoc = await EmergencyStation.findOne({
         type: targetStation.type,
         status: "active",
       });
 
-      if (!fallbackStation) {
+      if (!targetStationDoc) {
         alert.status = "dispatched";
         alert.dispatchedAt = new Date();
         await alert.save();
@@ -608,10 +611,8 @@ export async function dispatchAlertToStation(
       }
 
       // Use fallback station
-      logger.info(`Using fallback station: ${fallbackStation.name}`);
+      logger.info(`Using fallback station: ${targetStationDoc.name}`);
     }
-
-    const targetStationDoc = station || fallbackStation;
 
     // Send alert to the target station
     const result = await sendAlertToStation(targetStationDoc, {

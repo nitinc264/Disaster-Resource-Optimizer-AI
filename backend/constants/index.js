@@ -25,6 +25,9 @@ export const HTTP_STATUS = {
 export const GEOCODE_DEFAULTS = {
   REGION: "Pune, India",
   TIMEOUT: 5000,
+  // Default location (Pune city center) for needs without geocoded coordinates
+  DEFAULT_LAT: 18.5204,
+  DEFAULT_LON: 73.8567,
 };
 
 // AI Model configurations

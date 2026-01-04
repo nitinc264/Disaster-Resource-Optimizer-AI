@@ -233,12 +233,14 @@ function DashboardPage() {
   );
 
   // Get analyzed reports with valid coordinates to show on map
+  // Include Analyzed_Visual status so photo reports appear on map immediately after Sentinel analysis
   const analyzedReports = useMemo(
     () =>
       (reportsData || []).filter(
         (report) =>
           (report.status === "Analyzed" ||
             report.status === "Analyzed_Full" ||
+            report.status === "Analyzed_Visual" ||
             report.status === "Clustered" ||
             report.status === "InProgress") &&
           typeof report.lat === "number" &&
