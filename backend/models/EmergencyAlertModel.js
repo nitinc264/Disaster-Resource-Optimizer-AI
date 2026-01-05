@@ -172,7 +172,6 @@ const emergencyAlertSchema = new mongoose.Schema(
 );
 
 // Indexes
-emergencyAlertSchema.index({ alertId: 1 });
 emergencyAlertSchema.index({ status: 1, createdAt: -1 });
 emergencyAlertSchema.index({ emergencyType: 1 });
 emergencyAlertSchema.index({ "sentToStations.stationId": 1 });
