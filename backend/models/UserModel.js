@@ -52,9 +52,6 @@ const UserSchema = new mongoose.Schema(
   }
 );
 
-// Index for faster PIN lookups
-UserSchema.index({ pin: 1 });
-
 const User = mongoose.model("User", UserSchema);
 
 export default User;
