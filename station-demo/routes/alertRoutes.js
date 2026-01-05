@@ -79,9 +79,10 @@ router.post("/alerts/receive", verifyApiKey, async (req, res) => {
     await alert.save();
 
     // Emit to all connected dashboards
+    // Only trigger buzzer sound if severity > 4
     io.emit("newAlert", {
       ...alert.toObject(),
-      playSound: true,
+      playSound: severity > 4,
       priority: severity >= 7 ? "critical" : "normal",
     });
 

@@ -8,6 +8,7 @@ import {
   Loader2,
   X,
   Send,
+  Phone,
 } from "lucide-react";
 import { getCurrentLocation, uploadPhotoReport } from "../services";
 import "./PhotoReporter.css";
@@ -17,6 +18,7 @@ const PhotoReporter = () => {
   const [imageFile, setImageFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
   const [caption, setCaption] = useState("");
+  const [mobileNumber, setMobileNumber] = useState("");
   const [error, setError] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadSuccess, setUploadSuccess] = useState(null);
@@ -175,12 +177,13 @@ const PhotoReporter = () => {
         console.warn("Could not get location:", locErr);
       }
 
-      await uploadPhotoReport(imageFile, location, caption);
+      await uploadPhotoReport(imageFile, location, caption, mobileNumber);
 
       setUploadSuccess(true);
       setImageFile(null);
       setPreviewUrl(null);
       setCaption("");
+      setMobileNumber("");
 
       // Reset success message after delay
       setTimeout(() => {
@@ -305,6 +308,21 @@ const PhotoReporter = () => {
                     value={caption}
                     onChange={(e) => setCaption(e.target.value)}
                     required
+                  />
+                </div>
+
+                <div className="photo-caption-container">
+                  <label className="photo-caption-label">
+                    <Phone size={16} style={{ marginRight: '6px', verticalAlign: 'middle' }} />
+                    {t("photo.mobileNumber", "Mobile Number")}
+                  </label>
+                  <input
+                    type="tel"
+                    className="photo-mobile-input"
+                    placeholder={t("photo.mobileNumberPlaceholder", "Enter your mobile number")}
+                    value={mobileNumber}
+                    onChange={(e) => setMobileNumber(e.target.value)}
+                    pattern="[0-9+\-\s]*"
                   />
                 </div>
 

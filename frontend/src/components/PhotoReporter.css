@@ -228,6 +228,29 @@
   box-shadow: 0 0 0 2px var(--primary-light);
 }
 
+/* Mobile Number Input */
+.photo-mobile-input {
+  width: 100%;
+  padding: var(--space-3);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--background);
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 1rem;
+  margin-bottom: var(--space-4);
+}
+
+.photo-mobile-input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px var(--primary-light);
+}
+
+.photo-mobile-input::placeholder {
+  color: var(--text-muted);
+}
+
 /* Actions */
 .photo-actions {
   display: flex;
