@@ -493,7 +493,11 @@ def get_nearest_station(db, report_lat, report_lng, station_type):
 def determine_station_type(report):
     """
     Determine which type of station should respond based on report needs/tags.
-    Priority: rerouted_to_station > needs array > text content > tag
+    Priority: rerouted_to_station > text content > tag > needs array
+    
+    This ensures that explicit mentions like "stampede" in user text take priority
+    over generic AI-inferred needs like "Medical" (since stampede victims need
+    police for crowd control, not hospital as primary responder).
     
     Args:
         report: Report document from MongoDB
@@ -512,25 +516,26 @@ def determine_station_type(report):
     tag = report.get('sentinelData', {}).get('tag', '').lower()
     text = report.get('text', '').lower()
     
-    # Priority 1: Check needs array first (most specific)
+    # Priority 1: Check text content FIRST (user's explicit message takes priority)
+    # This ensures stampede/crowd/riot mentions route to police before "Medical" needs
+    for keyword, station_type in NEED_TO_STATION_MAP:
+        if keyword in text:
+            print(f"[Logistics]    Matched text keyword '{keyword}' -> {station_type.upper()}")
+            return station_type
+    
+    # Priority 2: Check tag (from image analysis)
+    for keyword, station_type in NEED_TO_STATION_MAP:
+        if keyword in tag:
+            print(f"[Logistics]    Matched tag '{tag}' with '{keyword}' -> {station_type.upper()}")
+            return station_type
+    
+    # Priority 3: Check needs array (secondary classification from AI)
     for need in needs:
         need_lower = need.lower()
         for keyword, station_type in NEED_TO_STATION_MAP:
             if keyword in need_lower:
                 print(f"[Logistics]    Matched need '{need}' -> {station_type.upper()}")
                 return station_type
-    
-    # Priority 2: Check text content
-    for keyword, station_type in NEED_TO_STATION_MAP:
-        if keyword in text:
-            print(f"[Logistics]    Matched text keyword '{keyword}' -> {station_type.upper()}")
-            return station_type
-    
-    # Priority 3: Check tag (least specific, often generic like "Disaster")
-    for keyword, station_type in NEED_TO_STATION_MAP:
-        if keyword in tag:
-            print(f"[Logistics]    Matched tag '{tag}' with '{keyword}' -> {station_type.upper()}")
-            return station_type
     
     # Default to rescue
     print(f"[Logistics]    No match found, defaulting to RESCUE")

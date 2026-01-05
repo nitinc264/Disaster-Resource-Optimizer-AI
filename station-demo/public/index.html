@@ -997,15 +997,15 @@
         renderAlerts();
         updateMarkers();
         
-        // Play sound if there are any active/received alerts on load
+        // Play sound if there are any active/received alerts on load with severity > 4
         // This ensures sound plays even if dashboard was opened after alerts arrived
         const activeAlerts = initialAlerts.filter(a => 
-          a.status === 'received' || a.status === 'acknowledged'
+          (a.status === 'received' || a.status === 'acknowledged') && a.severity > 4
         );
         if (activeAlerts.length > 0 && soundEnabled) {
           const hasCritical = activeAlerts.some(a => a.severity >= 7);
           playAlertSound(hasCritical);
-          console.log(`Playing alert sound for ${activeAlerts.length} active alerts`);
+          console.log(`Playing alert sound for ${activeAlerts.length} active alerts with severity > 4`);
         }
       });
 
@@ -1015,8 +1015,8 @@
         // Add to alerts array
         alerts.unshift(alert);
 
-        // Always play sound for new alerts if sound is enabled
-        if (soundEnabled) {
+        // Play sound only if server indicates playSound is true (severity > 4) and sound is enabled
+        if (soundEnabled && alert.playSound) {
           playAlertSound(alert.priority === "critical" || alert.severity >= 7);
         }
 

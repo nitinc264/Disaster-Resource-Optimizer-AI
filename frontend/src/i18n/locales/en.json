@@ -159,6 +159,8 @@
     "chooseFile": "Choose File",
     "caption": "Add a description (optional)",
     "captionPlaceholder": "Describe what you see...",
+    "mobileNumber": "Mobile Number",
+    "mobileNumberPlaceholder": "Enter your mobile number",
     "upload": "Upload Report",
     "uploading": "Uploading...",
     "uploadSuccess": "Photo report submitted successfully!",

@@ -5,6 +5,7 @@ import { apiClient } from "./api";
  * @param {File} imageFile - Captured image file
  * @param {{lat: number, lng: number}} location - User location (optional)
  * @param {string} message - Optional caption/description
+ * @param {string} mobileNumber - Optional mobile number for contact
  * @returns {Promise<Object>} Backend response payload
  */
 // Default location: Pune city center (used when geolocation is unavailable)
@@ -13,7 +14,7 @@ const DEFAULT_LOCATION = {
   lng: 73.8567,
 };
 
-export async function uploadPhotoReport(imageFile, location, message = "") {
+export async function uploadPhotoReport(imageFile, location, message = "", mobileNumber = "") {
   const formData = new FormData();
 
   formData.append("image", imageFile);
@@ -32,6 +33,10 @@ export async function uploadPhotoReport(imageFile, location, message = "") {
 
   if (message) {
     formData.append("message", message);
+  }
+
+  if (mobileNumber) {
+    formData.append("mobileNumber", mobileNumber);
   }
 
   try {

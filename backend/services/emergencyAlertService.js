@@ -43,10 +43,14 @@ const DISASTER_TO_SERVICE_MAP = {
   // Water emergencies - Rescue is primary
   drowning: ["rescue"],
 
-  // Police matters
+  // Police matters - crowd control, security incidents
   police: ["police"],
   crime: ["police"],
   security: ["police"],
+  stampede: ["police"],
+  crowd: ["police"],
+  riot: ["police"],
+  panic: ["police"],
 
   // General/Other - Rescue as fallback
   storm: ["rescue"],
@@ -91,7 +95,11 @@ function determineEmergencyType(data) {
     if (
       tag.includes("police") ||
       tag.includes("crime") ||
-      tag.includes("security")
+      tag.includes("security") ||
+      tag.includes("stampede") ||
+      tag.includes("crowd") ||
+      tag.includes("riot") ||
+      tag.includes("panic")
     )
       return "police";
   }
@@ -185,15 +193,21 @@ function determineEmergencyType(data) {
     return NEED_TO_EMERGENCY_MAP[data.triageData.needType] || "general";
   }
 
-  // Check oracleData needs
+  // Check oracleData needs - police/security keywords checked before medical
   if (data.oracleData?.needs) {
     const needs = data.oracleData.needs.map((n) => n.toLowerCase());
     if (needs.includes("fire suppression")) return "fire";
+    // Check for crowd control/police needs BEFORE medical
+    if (
+      needs.includes("police") ||
+      needs.includes("crowd control") ||
+      needs.includes("security")
+    )
+      return "police";
     if (needs.includes("medical") || needs.includes("ambulance"))
       return "medical";
     if (needs.includes("rescue")) return "rescue";
     if (needs.includes("evacuation")) return "flood";
-    if (needs.includes("police")) return "police";
   }
 
   return "general";
