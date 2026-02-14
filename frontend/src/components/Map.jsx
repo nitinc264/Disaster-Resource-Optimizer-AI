@@ -132,16 +132,9 @@ function Map({
   }, [volunteerMode, volunteerLocation]);
 
   const handleStationClick = (e, station) => {
-    console.log(
-      "Station clicked:",
-      station.name,
-      "isRerouteMode:",
-      isRerouteMode,
-    );
     if (isRerouteMode && onStationClick) {
       e.originalEvent?.stopPropagation();
       e.originalEvent?.preventDefault();
-      console.log("Calling onStationClick with station:", station);
       onStationClick(station);
     }
   };

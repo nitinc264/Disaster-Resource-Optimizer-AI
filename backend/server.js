@@ -97,11 +97,11 @@ function startAgents() {
   ];
 
   console.log(
-    "\n============================================================================="
+    "\n=============================================================================",
   );
   console.log("STARTING BACKGROUND AGENTS");
   console.log(
-    "=============================================================================\n"
+    "=============================================================================\n",
   );
 
   agents.forEach((agent) => {
@@ -148,7 +148,7 @@ function startAgents() {
       proc.on("error", (err) => {
         console.error(
           `${agent.emoji} ${agent.name} failed to start:`,
-          err.message
+          err.message,
         );
       });
     } catch (error) {
@@ -157,7 +157,7 @@ function startAgents() {
   });
 
   console.log(
-    "\n=============================================================================\n"
+    "\n=============================================================================\n",
   );
 }
 
@@ -202,7 +202,7 @@ app.use(
   cors({
     ...config.cors,
     credentials: true, // Allow cookies to be sent with requests
-  })
+  }),
 );
 
 // Session middleware - 24 hour persistence
@@ -217,7 +217,7 @@ app.use(
       httpOnly: true,
       sameSite: "lax",
     },
-  })
+  }),
 );
 
 // Body parsing middleware
@@ -321,9 +321,11 @@ app.post(
       const DEFAULT_LAT = 18.5204;
       const DEFAULT_LNG = 73.8567;
       let usedDefaultLocation = false;
-      
+
       if (latNum === 0 && lngNum === 0) {
-        console.log("[WARN] Received 0,0 coordinates, using Pune default location");
+        console.log(
+          "[WARN] Received 0,0 coordinates, using Pune default location",
+        );
         latNum = DEFAULT_LAT;
         lngNum = DEFAULT_LNG;
         usedDefaultLocation = true;
@@ -361,15 +363,17 @@ app.post(
       });
 
       const savedReport = await report.save();
-      
+
       if (usedDefaultLocation) {
-        console.log(`[INFO] Report ${savedReport._id} created with default location (Pune)`);
+        console.log(
+          `[INFO] Report ${savedReport._id} created with default location (Pune)`,
+        );
       }
 
       return res.status(201).json({
         success: true,
-        message: usedDefaultLocation 
-          ? "Photo report saved with approximate location (Pune city center)" 
+        message: usedDefaultLocation
+          ? "Photo report saved with approximate location (Pune city center)"
           : "Photo report saved successfully",
         data: {
           id: savedReport._id,
@@ -386,7 +390,7 @@ app.post(
         message: error.message,
       });
     }
-  }
+  },
 );
 
 // GET /api/reports/pending-visual - For Python Sentinel Agent
@@ -426,7 +430,7 @@ app.patch("/api/reports/:id/update-agent", async (req, res) => {
     if (status && analyzedStatuses.includes(status)) {
       try {
         console.log(
-          `📢 Report ${id} analyzed, checking for emergency dispatch...`
+          `📢 Report ${id} analyzed, checking for emergency dispatch...`,
         );
 
         // Only dispatch if we have location and a valid disaster detection
@@ -454,19 +458,19 @@ app.patch("/api/reports/:id/update-agent", async (req, res) => {
             console.log(`🚨 Dispatching emergency alert for report ${id}`);
             const alertResult = await dispatchEmergencyAlert(
               updatedReport,
-              "Report"
+              "Report",
             );
 
             if (alertResult.success) {
               console.log(
-                `✅ Alert dispatched: ${alertResult.alertId} to ${alertResult.stationsNotified} stations`
+                `✅ Alert dispatched: ${alertResult.alertId} to ${alertResult.stationsNotified} stations`,
               );
             } else {
               console.warn(`⚠️ Alert dispatch failed: ${alertResult.error}`);
             }
           } else {
             console.log(
-              `ℹ️ Report ${id} not classified as emergency (confidence: ${confidence}, severity: ${severity})`
+              `ℹ️ Report ${id} not classified as emergency (confidence: ${confidence}, severity: ${severity})`,
             );
           }
         }
@@ -475,8 +479,6 @@ app.patch("/api/reports/:id/update-agent", async (req, res) => {
         // Don't fail the update if alert dispatch fails
       }
     }
-
-    res.json(updatedReport);
 
     res.json(updatedReport);
   } catch (error) {

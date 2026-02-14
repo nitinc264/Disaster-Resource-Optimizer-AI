@@ -49,7 +49,7 @@ export default function SOSButton({
           setIsLocating(false);
           resolve(null);
         },
-        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 },
       );
     });
   }, []);
@@ -99,7 +99,6 @@ export default function SOSButton({
       message: "Emergency SOS activated by field volunteer",
     };
 
-    console.log("SOS Alert Triggered:", sosData);
     window.dispatchEvent(new CustomEvent("sos-alert", { detail: sosData }));
 
     // TODO: Send to backend
@@ -118,7 +117,6 @@ export default function SOSButton({
     setAlertSent(false);
 
     // TODO: Send cancellation to backend
-    console.log("SOS Cancelled");
   };
 
   // Handle mouse/touch events
@@ -168,9 +166,7 @@ export default function SOSButton({
             </div>
 
             <div className="sos-modal-body">
-              <p>
-                {t("sos.confirmMessage")}
-              </p>
+              <p>{t("sos.confirmMessage")}</p>
 
               <div
                 className={`sos-status ${location ? "success" : "locating"}`}

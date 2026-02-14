@@ -65,10 +65,3 @@ export function getEnvironmentConfig() {
 
   return configs[env] || development;
 }
-
-export default {
-  development,
-  production,
-  test,
-  getEnvironmentConfig,
-};

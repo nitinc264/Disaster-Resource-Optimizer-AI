@@ -34,7 +34,7 @@ export async function syncPendingVerifications() {
         // Post verification to server
         await postVerification(
           verification.taskId,
-          verification.data?.notes || ""
+          verification.data?.notes || "",
         );
 
         // Remove from IndexedDB on success
@@ -43,7 +43,7 @@ export async function syncPendingVerifications() {
       } catch (error) {
         console.error(
           `Failed to sync verification ${verification.taskId}:`,
-          error
+          error,
         );
         failed++;
         errors.push({
@@ -58,7 +58,7 @@ export async function syncPendingVerifications() {
       window.dispatchEvent(
         new CustomEvent(SYNC_COMPLETE_EVENT, {
           detail: { synced, failed, errors },
-        })
+        }),
       );
     }
 
@@ -104,11 +104,9 @@ export function initSyncListeners() {
     if (syncInProgress) return;
 
     syncInProgress = true;
-    console.log("Network restored - syncing pending verifications...");
 
     try {
       const result = await syncPendingVerifications();
-      console.log("Sync result:", result);
     } catch (error) {
       console.error("Auto-sync failed:", error);
     } finally {

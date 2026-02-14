@@ -33,8 +33,3 @@ export function sendError(res, message, statusCode = 500, details = null) {
     },
   });
 }
-
-export default {
-  sendSuccess,
-  sendError,
-};

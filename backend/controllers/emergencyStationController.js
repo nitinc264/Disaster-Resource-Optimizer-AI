@@ -61,7 +61,7 @@ export async function getAllStations(req, res) {
 export async function getStation(req, res) {
   try {
     const station = await EmergencyStation.findById(req.params.id).select(
-      "-apiConfig.apiKey"
+      "-apiConfig.apiKey",
     );
 
     if (!station) {
@@ -122,7 +122,7 @@ export async function createStation(req, res) {
       res,
       { station: stationResponse },
       "Station registered successfully",
-      201
+      201,
     );
   } catch (error) {
     logger.error("Error creating station:", error);
@@ -146,7 +146,7 @@ export async function updateStation(req, res) {
     const station = await EmergencyStation.findByIdAndUpdate(
       req.params.id,
       updates,
-      { new: true, runValidators: true }
+      { new: true, runValidators: true },
     ).select("-apiConfig.apiKey");
 
     if (!station) {
@@ -179,7 +179,7 @@ export async function deleteStation(req, res) {
         name: station.name,
       },
       "Station deleted successfully",
-      200
+      200,
     );
   } catch (error) {
     logger.error("Error deleting station:", error);
@@ -232,7 +232,7 @@ export async function updateStatusEndpoint(req, res) {
         status: station.status,
       },
       "Station status updated",
-      200
+      200,
     );
   } catch (error) {
     logger.error("Error updating station status:", error);
@@ -259,7 +259,7 @@ export async function findNearestStations(req, res) {
         parseFloat(lat),
         parseFloat(lng),
         type,
-        parseInt(limit)
+        parseInt(limit),
       );
     } else {
       // Find nearest of all types
@@ -271,7 +271,7 @@ export async function findNearestStations(req, res) {
           parseFloat(lat),
           parseFloat(lng),
           t,
-          1
+          1,
         );
         stations.push(...nearest);
       }
@@ -441,7 +441,7 @@ export async function updateAlertStatus(req, res) {
         status,
         ...(status === "resolved" && { resolvedAt: new Date() }),
       },
-      { new: true }
+      { new: true },
     );
 
     if (!alert) {
@@ -455,7 +455,7 @@ export async function updateAlertStatus(req, res) {
         status: alert.status,
       },
       "Alert status updated",
-      200
+      200,
     );
   } catch (error) {
     logger.error("Error updating alert status:", error);
@@ -480,7 +480,7 @@ export async function stationDispatchCallback(req, res) {
     } = req.body;
 
     logger.info(
-      `Dispatch callback received: alertId=${alertId}, stationId=${stationId}`
+      `Dispatch callback received: alertId=${alertId}, stationId=${stationId}`,
     );
 
     if (!alertId || !stationId) {
@@ -497,7 +497,7 @@ export async function stationDispatchCallback(req, res) {
 
     if (!station) {
       logger.warn(
-        `Station not found: ${stationId}, proceeding without station verification`
+        `Station not found: ${stationId}, proceeding without station verification`,
       );
     }
 
@@ -509,7 +509,7 @@ export async function stationDispatchCallback(req, res) {
       station.apiConfig.apiKey !== apiKey
     ) {
       logger.warn(
-        `API key mismatch for station ${stationId}, but proceeding for demo`
+        `API key mismatch for station ${stationId}, but proceeding for demo`,
       );
     }
 
@@ -529,7 +529,7 @@ export async function stationDispatchCallback(req, res) {
       {
         arrayFilters: station ? [{ "elem.stationId": station._id }] : [],
         new: true,
-      }
+      },
     );
 
     if (!alert) {
@@ -556,7 +556,7 @@ export async function stationDispatchCallback(req, res) {
         // Try updating Report first, then Need
         const reportUpdate = await Report.findByIdAndUpdate(
           reportId,
-          updateData
+          updateData,
         );
         const needUpdate = await Need.findByIdAndUpdate(reportId, updateData);
 
@@ -564,7 +564,7 @@ export async function stationDispatchCallback(req, res) {
           logger.info(
             `Updated ${
               reportUpdate ? "report" : "need"
-            } ${reportId} emergencyStatus to 'dispatched'`
+            } ${reportId} emergencyStatus to 'dispatched'`,
           );
         } else {
           logger.warn(`Neither report nor need ${reportId} found for update`);
@@ -596,7 +596,7 @@ export async function stationDispatchCallback(req, res) {
         estimatedArrival,
       },
       "Dispatch callback received",
-      200
+      200,
     );
   } catch (error) {
     logger.error("Error processing dispatch callback:", error);
@@ -614,7 +614,7 @@ export async function stationRejectCallback(req, res) {
     const { alertId, stationId, apiKey, reason } = req.body;
 
     logger.info(
-      `Reject callback received: alertId=${alertId}, stationId=${stationId}, reason=${reason}`
+      `Reject callback received: alertId=${alertId}, stationId=${stationId}, reason=${reason}`,
     );
 
     if (!alertId || !stationId) {
@@ -645,7 +645,7 @@ export async function stationRejectCallback(req, res) {
       {
         arrayFilters: station ? [{ "elem.stationId": station._id }] : [],
         new: true,
-      }
+      },
     );
 
     if (!alert) {
@@ -675,7 +675,7 @@ export async function stationRejectCallback(req, res) {
         // Try updating Report first, then Need
         const reportUpdate = await Report.findByIdAndUpdate(
           reportId,
-          updateData
+          updateData,
         );
         const needUpdate = await Need.findByIdAndUpdate(reportId, updateData);
 
@@ -684,7 +684,7 @@ export async function stationRejectCallback(req, res) {
             reportUpdate ? "report" : "need"
           } ${reportId} emergencyStatus to '${
             allRejected ? "rejected" : "pending"
-          }'`
+          }'`,
         );
 
         // Delete associated mission to remove the route from map when rejected
@@ -700,13 +700,13 @@ export async function stationRejectCallback(req, res) {
 
           if (deletedMission.deletedCount > 0) {
             logger.info(
-              `Deleted ${deletedMission.deletedCount} mission(s) for rejected alert`
+              `Deleted ${deletedMission.deletedCount} mission(s) for rejected alert`,
             );
           }
         }
       } catch (err) {
         logger.error(
-          `Failed to update report/need or delete mission: ${err.message}`
+          `Failed to update report/need or delete mission: ${err.message}`,
         );
       }
     }
@@ -725,7 +725,7 @@ export async function stationRejectCallback(req, res) {
         needsRerouting: allRejected,
       },
       "Rejection callback received",
-      200
+      200,
     );
   } catch (error) {
     logger.error("Error processing rejection callback:", error);
@@ -742,7 +742,7 @@ export async function stationResolvedCallback(req, res) {
     const { alertId, stationId, apiKey, notes, outcome } = req.body;
 
     logger.info(
-      `Resolved callback received: alertId=${alertId}, stationId=${stationId}`
+      `Resolved callback received: alertId=${alertId}, stationId=${stationId}`,
     );
 
     if (!alertId || !stationId) {
@@ -774,7 +774,7 @@ export async function stationResolvedCallback(req, res) {
       {
         arrayFilters: station ? [{ "elem.stationId": station._id }] : [],
         new: true,
-      }
+      },
     );
 
     if (!alert) {
@@ -798,14 +798,14 @@ export async function stationResolvedCallback(req, res) {
         // Try updating Report first, then Need
         const reportUpdate = await Report.findByIdAndUpdate(
           reportId,
-          updateData
+          updateData,
         );
         const needUpdate = await Need.findByIdAndUpdate(reportId, updateData);
 
         logger.info(
           `Updated ${
             reportUpdate ? "report" : "need"
-          } ${reportId} emergencyStatus to 'resolved'`
+          } ${reportId} emergencyStatus to 'resolved'`,
         );
 
         // Delete associated mission to remove the route from map
@@ -820,12 +820,12 @@ export async function stationResolvedCallback(req, res) {
 
         if (deletedMission.deletedCount > 0) {
           logger.info(
-            `Deleted ${deletedMission.deletedCount} mission(s) for resolved alert`
+            `Deleted ${deletedMission.deletedCount} mission(s) for resolved alert`,
           );
         }
       } catch (err) {
         logger.error(
-          `Failed to update report/need or delete mission: ${err.message}`
+          `Failed to update report/need or delete mission: ${err.message}`,
         );
       }
     }
@@ -849,29 +849,10 @@ export async function stationResolvedCallback(req, res) {
         outcome,
       },
       "Resolved callback received",
-      200
+      200,
     );
   } catch (error) {
     logger.error("Error processing resolved callback:", error);
     sendError(res, "Failed to process resolved callback", 500);
   }
 }
-
-export default {
-  getAllStations,
-  getStation,
-  createStation,
-  updateStation,
-  deleteStation,
-  pingStationEndpoint,
-  updateStatusEndpoint,
-  findNearestStations,
-  getAllAlerts,
-  getAlert,
-  dispatchAlert,
-  acknowledgeAlert,
-  updateAlertStatus,
-  stationDispatchCallback,
-  stationRejectCallback,
-  stationResolvedCallback,
-};

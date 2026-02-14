@@ -33,7 +33,7 @@ function cleanCache() {
   if (routeCache.size > MAX_CACHE_SIZE) {
     const keysToDelete = Array.from(routeCache.keys()).slice(
       0,
-      routeCache.size - MAX_CACHE_SIZE
+      routeCache.size - MAX_CACHE_SIZE,
     );
     keysToDelete.forEach((key) => routeCache.delete(key));
   }
@@ -84,7 +84,7 @@ export async function getRoute(waypoints, options = {}) {
 
   try {
     logger.debug(
-      `[RouteService] Fetching route from OSRM: ${coordinates.length} waypoints`
+      `[RouteService] Fetching route from OSRM: ${coordinates.length} waypoints`,
     );
 
     const response = await axios.get(url, {
@@ -153,7 +153,7 @@ function getFallbackRoute(coordinates) {
       coordinates[i][0],
       coordinates[i][1],
       coordinates[i + 1][0],
-      coordinates[i + 1][1]
+      coordinates[i + 1][1],
     );
   }
 
@@ -259,9 +259,3 @@ export async function getOptimizedRoute(waypoints, options = {}) {
     return getRoute(waypoints);
   }
 }
-
-export default {
-  getRoute,
-  getVolunteerRoute,
-  getOptimizedRoute,
-};

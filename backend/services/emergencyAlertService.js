@@ -318,7 +318,7 @@ async function sendAlertToStation(station, alertData) {
           "X-Alert-Priority": alertData.severity >= 7 ? "critical" : "normal",
         },
         timeout: 10000, // 10 second timeout
-      }
+      },
     );
 
     logger.info(`Alert sent to ${station.name}`, {
@@ -352,7 +352,7 @@ async function sendAlertToStation(station, alertData) {
  */
 export async function dispatchEmergencyAlert(
   sourceData,
-  sourceType = "Report"
+  sourceType = "Report",
 ) {
   try {
     // Determine emergency type
@@ -393,7 +393,7 @@ export async function dispatchEmergencyAlert(
         lat,
         lng,
         serviceType,
-        1 // Get nearest station of each type
+        1, // Get nearest station of each type
       );
 
       for (const { station, distance } of nearestStations) {
@@ -407,7 +407,7 @@ export async function dispatchEmergencyAlert(
     // Fallback: If no stations found for specific types, try police and rescue
     if (stationsToAlert.length === 0) {
       logger.info(
-        "No specific stations found, falling back to police and rescue"
+        "No specific stations found, falling back to police and rescue",
       );
 
       const fallbackTypes = ["police", "rescue"];
@@ -417,7 +417,7 @@ export async function dispatchEmergencyAlert(
             lat,
             lng,
             fallbackType,
-            1
+            1,
           );
 
           for (const { station, distance } of nearestStations) {
@@ -431,7 +431,9 @@ export async function dispatchEmergencyAlert(
       }
     }
 
-    logger.info(`Routing alert to ${stationsToAlert.length} station(s) for emergency type: ${emergencyType}`);
+    logger.info(
+      `Routing alert to ${stationsToAlert.length} station(s) for emergency type: ${emergencyType}`,
+    );
 
     if (stationsToAlert.length === 0) {
       logger.warn("No active emergency stations found for alert", {
@@ -509,21 +511,21 @@ export async function dispatchEmergencyAlert(
         // Try updating Report first, then Need
         const reportUpdate = await Report.findByIdAndUpdate(
           sourceData._id,
-          updateData
+          updateData,
         );
         const needUpdate = await Need.findByIdAndUpdate(
           sourceData._id,
-          updateData
+          updateData,
         );
 
         logger.info(
           `Updated ${reportUpdate ? "report" : "need"} ${
             sourceData._id
-          } with emergency status: assigned, type: ${emergencyType}`
+          } with emergency status: assigned, type: ${emergencyType}`,
         );
       } catch (err) {
         logger.warn(
-          `Could not update report/need emergencyStatus: ${err.message}`
+          `Could not update report/need emergencyStatus: ${err.message}`,
         );
       }
     }
@@ -563,13 +565,13 @@ export async function dispatchEmergencyAlert(
 export async function dispatchAlertToStation(
   sourceData,
   sourceType = "Report",
-  targetStation
+  targetStation,
 ) {
   try {
     // Determine emergency type
     const emergencyType = determineEmergencyType(sourceData);
     logger.info(
-      `Dispatching rerouted alert to ${targetStation.name} (${targetStation.type})`
+      `Dispatching rerouted alert to ${targetStation.name} (${targetStation.type})`,
     );
 
     // Get location
@@ -602,7 +604,7 @@ export async function dispatchAlertToStation(
 
     if (!targetStationDoc) {
       logger.warn(
-        `Target station not found: ${targetStation.name} (${targetStation.type})`
+        `Target station not found: ${targetStation.name} (${targetStation.type})`,
       );
 
       // Try to find any active station of this type
@@ -675,11 +677,11 @@ export async function dispatchAlertToStation(
         await Need.findByIdAndUpdate(sourceData._id, updateData);
 
         logger.info(
-          `Updated report/need ${sourceData._id} with new station assignment`
+          `Updated report/need ${sourceData._id} with new station assignment`,
         );
       } catch (err) {
         logger.warn(
-          `Could not update report/need emergencyStatus: ${err.message}`
+          `Could not update report/need emergencyStatus: ${err.message}`,
         );
       }
     }
@@ -712,7 +714,7 @@ export async function dispatchAlertToStation(
 export async function processStationAcknowledgment(
   alertId,
   stationId,
-  acknowledgment
+  acknowledgment,
 ) {
   try {
     const alert = await EmergencyAlert.findOne({ alertId });
@@ -723,7 +725,7 @@ export async function processStationAcknowledgment(
 
     // Find the station entry in sentToStations
     const stationEntry = alert.sentToStations.find(
-      (s) => s.stationId.toString() === stationId
+      (s) => s.stationId.toString() === stationId,
     );
 
     if (!stationEntry) {
@@ -779,13 +781,6 @@ export async function processStationAcknowledgment(
 }
 
 /**
- * Get all registered stations
- */
-export async function getAllStations() {
-  return EmergencyStation.find().sort({ type: 1, name: 1 });
-}
-
-/**
  * Register a new emergency station
  */
 export async function registerStation(stationData) {
@@ -802,7 +797,7 @@ export async function updateStationStatus(stationId, status) {
   const station = await EmergencyStation.findByIdAndUpdate(
     stationId,
     { status, lastPingAt: new Date() },
-    { new: true }
+    { new: true },
   );
   return station;
 }
@@ -848,13 +843,3 @@ export async function pingStation(stationId) {
     };
   }
 }
-
-export default {
-  dispatchEmergencyAlert,
-  dispatchAlertToStation,
-  processStationAcknowledgment,
-  getAllStations,
-  registerStation,
-  updateStationStatus,
-  pingStation,
-};

@@ -168,71 +168,6 @@ export async function getResourceSummary() {
   }
 }
 
-/**
- * Create a new resource station
- * @param {Object} data - Station data
- * @returns {Promise<Object>} Created station
- */
-export async function createResourceStation(data) {
-  try {
-    const response = await apiClient.post("/resources/stations", data);
-    return response.data;
-  } catch (error) {
-    console.error("Error creating resource station:", error);
-    throw error;
-  }
-}
-
-/**
- * Delete a resource station
- * @param {string} stationId - Station ID
- */
-export async function deleteResourceStation(stationId) {
-  try {
-    const response = await apiClient.delete(`/resources/stations/${stationId}`);
-    return response.data;
-  } catch (error) {
-    console.error("Error deleting resource station:", error);
-    throw error;
-  }
-}
-
-/**
- * Deploy vehicles/personnel from a station
- * @param {string} stationId - Station ID
- * @param {Object} deployment - { vehicleType, vehicleCount, role, personnelCount }
- */
-export async function deployStationResources(stationId, deployment) {
-  try {
-    const response = await apiClient.patch(
-      `/resources/stations/${stationId}/deploy`,
-      deployment,
-    );
-    return response.data;
-  } catch (error) {
-    console.error("Error deploying resources:", error);
-    throw error;
-  }
-}
-
-/**
- * Return deployed vehicles/personnel to a station
- * @param {string} stationId - Station ID
- * @param {Object} returns - { vehicleType, vehicleCount, role, personnelCount }
- */
-export async function returnStationResources(stationId, returns) {
-  try {
-    const response = await apiClient.patch(
-      `/resources/stations/${stationId}/return`,
-      returns,
-    );
-    return response.data;
-  } catch (error) {
-    console.error("Error returning resources:", error);
-    throw error;
-  }
-}
-
 // ============================================
 // Analytics API
 // ============================================
@@ -280,7 +215,7 @@ export async function getRoadConditions(options = {}) {
 /**
  * Report a road condition
  */
-export async function reportRoadCondition(condition) {
+async function reportRoadCondition(condition) {
   try {
     const response = await apiClient.post("/roads", condition);
     return response.data.data;
@@ -298,10 +233,7 @@ export async function reportRoadCondition(condition) {
 /**
  * Verify a road condition
  */
-export async function verifyRoadCondition(
-  conditionId,
-  verifiedBy = "dashboard",
-) {
+async function verifyRoadCondition(conditionId, verifiedBy = "dashboard") {
   try {
     const response = await apiClient.patch(`/roads/${conditionId}/verify`, {
       verifiedBy,
@@ -316,7 +248,7 @@ export async function verifyRoadCondition(
 /**
  * Update road condition status
  */
-export async function updateRoadConditionStatus(conditionId, status) {
+async function updateRoadConditionStatus(conditionId, status) {
   try {
     const response = await apiClient.patch(`/roads/${conditionId}/status`, {
       status,
@@ -369,7 +301,7 @@ export async function getMissingPersons(options = {}) {
  * Report a missing person (supports photo upload)
  * @param {Object|FormData} data - Person data or FormData with photo
  */
-export async function reportMissingPerson(data) {
+async function reportMissingPerson(data) {
   try {
     // Check if data is FormData (has photo)
     const isFormData = data instanceof FormData;
@@ -386,7 +318,7 @@ export async function reportMissingPerson(data) {
 /**
  * Mark a missing person as found
  */
-export async function markPersonFound(caseId, foundInfo) {
+async function markPersonFound(caseId, foundInfo) {
   try {
     const response = await apiClient.patch(
       `/missing-persons/${caseId}/found`,
@@ -402,7 +334,7 @@ export async function markPersonFound(caseId, foundInfo) {
 /**
  * Mark a missing person as reunited
  */
-export async function markPersonReunited(caseId) {
+async function markPersonReunited(caseId) {
   try {
     const response = await apiClient.patch(
       `/missing-persons/${caseId}/reunited`,
@@ -410,19 +342,6 @@ export async function markPersonReunited(caseId) {
     return response.data.data;
   } catch (error) {
     console.error("Error marking person as reunited:", error);
-    throw error;
-  }
-}
-
-/**
- * Get missing persons statistics
- */
-export async function getMissingPersonsStats() {
-  try {
-    const response = await apiClient.get("/missing-persons/stats");
-    return response.data.data;
-  } catch (error) {
-    console.error("Error fetching stats:", error);
     throw error;
   }
 }
@@ -487,7 +406,7 @@ export async function getPublicShelters() {
 /**
  * Create a new shelter
  */
-export async function createShelter(shelter) {
+async function createShelter(shelter) {
   try {
     const response = await apiClient.post("/shelters", shelter);
     return response.data.data;
@@ -500,7 +419,7 @@ export async function createShelter(shelter) {
 /**
  * Update shelter capacity
  */
-export async function updateShelterCapacity(shelterId, capacity) {
+async function updateShelterCapacity(shelterId, capacity) {
   try {
     const response = await apiClient.patch(
       `/shelters/${shelterId}/capacity`,
@@ -516,7 +435,7 @@ export async function updateShelterCapacity(shelterId, capacity) {
 /**
  * Update shelter supplies
  */
-export async function updateShelterSupplies(shelterId, supplies) {
+async function updateShelterSupplies(shelterId, supplies) {
   try {
     const response = await apiClient.patch(
       `/shelters/${shelterId}/supplies`,

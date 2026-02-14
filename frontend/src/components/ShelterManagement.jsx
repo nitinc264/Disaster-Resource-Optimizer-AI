@@ -1009,7 +1009,6 @@ export default function ShelterManagement({ currentLocation }) {
           <button
             className="btn-add"
             onClick={() => {
-              console.log("Add Shelter button clicked, opening modal");
               setShowAddForm(true);
             }}
           >

@@ -8,7 +8,6 @@ import {
   TriageAlertBanner,
   ResourceTracker,
   AnalyticsDashboard,
-  ResourceInventory,
   getTriageCategoryFromUrgency,
   RoadConditions,
   MissingPersons,
@@ -74,7 +73,6 @@ function DashboardPage() {
           });
         },
         (error) => {
-          console.log("Geolocation error:", error);
           // Default to a sample location
           setCurrentLocation({ lat: 19.076, lng: 72.8777 });
         },
@@ -116,9 +114,6 @@ function DashboardPage() {
     const handleSyncComplete = (event) => {
       const { synced } = event.detail;
       if (synced > 0) {
-        console.log(
-          `Sync complete: ${synced} verifications synced, refreshing map data...`,
-        );
         // Invalidate all map-related queries to refresh data
         queryClient.invalidateQueries({ queryKey: ["map-needs"] });
         queryClient.invalidateQueries({ queryKey: ["missions"] });
@@ -378,16 +373,8 @@ function DashboardPage() {
 
   const handleStationClick = async (station) => {
     if (!reroutingMissionId) {
-      console.log("No mission selected for re-routing");
       return;
     }
-
-    console.log(
-      "Re-routing mission",
-      reroutingMissionId,
-      "to station",
-      station.name,
-    );
 
     try {
       await rerouteMission(reroutingMissionId, station);

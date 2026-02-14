@@ -42,11 +42,3 @@ export const ENVIRONMENTS = {
   PRODUCTION: "production",
   TEST: "test",
 };
-
-export default {
-  STATUS,
-  HTTP_STATUS,
-  GEOCODE_DEFAULTS,
-  AI_MODELS,
-  ENVIRONMENTS,
-};

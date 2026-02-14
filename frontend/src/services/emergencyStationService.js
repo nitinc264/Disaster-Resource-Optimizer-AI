@@ -22,29 +22,10 @@ export async function getAllStations(filters = {}) {
 }
 
 /**
- * Get a specific station by ID
- */
-export async function getStation(stationId) {
-  const response = await apiClient.get(`/emergency-stations/${stationId}`);
-  return response.data;
-}
-
-/**
  * Register a new emergency station
  */
 export async function registerStation(stationData) {
   const response = await apiClient.post("/emergency-stations", stationData);
-  return response.data;
-}
-
-/**
- * Update an emergency station
- */
-export async function updateStation(stationId, updates) {
-  const response = await apiClient.put(
-    `/emergency-stations/${stationId}`,
-    updates
-  );
   return response.data;
 }
 
@@ -57,33 +38,11 @@ export async function deleteStation(stationId) {
 }
 
 /**
- * Find nearest stations to a location
- */
-export async function findNearestStations(lat, lng, type = null, limit = 5) {
-  const params = new URLSearchParams({ lat, lng, limit });
-  if (type) params.append("type", type);
-
-  const response = await apiClient.get(`/emergency-stations/nearest?${params}`);
-  return response.data;
-}
-
-/**
  * Ping a station to check if it's online
  */
 export async function pingStation(stationId) {
   const response = await apiClient.post(
-    `/emergency-stations/${stationId}/ping`
-  );
-  return response.data;
-}
-
-/**
- * Update station status
- */
-export async function updateStationStatus(stationId, status) {
-  const response = await apiClient.post(
-    `/emergency-stations/${stationId}/status`,
-    { status }
+    `/emergency-stations/${stationId}/ping`,
   );
   return response.data;
 }
@@ -107,20 +66,12 @@ export async function getAllAlerts(filters = {}) {
 }
 
 /**
- * Get a specific alert by ID
- */
-export async function getAlert(alertId) {
-  const response = await apiClient.get(`/emergency-stations/alerts/${alertId}`);
-  return response.data;
-}
-
-/**
  * Manually dispatch an emergency alert
  */
 export async function dispatchAlert(alertData) {
   const response = await apiClient.post(
     "/emergency-stations/alerts/dispatch",
-    alertData
+    alertData,
   );
   return response.data;
 }
@@ -131,7 +82,7 @@ export async function dispatchAlert(alertData) {
 export async function updateAlertStatus(alertId, status) {
   const response = await apiClient.put(
     `/emergency-stations/alerts/${alertId}/status`,
-    { status }
+    { status },
   );
   return response.data;
 }
@@ -258,21 +209,3 @@ export function getSeverityInfo(severity) {
     };
   }
 }
-
-export default {
-  getAllStations,
-  getStation,
-  registerStation,
-  updateStation,
-  deleteStation,
-  findNearestStations,
-  pingStation,
-  updateStationStatus,
-  getAllAlerts,
-  getAlert,
-  dispatchAlert,
-  updateAlertStatus,
-  getStationTypeInfo,
-  getEmergencyTypeInfo,
-  getSeverityInfo,
-};

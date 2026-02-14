@@ -37,7 +37,6 @@ export function VolunteerRouteProvider({ children }) {
             lat: position.coords.latitude,
             lng: position.coords.longitude,
           };
-          console.log("Location received:", newLocation.lat, newLocation.lng);
 
           setCurrentLocation(newLocation);
           setLastKnownLocation(newLocation); // Always save last known
@@ -46,8 +45,6 @@ export function VolunteerRouteProvider({ children }) {
           lastUpdateTime = Date.now();
         },
         (error) => {
-          console.log("Location error:", error.code, error.message);
-
           if (error.code === 1) {
             // PERMISSION_DENIED
             setLocationError("denied");
@@ -67,7 +64,7 @@ export function VolunteerRouteProvider({ children }) {
           enableHighAccuracy: true,
           maximumAge: 30000, // Accept position up to 30 seconds old
           timeout: 10000, // 10 second timeout
-        }
+        },
       );
     };
 
@@ -95,7 +92,7 @@ export function VolunteerRouteProvider({ children }) {
           enableHighAccuracy: false,
           maximumAge: 60000,
           timeout: 5000,
-        }
+        },
       );
     }, 15000); // Every 15 seconds
 
@@ -161,7 +158,7 @@ export function VolunteerRouteProvider({ children }) {
         setIsLoadingRoute(false);
       }
     },
-    [currentLocation, lastKnownLocation]
+    [currentLocation, lastKnownLocation],
   );
 
   // Cancel active route
@@ -196,7 +193,7 @@ export function useVolunteerRoute() {
   const context = useContext(VolunteerRouteContext);
   if (!context) {
     throw new Error(
-      "useVolunteerRoute must be used within a VolunteerRouteProvider"
+      "useVolunteerRoute must be used within a VolunteerRouteProvider",
     );
   }
   return context;

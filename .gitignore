@@ -31,5 +31,12 @@ dist/
 dist-ssr/
 *.local
 
+# Uploaded files
+backend/uploads/*
+!backend/uploads/.gitkeep
+*.webm
+*.wav
+*.m4a
+
 # OS files
 Thumbs.db

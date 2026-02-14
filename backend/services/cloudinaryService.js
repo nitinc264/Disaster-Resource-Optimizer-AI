@@ -35,7 +35,7 @@ const UPLOAD_TIMEOUT = 60000; // 60 seconds
 function ensureConfigured() {
   if (!hasUrl && !hasExplicitCreds) {
     throw new Error(
-      "Cloudinary credentials are missing. Set CLOUDINARY_URL or CLOUDINARY_CLOUD_NAME/API_KEY/API_SECRET."
+      "Cloudinary credentials are missing. Set CLOUDINARY_URL or CLOUDINARY_CLOUD_NAME/API_KEY/API_SECRET.",
     );
   }
 }
@@ -61,7 +61,7 @@ function attemptUpload(buffer, uploadOptions) {
         uploadStream.destroy();
       }
       reject(
-        new Error(`Upload timeout after ${UPLOAD_TIMEOUT / 1000} seconds`)
+        new Error(`Upload timeout after ${UPLOAD_TIMEOUT / 1000} seconds`),
       );
     }, UPLOAD_TIMEOUT);
 
@@ -73,7 +73,7 @@ function attemptUpload(buffer, uploadOptions) {
           return reject(error);
         }
         resolve(result);
-      }
+      },
     );
 
     // Handle stream errors
@@ -119,7 +119,7 @@ export async function uploadImageBuffer(buffer, options = {}) {
       lastError = error;
       console.error(
         `Cloudinary upload attempt ${attempt} failed:`,
-        error.message
+        error.message,
       );
 
       // Check if it's a retryable error
@@ -146,10 +146,6 @@ export async function uploadImageBuffer(buffer, options = {}) {
   throw new Error(
     `Cloudinary upload failed after ${MAX_RETRIES} attempts: ${
       lastError?.message || "Unknown error"
-    }`
+    }`,
   );
 }
-
-export default {
-  uploadImageBuffer,
-};

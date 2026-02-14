@@ -16,7 +16,7 @@ export { default as ResourceTracker } from "./ResourceTracker.jsx";
 export { default as AnalyticsDashboard } from "./AnalyticsDashboard.jsx";
 
 // High Priority Safety Features
-export { default as SOSButton, FloatingSOSButton } from "./SOSButton.jsx";
+export { FloatingSOSButton } from "./SOSButton.jsx";
 export { default as ResourceInventory } from "./ResourceInventory.jsx";
 
 // Medium Priority Features
@@ -31,7 +31,6 @@ export { default as EmergencyStations } from "./EmergencyStations.jsx";
 export {
   default as AccessibilitySettings,
   AccessibilityProvider,
-  useAccessibility,
 } from "./AccessibilitySettings.jsx";
 
 // Authentication components

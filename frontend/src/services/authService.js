@@ -27,14 +27,14 @@ export const getStoredAuth = () => {
 /**
  * Store auth data in localStorage
  */
-export const storeAuth = (authData) => {
+const storeAuth = (authData) => {
   localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(authData));
 };
 
 /**
  * Clear stored auth data
  */
-export const clearAuth = () => {
+const clearAuth = () => {
   localStorage.removeItem(AUTH_STORAGE_KEY);
 };
 
@@ -80,20 +80,6 @@ export const logout = async () => {
   }
   clearAuth();
   delete apiClient.defaults.headers.common["x-auth-pin"];
-};
-
-/**
- * Get current user info
- */
-export const getCurrentUser = async () => {
-  const auth = getStoredAuth();
-  if (!auth?.pin) {
-    throw new Error("Not authenticated");
-  }
-
-  apiClient.defaults.headers.common["x-auth-pin"] = auth.pin;
-  const response = await apiClient.get("/auth/me");
-  return response.data;
 };
 
 /**

@@ -42,11 +42,3 @@ export const markAsRead = async (partnerId) => {
   const response = await apiClient.put(`/messages/read/${partnerId}`);
   return response.data;
 };
-
-/**
- * Get list of managers (for volunteers to message)
- */
-export const getManagersList = async () => {
-  const response = await apiClient.get("/messages/managers");
-  return response.data;
-};

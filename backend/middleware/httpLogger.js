@@ -13,11 +13,9 @@ export function requestLogger(req, res, next) {
     const duration = Date.now() - start;
     const { statusCode } = res;
     console.log(
-      `[RESPONSE] ${method} ${url} - Status: ${statusCode} - Duration: ${duration}ms`
+      `[RESPONSE] ${method} ${url} - Status: ${statusCode} - Duration: ${duration}ms`,
     );
   });
 
   next();
 }
-
-export default requestLogger;

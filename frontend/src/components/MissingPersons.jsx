@@ -59,7 +59,10 @@ const PersonDetailModal = ({ person, onClose, onMarkFound }) => {
         <div className="modal-body">
           {person.photos && person.photos.length > 0 && (
             <div className="modal-photo">
-              <img src={person.photos[0].url || person.photos[0]} alt={person.fullName} />
+              <img
+                src={person.photos[0].url || person.photos[0]}
+                alt={person.fullName}
+              />
             </div>
           )}
           <div className="modal-details">
@@ -69,7 +72,9 @@ const PersonDetailModal = ({ person, onClose, onMarkFound }) => {
             </div>
             <div className="detail-row">
               <strong>{t("family.age")}:</strong>
-              <span>{person.age} {t("missingPerson.years")}</span>
+              <span>
+                {person.age} {t("missingPerson.years")}
+              </span>
             </div>
             <div className="detail-row">
               <strong>{t("family.gender")}:</strong>
@@ -77,7 +82,9 @@ const PersonDetailModal = ({ person, onClose, onMarkFound }) => {
             </div>
             <div className="detail-row">
               <strong>{t("family.lastSeenLocation")}:</strong>
-              <span>{person.lastSeenLocation?.address || t("tasks.noLocation")}</span>
+              <span>
+                {person.lastSeenLocation?.address || t("tasks.noLocation")}
+              </span>
             </div>
             <div className="detail-row">
               <strong>{t("family.reported")}:</strong>
@@ -86,7 +93,11 @@ const PersonDetailModal = ({ person, onClose, onMarkFound }) => {
             {person.description && (
               <div className="detail-row">
                 <strong>{t("family.description")}:</strong>
-                <p>{typeof person.description === "string" ? person.description : person.description.physical || ""}</p>
+                <p>
+                  {typeof person.description === "string"
+                    ? person.description
+                    : person.description.physical || ""}
+                </p>
               </div>
             )}
             {person.medicalInfo && (
@@ -340,7 +351,12 @@ const PersonCard = ({ person, onView, onMarkFound }) => {
   );
 };
 
-const ReportMissingForm = ({ onSubmit, onCancel, currentLocation, isPublicMode = false }) => {
+const ReportMissingForm = ({
+  onSubmit,
+  onCancel,
+  currentLocation,
+  isPublicMode = false,
+}) => {
   const { t } = useTranslation();
   const [formData, setFormData] = useState({
     fullName: "",
@@ -412,7 +428,7 @@ const ReportMissingForm = ({ onSubmit, onCancel, currentLocation, isPublicMode =
       }
 
       await onSubmit(submitData);
-      
+
       // In public mode, show success and reset form
       if (isPublicMode) {
         setSubmitSuccess(true);
@@ -444,7 +460,9 @@ const ReportMissingForm = ({ onSubmit, onCancel, currentLocation, isPublicMode =
       {isPublicMode && submitSuccess && (
         <div className="public-success-message">
           <CheckCircle size={24} />
-          <span>{t("family.reportSubmitted", "Report submitted successfully!")}</span>
+          <span>
+            {t("family.reportSubmitted", "Report submitted successfully!")}
+          </span>
         </div>
       )}
 
@@ -716,7 +734,10 @@ const ReportMissingForm = ({ onSubmit, onCancel, currentLocation, isPublicMode =
   );
 };
 
-export default function MissingPersons({ currentLocation, isPublicMode = false }) {
+export default function MissingPersons({
+  currentLocation,
+  isPublicMode = false,
+}) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [showReportForm, setShowReportForm] = useState(isPublicMode); // Start with form open in public mode
@@ -752,17 +773,18 @@ export default function MissingPersons({ currentLocation, isPublicMode = false }
   // Update status mutation
   const updateStatusMutation = useMutation({
     mutationFn: ({ id, status }) => {
-      console.log("Marking person as found:", id, status);
       return missingPersonsAPI.updateStatus(id, status);
     },
-    onSuccess: (data) => {
-      console.log("Successfully marked as found:", data);
+    onSuccess: () => {
       queryClient.invalidateQueries(["missingPersons"]);
       alert(t("family.markedAsFound") || "Person marked as found!");
     },
     onError: (error) => {
       console.error("Error marking as found:", error);
-      alert(t("family.errorMarkingFound") || `Error: ${error.message || "Failed to mark as found"}`);
+      alert(
+        t("family.errorMarkingFound") ||
+          `Error: ${error.message || "Failed to mark as found"}`,
+      );
     },
   });
 
@@ -775,7 +797,6 @@ export default function MissingPersons({ currentLocation, isPublicMode = false }
       console.error("No ID provided to handleMarkFound");
       return;
     }
-    console.log("handleMarkFound called with id:", id);
     updateStatusMutation.mutate({ id, status: "found" });
   };
 
@@ -809,8 +830,8 @@ export default function MissingPersons({ currentLocation, isPublicMode = false }
             >
               {showReportForm ? <X size={16} /> : <Plus size={16} />}
               {showReportForm ? t("common.cancel") : t("family.reportMissing")}
-          </button>
-        </div>
+            </button>
+          </div>
         )}
       </div>
 
