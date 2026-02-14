@@ -1,0 +1,312 @@
+/* ==========================================
+   NAVBAR COMPONENT
+   ========================================== */
+.Navbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 60px;
+  padding: 0 24px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border-color);
+}
+
+/* ---- Left: brand + links ---- */
+.Navbar-left {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  min-width: 0;
+}
+
+.Navbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  flex-shrink: 0;
+}
+
+.Navbar-brandIcon {
+  color: var(--primary);
+  flex-shrink: 0;
+}
+
+.Navbar-brandName {
+  font-weight: 800;
+  font-size: 1.25rem;
+  color: var(--text-primary);
+  letter-spacing: 0.02em;
+}
+
+.Navbar-role {
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  line-height: 1;
+}
+
+.Navbar-role--mgr {
+  background: var(--primary);
+  color: #fff;
+}
+
+.Navbar-role--vol {
+  background: #3b82f6;
+  color: #fff;
+}
+
+/* ---- Nav links ---- */
+.Navbar-links {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.Navbar-link {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 16px;
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 0.95rem;
+  border-radius: 6px;
+  transition:
+    color 0.15s,
+    background 0.15s;
+  white-space: nowrap;
+}
+
+.Navbar-link:hover {
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.Navbar-link--active {
+  color: var(--primary) !important;
+  font-weight: 600;
+  background: rgba(249, 115, 22, 0.1) !important;
+}
+
+.Navbar-link--active::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 12px;
+  right: 12px;
+  height: 2px;
+  background: var(--primary);
+  border-radius: 1px;
+}
+
+/* ---- Right: actions ---- */
+.Navbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+/* Language */
+.Navbar-lang {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 14px;
+  height: 36px;
+  background: transparent;
+  border: 1px solid var(--border-color);
+  border-radius: 999px;
+  color: var(--text-secondary);
+  transition: border-color 0.15s;
+}
+
+.Navbar-lang:hover {
+  border-color: var(--text-secondary);
+}
+
+.Navbar-langIcon {
+  flex-shrink: 0;
+}
+
+/* Override global select styles */
+.Navbar-lang .Navbar-langSelect {
+  all: unset;
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.Navbar-lang .Navbar-langSelect option {
+  background: var(--surface);
+  color: var(--text-primary);
+}
+
+/* Icon button */
+.Navbar-iconBtn {
+  all: unset;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border: 1px solid var(--border-color);
+  border-radius: 999px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.15s;
+  box-sizing: border-box;
+}
+
+.Navbar-iconBtn:hover {
+  color: var(--text-primary);
+  border-color: var(--text-secondary);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.Navbar-iconBtn--logout:hover {
+  background: #ef4444;
+  border-color: #ef4444;
+  color: #fff;
+}
+
+/* Unread badge */
+.Navbar-unread {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #ef4444;
+  color: #fff;
+  font-size: 0.58rem;
+  font-weight: 700;
+  border-radius: 999px;
+  line-height: 1;
+}
+
+/* ==========================================
+   RESPONSIVE — Tablet
+   ========================================== */
+@media (max-width: 768px) {
+  .Navbar {
+    height: 56px;
+    padding: 0 16px;
+  }
+
+  .Navbar-left {
+    gap: 20px;
+  }
+
+  .Navbar-brandName {
+    font-size: 1.1rem;
+  }
+
+  .Navbar-link {
+    padding: 7px 12px;
+    font-size: 0.88rem;
+  }
+
+  .Navbar-lang {
+    padding: 0 10px;
+    height: 34px;
+  }
+
+  .Navbar-lang .Navbar-langSelect {
+    font-size: 0.8rem;
+  }
+
+  .Navbar-iconBtn {
+    width: 34px;
+    height: 34px;
+  }
+}
+
+/* ==========================================
+   RESPONSIVE — Mobile
+   ========================================== */
+@media (max-width: 480px) {
+  .Navbar {
+    height: 52px;
+    padding: 0 12px;
+    gap: 8px;
+  }
+
+  .Navbar-left {
+    gap: 12px;
+    overflow: hidden;
+  }
+
+  .Navbar-brand {
+    gap: 6px;
+  }
+
+  .Navbar-brandName {
+    display: none;
+  }
+
+  .Navbar-role {
+    display: none;
+  }
+
+  .Navbar-links {
+    gap: 2px;
+  }
+
+  .Navbar-link {
+    padding: 6px 10px;
+    font-size: 0.85rem;
+  }
+
+  .Navbar-link--active::after {
+    left: 8px;
+    right: 8px;
+  }
+
+  .Navbar-actions {
+    gap: 6px;
+  }
+
+  .Navbar-lang {
+    display: none;
+  }
+
+  .Navbar-iconBtn {
+    width: 32px;
+    height: 32px;
+  }
+}
+
+/* Very small phones */
+@media (max-width: 360px) {
+  .Navbar {
+    padding: 0 8px;
+  }
+
+  .Navbar-link {
+    padding: 6px 8px;
+    font-size: 0.78rem;
+  }
+
+  .Navbar-iconBtn {
+    width: 30px;
+    height: 30px;
+  }
+}

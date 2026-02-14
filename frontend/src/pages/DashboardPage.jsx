@@ -430,6 +430,21 @@ function DashboardPage() {
     return category === "critical";
   });
 
+  // Build tabs list based on role
+  const tabs = [
+    { id: "map", icon: "🗺️", label: t("nav.map") },
+    { id: "roads", icon: "🚧", label: t("nav.roads") },
+    { id: "missing", icon: "🔍", label: t("nav.missing") },
+    ...(isManager
+      ? [
+          { id: "shelters", icon: "🏠", label: t("nav.shelters") },
+          { id: "resources", icon: "📦", label: t("nav.resources") },
+          { id: "analytics", icon: "📊", label: t("nav.analytics") },
+          { id: "volunteers", icon: "👥", label: t("nav.team") },
+        ]
+      : []),
+  ];
+
   return (
     <div className="dashboard-page">
       {/* Critical Triage Alert Banner */}
@@ -437,272 +452,208 @@ function DashboardPage() {
         <TriageAlertBanner criticalCount={criticalItems.length} />
       )}
 
-      {/* Compact Header Bar - Only for Managers */}
+      {/* Clean Top Bar — title + stats + refresh */}
       {isManager && (
-        <header className="dashboard-header dashboard-header-compact">
-          <div className="header-row">
-            <div className="header-title">
-              <h1>
-                <span className="desktop-title">{t("dashboard.title")}</span>
-              </h1>
-              <span className="pill pill-critical">
+        <header className="dash-topbar">
+          <div className="topbar-left">
+            <h1 className="topbar-title">{t("dashboard.title")}</h1>
+            {criticalItems.length > 0 && (
+              <span className="topbar-badge topbar-badge--danger">
                 {criticalItems.length} {t("triage.critical").toLowerCase()}
               </span>
-            </div>
-
-            <div className="header-actions">
-              <button
-                className="btn-refresh"
-                onClick={handleRefreshAll}
-                disabled={isFetching || isReportsLoading}
-              >
-                <span
-                  className={`refresh-icon ${
-                    isFetching || isReportsLoading ? "spinning" : ""
-                  }`}
-                ></span>
-                <span>
-                  {isFetching || isReportsLoading
-                    ? t("dashboard.syncing")
-                    : t("dashboard.refresh")}
-                </span>
-              </button>
-            </div>
+            )}
           </div>
 
-          <div className="header-stats-row">
-            <div className="stat-chip stat-total">
-              <span className="stat-heading">
+          <div className="topbar-stats">
+            <div className="topbar-stat">
+              <span className="topbar-stat__value">{allMapItems.length}</span>
+              <span className="topbar-stat__label">
                 {t("dashboard.totalIncidents")}
               </span>
-              <span className="stat-value">{allMapItems.length}</span>
             </div>
-            <div className="stat-chip stat-pending">
-              <span className="stat-heading">{t("dashboard.pending")}</span>
-              <span className="stat-value">{pendingCount}</span>
+            <div className="topbar-stat topbar-stat--pending">
+              <span className="topbar-stat__value">{pendingCount}</span>
+              <span className="topbar-stat__label">
+                {t("dashboard.pending")}
+              </span>
             </div>
-            <div className="stat-chip stat-active">
-              <span className="stat-heading">{t("dashboard.inProgress")}</span>
-              <span className="stat-value">{inProgressCount}</span>
+            <div className="topbar-stat topbar-stat--active">
+              <span className="topbar-stat__value">{inProgressCount}</span>
+              <span className="topbar-stat__label">
+                {t("dashboard.inProgress")}
+              </span>
             </div>
-            <div className="stat-chip stat-missions">
-              <span className="stat-heading">{t("missions.title")}</span>
-              <span className="stat-value">{missionsData?.length || 0}</span>
+            <div className="topbar-stat topbar-stat--missions">
+              <span className="topbar-stat__value">
+                {missionsData?.length || 0}
+              </span>
+              <span className="topbar-stat__label">{t("missions.title")}</span>
             </div>
           </div>
+
+          <button
+            className="topbar-refresh"
+            onClick={handleRefreshAll}
+            disabled={isFetching || isReportsLoading}
+            title={t("dashboard.refresh")}
+          >
+            <span
+              className={`topbar-refresh__icon ${isFetching || isReportsLoading ? "spinning" : ""}`}
+            />
+            <span className="topbar-refresh__text">
+              {isFetching || isReportsLoading
+                ? t("dashboard.syncing")
+                : t("dashboard.refresh")}
+            </span>
+          </button>
         </header>
       )}
 
-      <div className="dashboard-main">
-        {/* Sidebar Navigation */}
-        <aside className="dashboard-sidebar">
-          <nav className="sidebar-nav" role="tablist">
-            <button
-              className={`nav-item ${activeTab === "map" ? "active" : ""}`}
-              onClick={() => setActiveTab("map")}
-              title={t("nav.map")}
-            >
-              <span className="nav-icon">🗺️</span>
-              <span className="nav-label">{t("nav.map")}</span>
-            </button>
-            <button
-              className={`nav-item ${activeTab === "roads" ? "active" : ""}`}
-              onClick={() => setActiveTab("roads")}
-              title={t("nav.roads")}
-            >
-              <span className="nav-icon">🚧</span>
-              <span className="nav-label">{t("nav.roads")}</span>
-            </button>
-            <button
-              className={`nav-item ${activeTab === "missing" ? "active" : ""}`}
-              onClick={() => setActiveTab("missing")}
-              title={t("nav.missing")}
-            >
-              <span className="nav-icon">🔍</span>
-              <span className="nav-label">{t("nav.missing")}</span>
-            </button>
+      {/* Horizontal Tab Navigation */}
+      <nav className="dash-tabs" role="tablist">
+        {tabs.map((tab) => (
+          <button
+            key={tab.id}
+            className={`dash-tab ${activeTab === tab.id ? "dash-tab--active" : ""}`}
+            onClick={() => setActiveTab(tab.id)}
+            role="tab"
+            aria-selected={activeTab === tab.id}
+            title={tab.label}
+          >
+            <span className="dash-tab__icon">{tab.icon}</span>
+            <span className="dash-tab__label">{tab.label}</span>
+          </button>
+        ))}
+      </nav>
+
+      {/* Content Area */}
+      <div className="dash-content">
+        {/* Map View */}
+        {activeTab === "map" && (
+          <div className="dash-map-layout">
+            <main className="dash-map">
+              <MapComponent
+                needs={allMapItems}
+                selectedNeedIds={new Set()}
+                onPinClick={() => {}}
+                missionRoutes={missionRoutes}
+                isRerouteMode={!!reroutingMissionId}
+                onStationClick={handleStationClick}
+                volunteerMode={isVolunteer}
+                volunteerLocation={volunteerLocation}
+                volunteerRoute={activeRoute}
+                isRouteFallback={routeInfo?.isFallback || false}
+                shelters={sheltersData}
+              />
+              {(isNeedsLoading ||
+                isReportsLoading ||
+                isRoadConditionsLoading) &&
+                !isVolunteer && (
+                  <div className="dash-map__loading">
+                    <div className="spinner" />
+                    <span>{t("common.loading")}</span>
+                  </div>
+                )}
+            </main>
+
+            {/* Side Panel — Missions & Reports (managers only) */}
             {isManager && (
-              <>
-                <button
-                  className={`nav-item ${
-                    activeTab === "shelters" ? "active" : ""
-                  }`}
-                  onClick={() => setActiveTab("shelters")}
-                  title={t("nav.shelters")}
+              <aside
+                className={`dash-panel ${isPanelOpen ? "dash-panel--open" : ""}`}
+              >
+                <div
+                  className="dash-panel__handle"
+                  onClick={() => setIsPanelOpen(!isPanelOpen)}
+                  aria-label="Toggle panel"
                 >
-                  <span className="nav-icon">🏠</span>
-                  <span className="nav-label">{t("nav.shelters")}</span>
-                </button>
-                <button
-                  className={`nav-item ${
-                    activeTab === "resources" ? "active" : ""
-                  }`}
-                  onClick={() => setActiveTab("resources")}
-                  title={t("nav.resources")}
-                >
-                  <span className="nav-icon">📦</span>
-                  <span className="nav-label">{t("nav.resources")}</span>
-                </button>
-                <button
-                  className={`nav-item ${
-                    activeTab === "analytics" ? "active" : ""
-                  }`}
-                  onClick={() => setActiveTab("analytics")}
-                  title={t("nav.analytics")}
-                >
-                  <span className="nav-icon">📊</span>
-                  <span className="nav-label">{t("nav.analytics")}</span>
-                </button>
-                <button
-                  className={`nav-item ${
-                    activeTab === "volunteers" ? "active" : ""
-                  }`}
-                  onClick={() => setActiveTab("volunteers")}
-                  title={t("nav.team")}
-                >
-                  <span className="nav-icon">👥</span>
-                  <span className="nav-label">{t("nav.team")}</span>
-                </button>
-              </>
-            )}
-          </nav>
-        </aside>
+                  <span className="handle-bar" />
+                </div>
 
-        {/* Main Content Area */}
-        <div className="dashboard-content-area">
-          {/* Map View Content */}
-          {activeTab === "map" && (
-            <div className="map-view-layout">
-              {/* Center - Map */}
-              <main className="map-container">
-                <MapComponent
-                  needs={allMapItems}
-                  selectedNeedIds={new Set()}
-                  onPinClick={() => {}}
-                  missionRoutes={missionRoutes}
-                  isRerouteMode={!!reroutingMissionId}
-                  onStationClick={handleStationClick}
-                  volunteerMode={isVolunteer}
-                  volunteerLocation={volunteerLocation}
-                  volunteerRoute={activeRoute}
-                  isRouteFallback={routeInfo?.isFallback || false}
-                  shelters={sheltersData}
-                />
-                {(isNeedsLoading ||
-                  isReportsLoading ||
-                  isRoadConditionsLoading) &&
-                  !isVolunteer && (
-                    <div className="map-loading-overlay">
-                      <div className="spinner"></div>
-                      <span>{t("common.loading")}</span>
-                    </div>
-                  )}
-              </main>
-
-              {/* Bottom Panel - Missions & Reports (Only for managers) */}
-              {isManager && (
-                <aside
-                  className={`panel panel-combined ${
-                    isPanelOpen ? "open" : ""
-                  }`}
-                >
-                  <div
-                    className="panel-toggle-handle"
-                    onClick={() => setIsPanelOpen(!isPanelOpen)}
-                    aria-label="Toggle panel"
+                <div className="dash-panel__tabs">
+                  <button
+                    className={`dash-panel__tab ${activePanel === "missions" ? "dash-panel__tab--active" : ""}`}
+                    onClick={() => {
+                      setActivePanel("missions");
+                      setIsPanelOpen(true);
+                    }}
                   >
-                    <span className="handle-bar"></span>
-                  </div>
-                  <div className="panel-tabs">
-                    <button
-                      className={`panel-tab ${
-                        activePanel === "missions" ? "active" : ""
-                      }`}
-                      onClick={() => {
-                        setActivePanel("missions");
-                        setIsPanelOpen(true);
-                      }}
-                    >
-                      {t("missions.title")}
-                      <span className="tab-badge">
-                        {missionsData?.length || 0}
-                      </span>
-                    </button>
-                    <button
-                      className={`panel-tab ${
-                        activePanel === "reports" ? "active" : ""
-                      }`}
-                      onClick={() => {
-                        setActivePanel("reports");
-                        setIsPanelOpen(true);
-                      }}
-                    >
-                      {t("missions.reports")}
-                      <span className="tab-badge">
-                        {unroutedReports?.length || 0}
-                      </span>
-                    </button>
-                  </div>
+                    {t("missions.title")}
+                    <span className="dash-panel__badge">
+                      {missionsData?.length || 0}
+                    </span>
+                  </button>
+                  <button
+                    className={`dash-panel__tab ${activePanel === "reports" ? "dash-panel__tab--active" : ""}`}
+                    onClick={() => {
+                      setActivePanel("reports");
+                      setIsPanelOpen(true);
+                    }}
+                  >
+                    {t("missions.reports")}
+                    <span className="dash-panel__badge">
+                      {unroutedReports?.length || 0}
+                    </span>
+                  </button>
+                </div>
 
-                  <div className="panel-body">
-                    {activePanel === "missions" ? (
-                      <MissionPanel
-                        missions={missionsData || []}
-                        missionRoutes={missionRoutes}
-                        onCompleteMission={handleCompleteMission}
-                        onStartReroute={handleStartReroute}
-                        reroutingMissionId={reroutingMissionId}
-                        onCancelReroute={handleCancelReroute}
-                      />
-                    ) : (
-                      <ReportsList
-                        reports={unroutedReports}
-                        onReportClick={handleReportClick}
-                        selectedReportId={selectedReportId}
-                      />
-                    )}
-                  </div>
-                </aside>
-              )}
-            </div>
-          )}
+                <div className="dash-panel__body">
+                  {activePanel === "missions" ? (
+                    <MissionPanel
+                      missions={missionsData || []}
+                      missionRoutes={missionRoutes}
+                      onCompleteMission={handleCompleteMission}
+                      onStartReroute={handleStartReroute}
+                      reroutingMissionId={reroutingMissionId}
+                      onCancelReroute={handleCancelReroute}
+                    />
+                  ) : (
+                    <ReportsList
+                      reports={unroutedReports}
+                      onReportClick={handleReportClick}
+                      selectedReportId={selectedReportId}
+                    />
+                  )}
+                </div>
+              </aside>
+            )}
+          </div>
+        )}
 
-          {activeTab === "roads" && (
-            <div className="dashboard-fullwidth">
-              <RoadConditions currentLocation={currentLocation} />
-            </div>
-          )}
+        {activeTab === "roads" && (
+          <div className="dash-fullpage">
+            <RoadConditions currentLocation={currentLocation} />
+          </div>
+        )}
 
-          {activeTab === "missing" && (
-            <div className="dashboard-fullwidth">
-              <MissingPersons currentLocation={currentLocation} />
-            </div>
-          )}
+        {activeTab === "missing" && (
+          <div className="dash-fullpage">
+            <MissingPersons currentLocation={currentLocation} />
+          </div>
+        )}
 
-          {activeTab === "shelters" && isManager && (
-            <div className="dashboard-fullwidth">
-              <ShelterManagement currentLocation={currentLocation} />
-            </div>
-          )}
+        {activeTab === "shelters" && isManager && (
+          <div className="dash-fullpage">
+            <ShelterManagement currentLocation={currentLocation} />
+          </div>
+        )}
 
-          {activeTab === "resources" && isManager && (
-            <div className="dashboard-fullwidth" style={{ padding: 0 }}>
-              <ResourcesPage />
-            </div>
-          )}
+        {activeTab === "resources" && isManager && (
+          <div className="dash-fullpage" style={{ padding: 0 }}>
+            <ResourcesPage />
+          </div>
+        )}
 
-          {activeTab === "analytics" && isManager && (
-            <div className="dashboard-fullwidth">
-              <AnalyticsDashboard />
-            </div>
-          )}
+        {activeTab === "analytics" && isManager && (
+          <div className="dash-fullpage">
+            <AnalyticsDashboard />
+          </div>
+        )}
 
-          {activeTab === "volunteers" && isManager && (
-            <div className="dashboard-fullwidth">
-              <VolunteerManagement />
-            </div>
-          )}
-        </div>
+        {activeTab === "volunteers" && isManager && (
+          <div className="dash-fullpage">
+            <VolunteerManagement />
+          </div>
+        )}
       </div>
     </div>
   );

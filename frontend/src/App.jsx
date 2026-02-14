@@ -1,14 +1,7 @@
 import { useState, useEffect } from "react";
-import {
-  BrowserRouter,
-  Routes,
-  Route,
-  NavLink,
-  Navigate,
-} from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { languages } from "./i18n";
 import {
   AccessibilityProvider,
   AccessibilitySettings,
@@ -16,6 +9,7 @@ import {
   EmergencyStations,
   RoleSelector,
 } from "./components";
+import Navbar from "./components/Navbar";
 import MessagingModal from "./components/MessagingModal";
 import { AuthProvider, useAuth, VolunteerRouteProvider } from "./contexts";
 import {
@@ -25,17 +19,7 @@ import {
   AddShelterPage,
   PublicDashboard,
 } from "./pages";
-import {
-  LogOut,
-  Globe,
-  Settings,
-  Shield,
-  AlertTriangle,
-  MessageSquare,
-  Package,
-} from "lucide-react";
 import { initSyncListeners } from "./services/syncService";
-import { getUnreadCount } from "./services/messagingService";
 import "./App.css";
 
 // Create a react-query client
@@ -48,53 +32,10 @@ const queryClient = new QueryClient({
   },
 });
 
-function LanguageSwitcher() {
-  const { i18n } = useTranslation();
-
-  return (
-    <div className="lang-dropdown">
-      <Globe size={16} />
-      <select
-        className="lang-select"
-        value={i18n.language}
-        onChange={(e) => i18n.changeLanguage(e.target.value)}
-        aria-label="Select language"
-      >
-        {languages.map((lang) => (
-          <option key={lang.code} value={lang.code}>
-            {lang.nativeName}
-          </option>
-        ))}
-      </select>
-    </div>
-  );
-}
-
 function AuthenticatedApp() {
   const { t } = useTranslation();
-  const { logout, isManager } = useAuth();
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [messagingOpen, setMessagingOpen] = useState(false);
-  const [unreadMessages, setUnreadMessages] = useState(0);
-
-  // Poll for unread message count
-  useEffect(() => {
-    const fetchUnread = async () => {
-      try {
-        const result = await getUnreadCount();
-        if (result.success) {
-          setUnreadMessages(result.data.unreadCount);
-        }
-      } catch (err) {
-        // Silently fail
-      }
-    };
-
-    fetchUnread();
-    const interval = setInterval(fetchUnread, 10000); // Poll every 10 seconds
-
-    return () => clearInterval(interval);
-  }, []);
 
   // Reset unread count when opening messaging modal
   const handleOpenMessaging = () => {
@@ -103,111 +44,15 @@ function AuthenticatedApp() {
 
   const handleCloseMessaging = () => {
     setMessagingOpen(false);
-    // Refresh unread count
-    getUnreadCount()
-      .then((result) => {
-        if (result.success) {
-          setUnreadMessages(result.data.unreadCount);
-        }
-      })
-      .catch(() => {});
   };
 
   return (
     <BrowserRouter>
       <div className="app-shell">
-        {/* Clean Simple Navbar */}
-        <header className="navbar">
-          <div className="navbar-inner">
-            {/* Brand */}
-            <div className="navbar-brand">
-              <Shield size={24} className="brand-icon" />
-              <span className="brand-name">AEGIS</span>
-            </div>
-
-            {/* Role Badge */}
-            <div
-              className={`role-badge ${isManager ? "manager" : "volunteer"}`}
-            >
-              {isManager ? t("common.manager") : t("common.volunteer")}
-            </div>
-
-            {/* Navigation Tabs */}
-            <nav className="navbar-tabs">
-              <NavLink
-                to="/dashboard"
-                className={({ isActive }) =>
-                  `nav-tab ${isActive ? "active" : ""}`
-                }
-              >
-                {t("nav.dashboard")}
-              </NavLink>
-              <NavLink
-                to="/tasks"
-                className={({ isActive }) =>
-                  `nav-tab ${isActive ? "active" : ""}`
-                }
-              >
-                {t("nav.tasks")}
-              </NavLink>
-              {/* Resources tab */}
-              <NavLink
-                to="/resources"
-                className={({ isActive }) =>
-                  `nav-tab ${isActive ? "active" : ""}`
-                }
-              >
-                <Package size={14} style={{ marginRight: "4px" }} />
-                {t("nav.resources")}
-              </NavLink>
-              {isManager && (
-                <NavLink
-                  to="/emergency-stations"
-                  className={({ isActive }) =>
-                    `nav-tab ${isActive ? "active" : ""}`
-                  }
-                >
-                  <AlertTriangle size={14} style={{ marginRight: "4px" }} />
-                  {t("nav.stations")}
-                </NavLink>
-              )}
-            </nav>
-
-            {/* Right Controls */}
-            <div className="navbar-actions">
-              <LanguageSwitcher />
-
-              <button
-                className="icon-btn messaging-btn"
-                onClick={handleOpenMessaging}
-                title={t("messaging.messages") || "Messages"}
-              >
-                <MessageSquare size={18} />
-                {unreadMessages > 0 && (
-                  <span className="unread-indicator">
-                    {unreadMessages > 9 ? "9+" : unreadMessages}
-                  </span>
-                )}
-              </button>
-
-              <button
-                className="icon-btn"
-                onClick={() => setSettingsOpen(true)}
-                title={t("settings.title")}
-              >
-                <Settings size={18} />
-              </button>
-
-              <button
-                className="logout-btn"
-                onClick={logout}
-                title={t("common.logout")}
-              >
-                <LogOut size={16} />
-              </button>
-            </div>
-          </div>
-        </header>
+        <Navbar
+          onOpenSettings={() => setSettingsOpen(true)}
+          onOpenMessaging={handleOpenMessaging}
+        />
 
         <main id="main-content" className="app-main" role="main">
           <Routes>

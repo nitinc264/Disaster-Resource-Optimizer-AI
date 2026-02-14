@@ -38,3 +38,6 @@ export {
 export { default as PinLogin } from "./PinLogin.jsx";
 export { default as VolunteerManagement } from "./VolunteerManagement.jsx";
 export { default as RoleSelector } from "./RoleSelector.jsx";
+
+// Navbar
+export { default as Navbar } from "./Navbar.jsx";
