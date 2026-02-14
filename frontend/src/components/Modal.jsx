@@ -1,4 +1,5 @@
 import { useEffect, useCallback, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { X } from "lucide-react";
 import "./Modal.css";
 
@@ -14,6 +15,7 @@ import "./Modal.css";
 function Modal({ isOpen, onClose, title, children, hideFooter = false }) {
   const modalRef = useRef(null);
   const previousActiveElement = useRef(null);
+  const { t } = useTranslation();
 
   // Handle ESC key to close modal
   const handleKeyDown = useCallback(
@@ -26,7 +28,7 @@ function Modal({ isOpen, onClose, title, children, hideFooter = false }) {
       // Focus trap - Tab key
       if (e.key === "Tab" && modalRef.current) {
         const focusableElements = modalRef.current.querySelectorAll(
-          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
         );
         const firstElement = focusableElements[0];
         const lastElement = focusableElements[focusableElements.length - 1];
@@ -46,7 +48,7 @@ function Modal({ isOpen, onClose, title, children, hideFooter = false }) {
         }
       }
     },
-    [isOpen, onClose]
+    [isOpen, onClose],
   );
 
   useEffect(() => {
@@ -65,10 +67,13 @@ function Modal({ isOpen, onClose, title, children, hideFooter = false }) {
       setTimeout(() => {
         if (modalRef.current) {
           const focusableElements = modalRef.current.querySelectorAll(
-            'input, select, textarea, button:not(.modal-close-btn):not(.modal-cancel-btn), [tabindex]:not([tabindex="-1"])'
+            'input, select, textarea, button:not(.modal-close-btn):not(.modal-cancel-btn), [tabindex]:not([tabindex="-1"])',
           );
           const firstInput = Array.from(focusableElements).find(
-            (el) => el.tagName === "INPUT" || el.tagName === "SELECT" || el.tagName === "TEXTAREA"
+            (el) =>
+              el.tagName === "INPUT" ||
+              el.tagName === "SELECT" ||
+              el.tagName === "TEXTAREA",
           );
           if (firstInput) {
             firstInput.focus();
@@ -108,11 +113,13 @@ function Modal({ isOpen, onClose, title, children, hideFooter = false }) {
         ref={modalRef}
       >
         <div className="modal-header">
-          <h2 id="modal-title" className="modal-title">{title}</h2>
+          <h2 id="modal-title" className="modal-title">
+            {title}
+          </h2>
           <button
             className="modal-close-btn"
             onClick={onClose}
-            aria-label="Close modal"
+            aria-label={t("common.closeModal")}
             type="button"
           >
             <X size={24} />
@@ -126,7 +133,7 @@ function Modal({ isOpen, onClose, title, children, hideFooter = false }) {
               onClick={onClose}
               type="button"
             >
-              Cancel
+              {t("common.cancel")}
             </button>
           </div>
         )}

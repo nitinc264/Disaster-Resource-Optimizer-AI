@@ -13,6 +13,41 @@ import { requireAuth, requireManager } from "../middleware/authMiddleware.js";
 const router = express.Router();
 
 /**
+ * GET /api/shelters/public
+ * Get all open shelters (no auth required) - for public map view
+ */
+router.get("/shelters/public", async (req, res) => {
+  try {
+    const shelters = await Shelter.find({ status: { $in: ["open", "full"] } })
+      .select(
+        "shelterId name type location capacity.total capacity.current status facilities contact",
+      )
+      .sort({ "capacity.current": 1 });
+
+    const sheltersWithStats = shelters.map((shelter) => {
+      const s = shelter.toObject();
+      s.occupancyPercentage = shelter.capacity.total
+        ? Math.round((shelter.capacity.current / shelter.capacity.total) * 100)
+        : 0;
+      s.availableSpots = Math.max(
+        0,
+        shelter.capacity.total - shelter.capacity.current,
+      );
+      return s;
+    });
+
+    sendSuccess(res, sheltersWithStats);
+  } catch (error) {
+    console.error("Error fetching public shelters:", error);
+    sendError(
+      res,
+      "Failed to fetch shelters",
+      HTTP_STATUS.INTERNAL_SERVER_ERROR,
+    );
+  }
+});
+
+/**
  * GET /api/shelters
  * Get all shelters
  */
@@ -41,7 +76,7 @@ router.get("/shelters", requireAuth, async (req, res) => {
         : 0;
       s.availableSpots = Math.max(
         0,
-        shelter.capacity.total - shelter.capacity.current
+        shelter.capacity.total - shelter.capacity.current,
       );
       return s;
     });
@@ -52,7 +87,7 @@ router.get("/shelters", requireAuth, async (req, res) => {
     sendError(
       res,
       "Failed to fetch shelters",
-      HTTP_STATUS.INTERNAL_SERVER_ERROR
+      HTTP_STATUS.INTERNAL_SERVER_ERROR,
     );
   }
 });
@@ -75,7 +110,7 @@ router.get("/shelters/:id", requireAuth, async (req, res) => {
       : 0;
     s.availableSpots = Math.max(
       0,
-      shelter.capacity.total - shelter.capacity.current
+      shelter.capacity.total - shelter.capacity.current,
     );
 
     sendSuccess(res, s);
@@ -84,7 +119,7 @@ router.get("/shelters/:id", requireAuth, async (req, res) => {
     sendError(
       res,
       "Failed to fetch shelter",
-      HTTP_STATUS.INTERNAL_SERVER_ERROR
+      HTTP_STATUS.INTERNAL_SERVER_ERROR,
     );
   }
 });
@@ -111,7 +146,7 @@ router.post("/shelters", requireManager, async (req, res) => {
       return sendError(
         res,
         "Name, location, and capacity are required",
-        HTTP_STATUS.BAD_REQUEST
+        HTTP_STATUS.BAD_REQUEST,
       );
     }
 
@@ -143,7 +178,7 @@ router.post("/shelters", requireManager, async (req, res) => {
     sendError(
       res,
       "Failed to create shelter",
-      HTTP_STATUS.INTERNAL_SERVER_ERROR
+      HTTP_STATUS.INTERNAL_SERVER_ERROR,
     );
   }
 });
@@ -154,7 +189,16 @@ router.post("/shelters", requireManager, async (req, res) => {
  */
 router.patch("/shelters/:id", requireManager, async (req, res) => {
   try {
-    const { name, location, contact, capacity, facilities, status, type, notes } = req.body;
+    const {
+      name,
+      location,
+      contact,
+      capacity,
+      facilities,
+      status,
+      type,
+      notes,
+    } = req.body;
 
     const shelter = await Shelter.findById(req.params.id);
     if (!shelter) {
@@ -208,7 +252,7 @@ router.patch("/shelters/:id", requireManager, async (req, res) => {
     sendError(
       res,
       "Failed to update shelter",
-      HTTP_STATUS.INTERNAL_SERVER_ERROR
+      HTTP_STATUS.INTERNAL_SERVER_ERROR,
     );
   }
 });
@@ -235,7 +279,7 @@ router.patch("/shelters/:id/capacity", requireAuth, async (req, res) => {
     const shelter = await Shelter.findOneAndUpdate(
       { shelterId: req.params.id },
       { $set: updateData },
-      { new: true }
+      { new: true },
     );
 
     if (!shelter) {
@@ -257,7 +301,7 @@ router.patch("/shelters/:id/capacity", requireAuth, async (req, res) => {
     sendError(
       res,
       "Failed to update capacity",
-      HTTP_STATUS.INTERNAL_SERVER_ERROR
+      HTTP_STATUS.INTERNAL_SERVER_ERROR,
     );
   }
 });
@@ -293,7 +337,7 @@ router.patch("/shelters/:id/supplies", requireAuth, async (req, res) => {
     const shelter = await Shelter.findOneAndUpdate(
       { shelterId: req.params.id },
       { $set: updateData },
-      { new: true }
+      { new: true },
     );
 
     if (!shelter) {
@@ -306,7 +350,7 @@ router.patch("/shelters/:id/supplies", requireAuth, async (req, res) => {
     sendError(
       res,
       "Failed to update supplies",
-      HTTP_STATUS.INTERNAL_SERVER_ERROR
+      HTTP_STATUS.INTERNAL_SERVER_ERROR,
     );
   }
 });
@@ -336,7 +380,7 @@ router.post("/shelters/:id/needs", requireAuth, async (req, res) => {
         },
         $set: { updatedAt: new Date() },
       },
-      { new: true }
+      { new: true },
     );
 
     if (!shelter) {
@@ -349,7 +393,7 @@ router.post("/shelters/:id/needs", requireAuth, async (req, res) => {
     sendError(
       res,
       "Failed to add urgent need",
-      HTTP_STATUS.INTERNAL_SERVER_ERROR
+      HTTP_STATUS.INTERNAL_SERVER_ERROR,
     );
   }
 });
@@ -369,7 +413,7 @@ router.patch("/shelters/:id/status", requireManager, async (req, res) => {
     const shelter = await Shelter.findOneAndUpdate(
       { shelterId: req.params.id },
       { $set: updateData },
-      { new: true }
+      { new: true },
     );
 
     if (!shelter) {
@@ -382,7 +426,7 @@ router.patch("/shelters/:id/status", requireManager, async (req, res) => {
     sendError(
       res,
       "Failed to update status",
-      HTTP_STATUS.INTERNAL_SERVER_ERROR
+      HTTP_STATUS.INTERNAL_SERVER_ERROR,
     );
   }
 });
@@ -409,7 +453,7 @@ router.patch("/shelters/:id/checkin", requireAuth, async (req, res) => {
     const shelter = await Shelter.findOneAndUpdate(
       { shelterId: req.params.id },
       updateData,
-      { new: true }
+      { new: true },
     );
 
     if (!shelter) {
@@ -428,7 +472,7 @@ router.patch("/shelters/:id/checkin", requireAuth, async (req, res) => {
     sendError(
       res,
       "Failed to record check-in",
-      HTTP_STATUS.INTERNAL_SERVER_ERROR
+      HTTP_STATUS.INTERNAL_SERVER_ERROR,
     );
   }
 });
@@ -462,7 +506,7 @@ router.get("/shelters/stats/summary", requireAuth, async (req, res) => {
 
       // Collect critical needs
       const criticalNeeds = shelter.urgentNeeds.filter(
-        (n) => n.priority === "critical"
+        (n) => n.priority === "critical",
       );
       if (criticalNeeds.length > 0) {
         stats.criticalNeeds.push({
@@ -485,7 +529,7 @@ router.get("/shelters/stats/summary", requireAuth, async (req, res) => {
     sendError(
       res,
       "Failed to fetch statistics",
-      HTTP_STATUS.INTERNAL_SERVER_ERROR
+      HTTP_STATUS.INTERNAL_SERVER_ERROR,
     );
   }
 });

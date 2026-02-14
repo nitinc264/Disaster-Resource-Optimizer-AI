@@ -18,8 +18,22 @@ import {
 } from "./components";
 import MessagingModal from "./components/MessagingModal";
 import { AuthProvider, useAuth, VolunteerRouteProvider } from "./contexts";
-import { VolunteerPage, DashboardPage, ResourcesPage, AddShelterPage, PublicDashboard } from "./pages";
-import { LogOut, Globe, Settings, Shield, AlertTriangle, MessageSquare } from "lucide-react";
+import {
+  VolunteerPage,
+  DashboardPage,
+  ResourcesPage,
+  AddShelterPage,
+  PublicDashboard,
+} from "./pages";
+import {
+  LogOut,
+  Globe,
+  Settings,
+  Shield,
+  AlertTriangle,
+  MessageSquare,
+  Package,
+} from "lucide-react";
 import { initSyncListeners } from "./services/syncService";
 import { getUnreadCount } from "./services/messagingService";
 import "./App.css";
@@ -90,11 +104,13 @@ function AuthenticatedApp() {
   const handleCloseMessaging = () => {
     setMessagingOpen(false);
     // Refresh unread count
-    getUnreadCount().then((result) => {
-      if (result.success) {
-        setUnreadMessages(result.data.unreadCount);
-      }
-    }).catch(() => {});
+    getUnreadCount()
+      .then((result) => {
+        if (result.success) {
+          setUnreadMessages(result.data.unreadCount);
+        }
+      })
+      .catch(() => {});
   };
 
   return (
@@ -134,7 +150,16 @@ function AuthenticatedApp() {
               >
                 {t("nav.tasks")}
               </NavLink>
-              {/* Resources tab hidden per request */}
+              {/* Resources tab */}
+              <NavLink
+                to="/resources"
+                className={({ isActive }) =>
+                  `nav-tab ${isActive ? "active" : ""}`
+                }
+              >
+                <Package size={14} style={{ marginRight: "4px" }} />
+                {t("nav.resources")}
+              </NavLink>
               {isManager && (
                 <NavLink
                   to="/emergency-stations"
@@ -143,7 +168,7 @@ function AuthenticatedApp() {
                   }
                 >
                   <AlertTriangle size={14} style={{ marginRight: "4px" }} />
-                  Stations
+                  {t("nav.stations")}
                 </NavLink>
               )}
             </nav>
@@ -159,7 +184,9 @@ function AuthenticatedApp() {
               >
                 <MessageSquare size={18} />
                 {unreadMessages > 0 && (
-                  <span className="unread-indicator">{unreadMessages > 9 ? "9+" : unreadMessages}</span>
+                  <span className="unread-indicator">
+                    {unreadMessages > 9 ? "9+" : unreadMessages}
+                  </span>
                 )}
               </button>
 
@@ -200,10 +227,7 @@ function AuthenticatedApp() {
         onClose={() => setSettingsOpen(false)}
       />
 
-      <MessagingModal
-        isOpen={messagingOpen}
-        onClose={handleCloseMessaging}
-      />
+      <MessagingModal isOpen={messagingOpen} onClose={handleCloseMessaging} />
     </BrowserRouter>
   );
 }

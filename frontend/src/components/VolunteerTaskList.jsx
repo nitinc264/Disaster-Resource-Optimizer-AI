@@ -228,7 +228,10 @@ export default function VolunteerTaskList() {
           <CloudOff size={14} />
           <span>
             {pendingCount}{" "}
-            {pendingCount === 1 ? "verification" : "verifications"} pending sync
+            {pendingCount === 1
+              ? t("taskList.verification")
+              : t("taskList.verifications")}{" "}
+            {t("taskList.pendingSync")}
           </span>
           {isOnline && (
             <button
@@ -237,7 +240,7 @@ export default function VolunteerTaskList() {
               disabled={isSyncing}
             >
               <RefreshCw size={14} className={isSyncing ? "spin" : ""} />
-              {isSyncing ? "Syncing..." : "Sync Now"}
+              {isSyncing ? t("taskList.syncing") : t("taskList.syncNow")}
             </button>
           )}
         </div>

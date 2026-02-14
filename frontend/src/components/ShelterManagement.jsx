@@ -47,7 +47,8 @@ const StatusBadge = ({ status, t }) => {
 const CapacityBar = ({ current, total }) => {
   const currentNum = Number(current) || 0;
   const totalNum = Number(total) || 100;
-  const percentage = totalNum > 0 ? Math.min((currentNum / totalNum) * 100, 100) : 0;
+  const percentage =
+    totalNum > 0 ? Math.min((currentNum / totalNum) * 100, 100) : 0;
   const colorClass =
     percentage >= 90 ? "critical" : percentage >= 70 ? "warning" : "normal";
 
@@ -86,7 +87,8 @@ const ShelterCard = ({ shelter, onEdit, onUpdate }) => {
   // Normalize capacity numbers to avoid NaN/0% display when values are strings or missing
   const currentNum = Number(shelter.capacity?.current) || 0;
   const totalNumRaw = Number(shelter.capacity?.total);
-  const totalNum = Number.isFinite(totalNumRaw) && totalNumRaw > 0 ? totalNumRaw : 100;
+  const totalNum =
+    Number.isFinite(totalNumRaw) && totalNumRaw > 0 ? totalNumRaw : 100;
   const occupancyPercentage = Math.round((currentNum / totalNum) * 100);
 
   // Helper to get facilities array
@@ -99,7 +101,8 @@ const ShelterCard = ({ shelter, onEdit, onUpdate }) => {
         if (key === "hasInternet" && shelter.facilities[key]) acc.push("wifi");
         if (key === "hasMedicalFacility" && shelter.facilities[key])
           acc.push("medical");
-        if (key === "hasKitchen" && shelter.facilities[key]) acc.push("kitchen");
+        if (key === "hasKitchen" && shelter.facilities[key])
+          acc.push("kitchen");
         if (key === "hasShowers" && shelter.facilities[key] > 0)
           acc.push("showers");
         return acc;
@@ -202,35 +205,35 @@ const ShelterCard = ({ shelter, onEdit, onUpdate }) => {
                 <div className="supply-item">
                   <span className="supply-label">{t("shelter.food")}</span>
                   <span className="supply-status">
-                    {typeof shelter.supplies.food === 'object' 
-                      ? `${shelter.supplies.food.available || 0}/${shelter.supplies.food.needed || 0} ${shelter.supplies.food.unit || ''}`
-                      : shelter.supplies.food || 'N/A'}
+                    {typeof shelter.supplies.food === "object"
+                      ? `${shelter.supplies.food.available || 0}/${shelter.supplies.food.needed || 0} ${shelter.supplies.food.unit || ""}`
+                      : shelter.supplies.food || "N/A"}
                   </span>
                 </div>
                 <div className="supply-item">
                   <span className="supply-label">{t("shelter.water")}</span>
                   <span className="supply-status">
-                    {typeof shelter.supplies.water === 'object'
-                      ? `${shelter.supplies.water.available || 0}/${shelter.supplies.water.needed || 0} ${shelter.supplies.water.unit || ''}`
-                      : shelter.supplies.water || 'N/A'}
+                    {typeof shelter.supplies.water === "object"
+                      ? `${shelter.supplies.water.available || 0}/${shelter.supplies.water.needed || 0} ${shelter.supplies.water.unit || ""}`
+                      : shelter.supplies.water || "N/A"}
                   </span>
                 </div>
                 <div className="supply-item">
                   <span className="supply-label">{t("shelter.medical")}</span>
                   <span className="supply-status">
-                    {typeof shelter.supplies.medical === 'object'
-                      ? `${shelter.supplies.medical.available || 0}/${shelter.supplies.medical.needed || 0} ${shelter.supplies.medical.unit || ''}`
-                      : (typeof shelter.supplies.medicalKits === 'object'
-                        ? `${shelter.supplies.medicalKits.available || 0}/${shelter.supplies.medicalKits.needed || 0} ${shelter.supplies.medicalKits.unit || ''}`
-                        : shelter.supplies.medical || 'N/A')}
+                    {typeof shelter.supplies.medical === "object"
+                      ? `${shelter.supplies.medical.available || 0}/${shelter.supplies.medical.needed || 0} ${shelter.supplies.medical.unit || ""}`
+                      : typeof shelter.supplies.medicalKits === "object"
+                        ? `${shelter.supplies.medicalKits.available || 0}/${shelter.supplies.medicalKits.needed || 0} ${shelter.supplies.medicalKits.unit || ""}`
+                        : shelter.supplies.medical || "N/A"}
                   </span>
                 </div>
                 <div className="supply-item">
                   <span className="supply-label">{t("shelter.blankets")}</span>
                   <span className="supply-status">
-                    {typeof shelter.supplies.blankets === 'object'
-                      ? `${shelter.supplies.blankets.available || 0}/${shelter.supplies.blankets.needed || 0} ${shelter.supplies.blankets.unit || ''}`
-                      : shelter.supplies.blankets || 'N/A'}
+                    {typeof shelter.supplies.blankets === "object"
+                      ? `${shelter.supplies.blankets.available || 0}/${shelter.supplies.blankets.needed || 0} ${shelter.supplies.blankets.unit || ""}`
+                      : shelter.supplies.blankets || "N/A"}
                   </span>
                 </div>
               </div>
@@ -257,14 +260,17 @@ const ShelterCard = ({ shelter, onEdit, onUpdate }) => {
           )}
 
           <div className="shelter-actions">
-            <button 
+            <button
               className="btn-navigate"
               onClick={(e) => {
                 e.stopPropagation();
                 const lat = shelter.location?.lat;
                 const lng = shelter.location?.lng;
                 if (lat && lng) {
-                  window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`, '_blank');
+                  window.open(
+                    `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`,
+                    "_blank",
+                  );
                 } else {
                   alert(t("shelter.locationNotSpecified"));
                 }
@@ -303,7 +309,12 @@ const ShelterCard = ({ shelter, onEdit, onUpdate }) => {
 // Default fallback location (Pune, India)
 const DEFAULT_SHELTER_LOCATION = { lat: 18.5204, lng: 73.8567 };
 
-const AddShelterForm = ({ onSubmit, onCancel, currentLocation: externalLocation, isSubmitting }) => {
+const AddShelterForm = ({
+  onSubmit,
+  onCancel,
+  currentLocation: externalLocation,
+  isSubmitting,
+}) => {
   const { t } = useTranslation();
   const [formData, setFormData] = useState({
     name: "",
@@ -333,7 +344,7 @@ const AddShelterForm = ({ onSubmit, onCancel, currentLocation: externalLocation,
   const fetchLocation = () => {
     if (!navigator.geolocation) {
       setLocationStatus("error");
-      setLocationError("Geolocation not supported");
+      setLocationError(t("common.geolocationNotSupported"));
       setLocation(DEFAULT_SHELTER_LOCATION);
       return;
     }
@@ -344,7 +355,7 @@ const AddShelterForm = ({ onSubmit, onCancel, currentLocation: externalLocation,
     const timeoutId = setTimeout(() => {
       // If location takes too long, use default
       setLocationStatus("error");
-      setLocationError("Location timeout - using default");
+      setLocationError(t("common.locationTimeout"));
       setLocation(DEFAULT_SHELTER_LOCATION);
     }, 10000); // 10 second timeout
 
@@ -369,7 +380,7 @@ const AddShelterForm = ({ onSubmit, onCancel, currentLocation: externalLocation,
         enableHighAccuracy: false, // Faster response
         timeout: 8000,
         maximumAge: 60000, // Cache for 1 minute
-      }
+      },
     );
   };
 
@@ -451,7 +462,7 @@ const AddShelterForm = ({ onSubmit, onCancel, currentLocation: externalLocation,
           type="text"
           value={formData.name}
           onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-          placeholder="e.g., Community Center Shelter"
+          placeholder={t("shelter.namePlaceholder")}
           required
         />
       </div>
@@ -464,7 +475,7 @@ const AddShelterForm = ({ onSubmit, onCancel, currentLocation: externalLocation,
           onChange={(e) =>
             setFormData({ ...formData, address: e.target.value })
           }
-          placeholder="Full address"
+          placeholder={t("shelter.addressPlaceholder")}
         />
       </div>
 
@@ -475,15 +486,17 @@ const AddShelterForm = ({ onSubmit, onCancel, currentLocation: externalLocation,
           <MapPin size={14} />
         )}
         <span>
-          {locationStatus === "loading" && "Fetching location..."}
-          {locationStatus === "success" && location &&
+          {locationStatus === "loading" && t("common.fetchingLocation")}
+          {locationStatus === "success" &&
+            location &&
             `${t("tasks.location")}: ${location.lat.toFixed(5)}, ${location.lng.toFixed(5)}`}
           {locationStatus === "error" && (
             <>
-              {locationError || "Location unavailable"} - using default location
+              {locationError || t("common.locationUnavailable")} -{" "}
+              {t("common.usingDefaultLocation")}
             </>
           )}
-          {locationStatus === "idle" && "Waiting for location..."}
+          {locationStatus === "idle" && t("common.waitingForLocation")}
         </span>
         {locationStatus === "error" && (
           <button
@@ -507,7 +520,7 @@ const AddShelterForm = ({ onSubmit, onCancel, currentLocation: externalLocation,
           onChange={(e) =>
             setFormData({ ...formData, totalCapacity: e.target.value })
           }
-          placeholder="Maximum people"
+          placeholder={t("shelter.maxPeoplePlaceholder")}
           min="1"
         />
       </div>
@@ -540,7 +553,7 @@ const AddShelterForm = ({ onSubmit, onCancel, currentLocation: externalLocation,
             onChange={(e) =>
               setFormData({ ...formData, phone: e.target.value })
             }
-            placeholder="Phone number"
+            placeholder={t("shelter.phonePlaceholder")}
           />
         </div>
 
@@ -552,7 +565,7 @@ const AddShelterForm = ({ onSubmit, onCancel, currentLocation: externalLocation,
             onChange={(e) =>
               setFormData({ ...formData, manager: e.target.value })
             }
-            placeholder="Manager name"
+            placeholder={t("shelter.managerNamePlaceholder")}
           />
         </div>
       </div>
@@ -561,12 +574,21 @@ const AddShelterForm = ({ onSubmit, onCancel, currentLocation: externalLocation,
         <button type="button" className="btn-cancel" onClick={onCancel}>
           {t("common.cancel")}
         </button>
-        <button 
-          type="submit" 
-          className="btn-submit" 
-          disabled={!formData.name || (formData.name || "").trim().length === 0 || isSubmitting || locationStatus === "loading"}
+        <button
+          type="submit"
+          className="btn-submit"
+          disabled={
+            !formData.name ||
+            (formData.name || "").trim().length === 0 ||
+            isSubmitting ||
+            locationStatus === "loading"
+          }
         >
-          {isSubmitting ? <Loader2 size={14} className="spin" /> : <Home size={14} />}
+          {isSubmitting ? (
+            <Loader2 size={14} className="spin" />
+          ) : (
+            <Home size={14} />
+          )}
           {isSubmitting ? t("common.loading") : t("shelter.register")}
         </button>
       </div>
@@ -601,7 +623,7 @@ const EditShelterForm = ({ shelter, onSubmit, onCancel, isSubmitting }) => {
       if (shelter.facilities.hasKitchen) facilities.push("kitchen");
       if (shelter.facilities.hasShowers > 0) facilities.push("showers");
     }
-    setFormData(prev => ({ ...prev, facilities }));
+    setFormData((prev) => ({ ...prev, facilities }));
   }, [shelter]);
 
   const facilityOptions = [
@@ -672,7 +694,7 @@ const EditShelterForm = ({ shelter, onSubmit, onCancel, isSubmitting }) => {
           type="text"
           value={formData.name}
           onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-          placeholder="e.g., Community Center Shelter"
+          placeholder={t("shelter.namePlaceholder")}
           required
         />
       </div>
@@ -685,7 +707,7 @@ const EditShelterForm = ({ shelter, onSubmit, onCancel, isSubmitting }) => {
           onChange={(e) =>
             setFormData({ ...formData, address: e.target.value })
           }
-          placeholder="Full address"
+          placeholder={t("shelter.addressPlaceholder")}
         />
       </div>
 
@@ -698,7 +720,9 @@ const EditShelterForm = ({ shelter, onSubmit, onCancel, isSubmitting }) => {
         >
           {statusOptions.map((status) => (
             <option key={status} value={status}>
-              {t(`shelter.status${status.charAt(0).toUpperCase() + status.slice(1)}`)}
+              {t(
+                `shelter.status${status.charAt(0).toUpperCase() + status.slice(1)}`,
+              )}
             </option>
           ))}
         </select>
@@ -712,7 +736,7 @@ const EditShelterForm = ({ shelter, onSubmit, onCancel, isSubmitting }) => {
           onChange={(e) =>
             setFormData({ ...formData, totalCapacity: e.target.value })
           }
-          placeholder="Maximum people"
+          placeholder={t("shelter.maxPeoplePlaceholder")}
           min="1"
         />
       </div>
@@ -745,7 +769,7 @@ const EditShelterForm = ({ shelter, onSubmit, onCancel, isSubmitting }) => {
             onChange={(e) =>
               setFormData({ ...formData, phone: e.target.value })
             }
-            placeholder="Phone number"
+            placeholder={t("shelter.phonePlaceholder")}
           />
         </div>
 
@@ -757,7 +781,7 @@ const EditShelterForm = ({ shelter, onSubmit, onCancel, isSubmitting }) => {
             onChange={(e) =>
               setFormData({ ...formData, manager: e.target.value })
             }
-            placeholder="Manager name"
+            placeholder={t("shelter.managerNamePlaceholder")}
           />
         </div>
       </div>
@@ -766,12 +790,20 @@ const EditShelterForm = ({ shelter, onSubmit, onCancel, isSubmitting }) => {
         <button type="button" className="btn-cancel" onClick={onCancel}>
           {t("common.cancel")}
         </button>
-        <button 
-          type="submit" 
-          className="btn-submit" 
-          disabled={!formData.name || (formData.name || "").trim().length === 0 || isSubmitting}
+        <button
+          type="submit"
+          className="btn-submit"
+          disabled={
+            !formData.name ||
+            (formData.name || "").trim().length === 0 ||
+            isSubmitting
+          }
         >
-          {isSubmitting ? <Loader2 size={14} className="spin" /> : <Edit size={14} />}
+          {isSubmitting ? (
+            <Loader2 size={14} className="spin" />
+          ) : (
+            <Edit size={14} />
+          )}
           {isSubmitting ? t("common.loading") : t("shelter.update")}
         </button>
       </div>
@@ -942,8 +974,9 @@ export default function ShelterManagement({ currentLocation }) {
     createMutation.mutate(data, {
       onError: (err) => {
         console.error("Error registering shelter:", err);
-        const message = err?.response?.data?.message || t("shelter.errorRegister");
-        alert(message || "Failed to register shelter");
+        const message =
+          err?.response?.data?.message || t("shelter.errorRegister");
+        alert(message || t("shelter.errorRegister"));
       },
     });
   };
@@ -1064,23 +1097,28 @@ export default function ShelterManagement({ currentLocation }) {
           setShowEditModal(false);
           setSelectedShelter(null);
         }}
-        title={`${t("common.edit")}: ${selectedShelter?.name || ''}`}
+        title={`${t("common.edit")}: ${selectedShelter?.name || ""}`}
         hideFooter
       >
         {selectedShelter && (
           <EditShelterForm
             shelter={selectedShelter}
             onSubmit={(data) => {
-              updateMutation.mutate({ id: selectedShelter._id, data }, {
-                onSuccess: () => {
-                  setShowEditModal(false);
-                  setSelectedShelter(null);
+              updateMutation.mutate(
+                { id: selectedShelter._id, data },
+                {
+                  onSuccess: () => {
+                    setShowEditModal(false);
+                    setSelectedShelter(null);
+                  },
+                  onError: (err) => {
+                    console.error("Error updating shelter:", err);
+                    alert(
+                      err?.response?.data?.message || t("shelter.errorUpdate"),
+                    );
+                  },
                 },
-                onError: (err) => {
-                  console.error("Error updating shelter:", err);
-                  alert(err?.response?.data?.message || "Failed to update shelter");
-                }
-              });
+              );
             }}
             onCancel={() => {
               setShowEditModal(false);

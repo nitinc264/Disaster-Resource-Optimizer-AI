@@ -129,13 +129,14 @@ function MapPin({ need, isSelected, onClick }) {
           </b>
           {emergencyType && emergencyType !== "none" && (
             <p className="pin-emergency-type">
-              <strong>📋 Type:</strong> {emergencyType.toUpperCase()}
+              <strong>📋 {t("map.type")}:</strong> {emergencyType.toUpperCase()}
             </p>
           )}
           {getEmergencyStatusBadge()}
           {need.assignedStation?.stationName && (
             <p className="pin-station">
-              <strong>📍 Station:</strong> {need.assignedStation.stationName}
+              <strong>📍 {t("map.station")}:</strong>{" "}
+              {need.assignedStation.stationName}
             </p>
           )}
           {isReport && need.category && (
@@ -157,7 +158,7 @@ function MapPin({ need, isSelected, onClick }) {
           {emergencyStatus === "rejected" &&
             need.assignedStation?.rejectionReason && (
               <p className="pin-rejection" style={{ color: "#ef4444" }}>
-                <strong>Rejection Reason:</strong>{" "}
+                <strong>{t("map.rejectionReason")}:</strong>{" "}
                 {need.assignedStation.rejectionReason}
               </p>
             )}

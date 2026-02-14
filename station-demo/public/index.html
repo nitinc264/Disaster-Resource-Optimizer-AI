@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -20,16 +20,39 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.min.js"></script>
     <style>
+      /* ============================================================
+         EMERGENCY STATION DASHBOARD — REDESIGNED UI
+         Modern operations center with glassmorphism & depth
+         ============================================================ */
+
+      @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap");
+
       :root {
         --primary-color: #f97316;
-        --bg-dark: #1a1a2e;
-        --bg-card: #16213e;
-        --text-primary: #ffffff;
-        --text-secondary: #a0aec0;
+        --bg-base: #0c0c1d;
+        --bg-surface: #141428;
+        --bg-card: #1c1c3a;
+        --bg-card-hover: #242450;
+        --bg-glass: rgba(28, 28, 58, 0.7);
+        --border-subtle: rgba(255, 255, 255, 0.06);
+        --border-glow: rgba(249, 115, 22, 0.25);
+        --text-primary: #f0f0f8;
+        --text-secondary: #8888a8;
+        --text-muted: #55556e;
         --danger: #ef4444;
         --warning: #f59e0b;
         --success: #10b981;
         --info: #3b82f6;
+        --purple: #8b5cf6;
+        --cyan: #06b6d4;
+        --radius-sm: 8px;
+        --radius-md: 12px;
+        --radius-lg: 16px;
+        --radius-xl: 20px;
+        --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.2);
+        --shadow-md: 0 4px 20px rgba(0, 0, 0, 0.3);
+        --shadow-lg: 0 8px 40px rgba(0, 0, 0, 0.4);
+        --transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
       }
 
       * {
@@ -39,58 +62,111 @@
       }
 
       body {
-        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-        background: var(--bg-dark);
+        font-family:
+          "Inter",
+          -apple-system,
+          BlinkMacSystemFont,
+          sans-serif;
+        background: var(--bg-base);
         color: var(--text-primary);
         min-height: 100vh;
+        overflow: hidden;
       }
 
-      /* Header */
+      /* ============== HEADER ============== */
       .header {
-        background: var(--bg-card);
-        padding: 1rem 2rem;
+        background: var(--bg-surface);
+        border-bottom: 1px solid var(--border-subtle);
+        padding: 0 1.5rem;
+        height: 60px;
         display: flex;
-        justify-content: space-between;
         align-items: center;
-        border-bottom: 3px solid var(--primary-color);
+        justify-content: space-between;
         position: sticky;
         top: 0;
         z-index: 1000;
+        backdrop-filter: blur(16px);
       }
 
       .station-info {
         display: flex;
         align-items: center;
-        gap: 1rem;
+        gap: 0.75rem;
       }
 
       .station-emoji {
-        font-size: 2.5rem;
+        font-size: 1.75rem;
+        width: 42px;
+        height: 42px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: var(--radius-sm);
       }
 
       .station-name {
-        font-size: 1.5rem;
-        font-weight: bold;
+        font-size: 1.1rem;
+        font-weight: 700;
+        letter-spacing: -0.02em;
       }
 
       .station-type {
-        color: var(--text-secondary);
+        font-size: 0.65rem;
+        font-weight: 600;
+        letter-spacing: 2px;
         text-transform: uppercase;
-        font-size: 0.8rem;
-        letter-spacing: 1px;
+        color: var(--primary-color);
+        opacity: 0.9;
       }
 
-      .status-indicator {
+      .header-actions {
         display: flex;
         align-items: center;
         gap: 0.5rem;
       }
 
+      .settings-btn {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--border-subtle);
+        color: var(--text-secondary);
+        padding: 0.45rem 0.85rem;
+        border-radius: var(--radius-sm);
+        cursor: pointer;
+        font-size: 0.8rem;
+        font-weight: 500;
+        font-family: inherit;
+        transition: all var(--transition);
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+      }
+
+      .settings-btn:hover {
+        background: rgba(255, 255, 255, 0.1);
+        border-color: rgba(255, 255, 255, 0.12);
+        color: var(--text-primary);
+      }
+
+      .status-indicator {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        font-size: 0.8rem;
+        color: var(--success);
+        font-weight: 500;
+        padding: 0.4rem 0.75rem;
+        background: rgba(16, 185, 129, 0.08);
+        border: 1px solid rgba(16, 185, 129, 0.15);
+        border-radius: var(--radius-sm);
+      }
+
       .status-dot {
-        width: 12px;
-        height: 12px;
+        width: 8px;
+        height: 8px;
         border-radius: 50%;
         background: var(--success);
+        box-shadow: 0 0 8px var(--success);
         animation: pulse 2s infinite;
       }
 
@@ -98,27 +174,26 @@
         0%,
         100% {
           opacity: 1;
+          box-shadow: 0 0 8px var(--success);
         }
         50% {
-          opacity: 0.5;
+          opacity: 0.6;
+          box-shadow: 0 0 4px var(--success);
         }
       }
 
-      /* Main Content */
+      /* ============== MAIN LAYOUT ============== */
       .main-content {
         display: grid;
-        grid-template-columns: 1fr 400px;
-        gap: 1rem;
-        padding: 1rem;
-        height: calc(100vh - 80px);
+        grid-template-columns: 1fr 380px;
+        height: calc(100vh - 60px);
+        gap: 0;
       }
 
-      /* Map Section */
+      /* ============== MAP ============== */
       .map-section {
-        background: var(--bg-card);
-        border-radius: 12px;
-        overflow: hidden;
         position: relative;
+        border-right: 1px solid var(--border-subtle);
       }
 
       #map {
@@ -126,93 +201,242 @@
         width: 100%;
       }
 
-      /* Alerts Panel */
+      .route-info-panel {
+        position: absolute;
+        bottom: 1rem;
+        left: 1rem;
+        background: var(--bg-glass);
+        backdrop-filter: blur(16px);
+        padding: 0.85rem 1rem;
+        border-radius: var(--radius-md);
+        border: 1px solid var(--border-subtle);
+        z-index: 1000;
+        min-width: 200px;
+        display: none;
+        box-shadow: var(--shadow-md);
+      }
+
+      .route-info-panel.active {
+        display: block;
+      }
+
+      .route-info-title {
+        font-weight: 700;
+        font-size: 0.85rem;
+        margin-bottom: 0.5rem;
+        color: var(--primary-color);
+      }
+
+      .route-info-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.2rem 0;
+        font-size: 0.82rem;
+      }
+
+      .route-info-label {
+        color: var(--text-secondary);
+      }
+      .route-info-value {
+        font-weight: 600;
+      }
+
+      /* ============== SIDE PANEL ============== */
       .alerts-panel {
         display: flex;
         flex-direction: column;
-        gap: 1rem;
+        background: var(--bg-surface);
+        overflow: hidden;
       }
 
-      .panel-header {
-        background: var(--bg-card);
-        padding: 1rem;
-        border-radius: 12px;
+      /* Tab Switcher */
+      .panel-tabs {
         display: flex;
-        justify-content: space-between;
+        padding: 0.75rem 0.75rem 0;
+        gap: 0.25rem;
+      }
+
+      .panel-tab {
+        flex: 1;
+        padding: 0.6rem 0.5rem;
+        text-align: center;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 0.82rem;
+        font-family: inherit;
+        transition: all var(--transition);
+        border: none;
+        background: transparent;
+        color: var(--text-muted);
+        display: flex;
         align-items: center;
+        justify-content: center;
+        gap: 0.4rem;
+        border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+        position: relative;
       }
 
-      .panel-title {
-        font-size: 1.2rem;
-        font-weight: bold;
+      .panel-tab::after {
+        content: "";
+        position: absolute;
+        bottom: 0;
+        left: 25%;
+        right: 25%;
+        height: 2px;
+        background: transparent;
+        border-radius: 2px;
+        transition: all var(--transition);
       }
 
-      .alert-count {
+      .panel-tab:hover {
+        color: var(--text-secondary);
+        background: rgba(255, 255, 255, 0.02);
+      }
+
+      .panel-tab.active {
+        color: var(--text-primary);
+        background: rgba(255, 255, 255, 0.04);
+      }
+
+      .panel-tab.active::after {
+        background: var(--primary-color);
+        left: 15%;
+        right: 15%;
+      }
+
+      .tab-badge {
         background: var(--danger);
         color: white;
-        padding: 0.25rem 0.75rem;
-        border-radius: 20px;
-        font-weight: bold;
+        padding: 0.05rem 0.45rem;
+        border-radius: 10px;
+        font-size: 0.7rem;
+        min-width: 18px;
+        font-weight: 700;
       }
 
-      /* Stats */
+      /* Content Areas */
+      .alerts-content {
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+        flex: 1;
+        overflow: hidden;
+      }
+
+      .alerts-content.hidden {
+        display: none;
+      }
+
+      .resources-panel {
+        display: none;
+        flex-direction: column;
+        gap: 0.75rem;
+        flex: 1;
+        overflow-y: auto;
+        padding: 0.75rem;
+      }
+
+      .resources-panel::-webkit-scrollbar {
+        width: 4px;
+      }
+      .resources-panel::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      .resources-panel::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 4px;
+      }
+
+      .resources-panel.active {
+        display: flex;
+      }
+
+      /* ============== STATS ============== */
       .stats-grid {
         display: grid;
-        grid-template-columns: repeat(2, 1fr);
+        grid-template-columns: 1fr 1fr;
         gap: 0.5rem;
+        padding: 0.75rem;
       }
 
       .stat-card {
         background: var(--bg-card);
-        padding: 1rem;
-        border-radius: 8px;
+        padding: 0.75rem;
+        border-radius: var(--radius-sm);
         text-align: center;
+        border: 1px solid var(--border-subtle);
+        transition: all var(--transition);
       }
 
       .stat-value {
-        font-size: 2rem;
-        font-weight: bold;
+        font-size: 1.6rem;
+        font-weight: 800;
+        font-variant-numeric: tabular-nums;
+        line-height: 1.2;
       }
 
       .stat-label {
         color: var(--text-secondary);
-        font-size: 0.8rem;
+        font-size: 0.7rem;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-top: 0.15rem;
       }
 
       .stat-card.critical .stat-value {
         color: var(--danger);
       }
-
+      .stat-card.critical {
+        border-color: rgba(239, 68, 68, 0.15);
+      }
       .stat-card.active .stat-value {
         color: var(--warning);
       }
+      .stat-card.active {
+        border-color: rgba(245, 158, 11, 0.15);
+      }
 
-      /* Alerts List */
+      /* ============== ALERTS LIST ============== */
       .alerts-list {
         flex: 1;
         overflow-y: auto;
         display: flex;
         flex-direction: column;
-        gap: 0.75rem;
+        gap: 0.4rem;
+        padding: 0 0.75rem 0.75rem;
+      }
+
+      .alerts-list::-webkit-scrollbar {
+        width: 4px;
+      }
+      .alerts-list::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      .alerts-list::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.08);
+        border-radius: 4px;
       }
 
       .alert-card {
         background: var(--bg-card);
-        border-radius: 12px;
-        padding: 1rem;
-        border-left: 4px solid var(--warning);
+        border-radius: var(--radius-md);
+        padding: 0.85rem 1rem;
+        border: 1px solid var(--border-subtle);
+        border-left: 3px solid var(--warning);
         cursor: pointer;
-        transition: all 0.3s ease;
+        transition: all var(--transition);
       }
 
       .alert-card:hover {
-        transform: translateX(5px);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        background: var(--bg-card-hover);
+        border-color: rgba(255, 255, 255, 0.1);
+        transform: translateX(2px);
       }
 
       .alert-card.critical {
         border-left-color: var(--danger);
-        animation: criticalPulse 1s infinite;
+        animation: criticalPulse 2.5s ease-in-out infinite;
       }
 
       @keyframes criticalPulse {
@@ -221,20 +445,20 @@
           background: var(--bg-card);
         }
         50% {
-          background: rgba(239, 68, 68, 0.1);
+          background: rgba(239, 68, 68, 0.06);
         }
       }
 
       .alert-card.new {
-        animation: newAlert 0.5s ease;
+        animation: slideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
       }
 
-      @keyframes newAlert {
-        0% {
+      @keyframes slideIn {
+        from {
           transform: translateX(100%);
           opacity: 0;
         }
-        100% {
+        to {
           transform: translateX(0);
           opacity: 1;
         }
@@ -244,107 +468,175 @@
         display: flex;
         justify-content: space-between;
         align-items: flex-start;
-        margin-bottom: 0.5rem;
+        margin-bottom: 0.35rem;
       }
 
       .alert-title {
-        font-weight: bold;
-        font-size: 0.95rem;
+        font-weight: 600;
+        font-size: 0.88rem;
+        line-height: 1.3;
       }
 
       .severity-badge {
-        padding: 0.2rem 0.5rem;
+        padding: 0.15rem 0.5rem;
         border-radius: 4px;
-        font-size: 0.75rem;
-        font-weight: bold;
+        font-size: 0.7rem;
+        font-weight: 700;
+        letter-spacing: 0.3px;
+        white-space: nowrap;
+        flex-shrink: 0;
       }
 
       .severity-badge.critical {
-        background: var(--danger);
+        background: rgba(239, 68, 68, 0.2);
+        color: #fca5a5;
       }
-
       .severity-badge.high {
-        background: var(--warning);
+        background: rgba(245, 158, 11, 0.2);
+        color: #fcd34d;
       }
-
       .severity-badge.medium {
-        background: var(--info);
+        background: rgba(59, 130, 246, 0.2);
+        color: #93c5fd;
       }
-
       .severity-badge.low {
-        background: var(--success);
+        background: rgba(16, 185, 129, 0.2);
+        color: #6ee7b7;
       }
 
       .alert-description {
         color: var(--text-secondary);
-        font-size: 0.85rem;
-        margin-bottom: 0.5rem;
+        font-size: 0.8rem;
+        margin-bottom: 0.4rem;
+        line-height: 1.4;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
       }
 
       .alert-meta {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        font-size: 0.75rem;
-        color: var(--text-secondary);
+        font-size: 0.72rem;
+        color: var(--text-muted);
       }
 
       .alert-type {
-        background: rgba(255, 255, 255, 0.1);
-        padding: 0.2rem 0.5rem;
+        background: rgba(255, 255, 255, 0.06);
+        padding: 0.15rem 0.45rem;
         border-radius: 4px;
+        font-weight: 500;
       }
 
       .alert-actions {
         display: flex;
-        gap: 0.5rem;
-        margin-top: 0.75rem;
+        gap: 0.4rem;
+        margin-top: 0.6rem;
       }
 
+      /* ============== BUTTONS ============== */
       .btn {
-        padding: 0.5rem 1rem;
+        padding: 0.4rem 0.85rem;
         border: none;
-        border-radius: 6px;
+        border-radius: var(--radius-sm);
         cursor: pointer;
-        font-size: 0.8rem;
-        font-weight: bold;
-        transition: all 0.2s ease;
+        font-size: 0.78rem;
+        font-weight: 600;
+        font-family: inherit;
+        transition: all var(--transition);
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+      }
+
+      .btn:hover {
+        opacity: 0.85;
+        transform: translateY(-1px);
+      }
+      .btn:active {
+        transform: translateY(0);
       }
 
       .btn-acknowledge {
         background: var(--info);
         color: white;
       }
-
       .btn-dispatch {
         background: var(--warning);
-        color: white;
+        color: #1a1a2e;
       }
-
       .btn-reject {
-        background: var(--danger);
-        color: white;
+        background: rgba(239, 68, 68, 0.15);
+        color: var(--danger);
+        border: 1px solid rgba(239, 68, 68, 0.2);
       }
-
+      .btn-reject:hover {
+        background: rgba(239, 68, 68, 0.25);
+      }
       .btn-resolve {
         background: var(--success);
         color: white;
       }
 
-      .btn:hover {
-        opacity: 0.9;
-        transform: translateY(-2px);
+      /* ============== STATUS BADGES ============== */
+      .status-badge {
+        padding: 0.15rem 0.45rem;
+        border-radius: 4px;
+        font-size: 0.65rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
       }
 
-      /* Alert Modal */
+      .status-received {
+        background: rgba(59, 130, 246, 0.2);
+        color: #93c5fd;
+      }
+      .status-acknowledged {
+        background: rgba(245, 158, 11, 0.2);
+        color: #fcd34d;
+      }
+      .status-dispatched {
+        background: rgba(139, 92, 246, 0.2);
+        color: #c4b5fd;
+      }
+      .status-en_route {
+        background: rgba(6, 182, 212, 0.2);
+        color: #67e8f9;
+      }
+      .status-on_scene {
+        background: rgba(16, 185, 129, 0.2);
+        color: #6ee7b7;
+      }
+      .status-resolved {
+        background: rgba(107, 114, 128, 0.2);
+        color: #9ca3af;
+      }
+      .status-rejected {
+        background: rgba(239, 68, 68, 0.2);
+        color: #fca5a5;
+      }
+
+      /* No Alerts */
+      .no-alerts {
+        text-align: center;
+        padding: 3rem 1.5rem;
+        color: var(--text-muted);
+      }
+      .no-alerts-icon {
+        font-size: 3rem;
+        margin-bottom: 0.75rem;
+      }
+
+      /* ============== MODALS ============== */
       .modal-overlay {
         display: none;
         position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: rgba(0, 0, 0, 0.8);
+        inset: 0;
+        background: rgba(0, 0, 0, 0.7);
+        backdrop-filter: blur(4px);
         z-index: 2000;
         justify-content: center;
         align-items: center;
@@ -356,114 +648,640 @@
 
       .modal {
         background: var(--bg-card);
-        border-radius: 16px;
-        padding: 2rem;
+        border-radius: var(--radius-lg);
+        border: 1px solid var(--border-subtle);
+        padding: 1.5rem;
         max-width: 500px;
-        width: 90%;
-        max-height: 80vh;
+        width: 92%;
+        max-height: 85vh;
         overflow-y: auto;
+        box-shadow: var(--shadow-lg);
+      }
+
+      .modal::-webkit-scrollbar {
+        width: 4px;
+      }
+      .modal::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 4px;
       }
 
       .modal-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 1.5rem;
+        margin-bottom: 1.25rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 1px solid var(--border-subtle);
+      }
+
+      .modal-header h2 {
+        font-size: 1.05rem;
+        font-weight: 700;
       }
 
       .modal-close {
-        background: none;
+        background: rgba(255, 255, 255, 0.05);
         border: none;
         color: var(--text-secondary);
-        font-size: 1.5rem;
+        font-size: 1.2rem;
         cursor: pointer;
+        width: 32px;
+        height: 32px;
+        border-radius: var(--radius-sm);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all var(--transition);
+      }
+
+      .modal-close:hover {
+        background: rgba(255, 255, 255, 0.1);
+        color: white;
       }
 
       .modal-body {
         display: flex;
         flex-direction: column;
-        gap: 1rem;
+        gap: 0.85rem;
       }
 
       .detail-row {
         display: flex;
         justify-content: space-between;
-        padding: 0.75rem 0;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 0.6rem 0;
+        border-bottom: 1px solid var(--border-subtle);
+        font-size: 0.88rem;
       }
 
       .detail-label {
         color: var(--text-secondary);
       }
-
       .detail-value {
-        font-weight: bold;
+        font-weight: 600;
       }
 
-      /* Sound Control */
-      .sound-control {
-        position: fixed;
-        bottom: 1rem;
-        right: 1rem;
-        background: var(--bg-card);
-        padding: 0.75rem 1rem;
-        border-radius: 8px;
+      /* ============== DISPATCH MODAL ============== */
+      .dispatch-section {
+        background: rgba(255, 255, 255, 0.03);
+        border-radius: var(--radius-md);
+        padding: 1rem;
+        border: 1px solid var(--border-subtle);
+      }
+      .dispatch-section h3 {
+        font-size: 0.9rem;
+        font-weight: 600;
+        margin-bottom: 0.75rem;
+      }
+      .dispatch-grid {
+        display: flex;
+        flex-direction: column;
+        gap: 0.35rem;
+      }
+      .dispatch-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.55rem 0.7rem;
+        background: rgba(255, 255, 255, 0.03);
+        border-radius: var(--radius-sm);
+        border: 1px solid transparent;
+        transition: all var(--transition);
+      }
+      .dispatch-item:hover {
+        background: rgba(255, 255, 255, 0.06);
+        border-color: var(--border-subtle);
+      }
+      .dispatch-item label {
         display: flex;
         align-items: center;
         gap: 0.5rem;
         cursor: pointer;
-        z-index: 1500;
+        font-size: 0.85rem;
+        flex: 1;
+        font-weight: 500;
       }
-
-      .sound-control:hover {
-        background: rgba(255, 255, 255, 0.1);
+      .dispatch-item input[type="checkbox"] {
+        width: 16px;
+        height: 16px;
+        accent-color: var(--primary-color);
+        cursor: pointer;
       }
-
-      /* No Alerts */
-      .no-alerts {
+      .dispatch-item .dispatch-qty {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+      }
+      .dispatch-item .dispatch-qty input {
+        width: 48px;
+        padding: 0.25rem;
+        background: rgba(0, 0, 0, 0.3);
+        border: 1px solid var(--border-subtle);
+        border-radius: 6px;
+        color: var(--text-primary);
+        font-size: 0.82rem;
+        font-family: "JetBrains Mono", monospace;
         text-align: center;
-        padding: 3rem;
+      }
+      .dispatch-item .avail-badge {
+        font-size: 0.7rem;
+        color: var(--text-muted);
+        background: rgba(255, 255, 255, 0.05);
+        padding: 0.15rem 0.4rem;
+        border-radius: 4px;
+        font-weight: 500;
+      }
+      .dispatch-alert-info {
+        background: rgba(249, 115, 22, 0.08);
+        border-left: 3px solid var(--primary-color);
+        padding: 0.7rem 1rem;
+        border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+      }
+      .dispatch-alert-info .dai-title {
+        font-weight: 600;
+        font-size: 0.9rem;
+      }
+      .dispatch-alert-info .dai-sub {
+        font-size: 0.78rem;
+        color: var(--text-secondary);
+        margin-top: 0.2rem;
+      }
+      .dispatch-actions {
+        display: flex;
+        gap: 0.5rem;
+        margin-top: 0.25rem;
+      }
+      .dispatch-actions .btn-cancel {
+        flex: 1;
+        padding: 0.65rem;
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid var(--border-subtle);
+        border-radius: var(--radius-sm);
+        color: var(--text-secondary);
+        font-size: 0.88rem;
+        font-family: inherit;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all var(--transition);
+      }
+      .dispatch-actions .btn-cancel:hover {
+        background: rgba(255, 255, 255, 0.1);
+        color: var(--text-primary);
+      }
+      .dispatch-actions .btn-confirm-dispatch {
+        flex: 2;
+        padding: 0.65rem;
+        background: var(--primary-color);
+        border: none;
+        border-radius: var(--radius-sm);
+        color: white;
+        font-size: 0.88rem;
+        font-family: inherit;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all var(--transition);
+      }
+      .dispatch-actions .btn-confirm-dispatch:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+      }
+      .dispatch-actions .btn-confirm-dispatch:not(:disabled):hover {
+        opacity: 0.9;
+      }
+      .dispatch-nothing {
+        text-align: center;
+        color: var(--text-secondary);
+        padding: 2rem 1rem;
+      }
+
+      /* ============== SETTINGS MODAL ============== */
+      .settings-modal {
+        max-width: 560px;
+      }
+
+      .settings-section {
+        margin-bottom: 1.25rem;
+      }
+
+      .settings-section h3 {
+        font-size: 0.88rem;
+        font-weight: 600;
+        margin-bottom: 0.6rem;
+        color: var(--primary-color);
+        border-bottom: 1px solid var(--border-subtle);
+        padding-bottom: 0.4rem;
+      }
+
+      .settings-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.4rem 0;
+        font-size: 0.85rem;
+      }
+
+      .settings-label {
         color: var(--text-secondary);
       }
 
-      .no-alerts-icon {
-        font-size: 4rem;
-        margin-bottom: 1rem;
-      }
-
-      /* Status Badge */
-      .status-badge {
+      .settings-value {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 0.8rem;
+        background: rgba(0, 0, 0, 0.3);
         padding: 0.2rem 0.5rem;
         border-radius: 4px;
-        font-size: 0.7rem;
-        text-transform: uppercase;
+        color: var(--text-primary);
       }
 
-      .status-received {
-        background: var(--info);
+      .api-info-panel {
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: var(--radius-sm);
+        padding: 0.85rem;
+        border: 1px solid var(--border-subtle);
       }
-      .status-acknowledged {
-        background: var(--warning);
+
+      .api-info-title {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        margin-bottom: 0.4rem;
+        font-weight: 500;
       }
-      .status-dispatched {
-        background: #8b5cf6;
+
+      .api-key-display {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        background: rgba(0, 0, 0, 0.3);
+        padding: 0.45rem 0.6rem;
+        border-radius: 6px;
+        font-family: "JetBrains Mono", monospace;
+        font-size: 0.78rem;
       }
-      .status-en_route {
-        background: #06b6d4;
+
+      .api-key-display .key-text {
+        flex: 1;
+        color: var(--primary-color);
+        word-break: break-all;
       }
-      .status-on_scene {
+
+      .copy-btn {
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid var(--border-subtle);
+        color: var(--text-secondary);
+        padding: 0.2rem 0.5rem;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 0.72rem;
+        font-family: inherit;
+        transition: all var(--transition);
+      }
+
+      .copy-btn:hover {
+        background: rgba(255, 255, 255, 0.15);
+        color: white;
+      }
+
+      .api-endpoint {
+        margin-top: 0.5rem;
+        font-size: 0.72rem;
+        color: var(--text-muted);
+      }
+
+      .api-endpoint code {
+        background: rgba(0, 0, 0, 0.3);
+        padding: 0.15rem 0.4rem;
+        border-radius: 4px;
+        color: var(--success);
+        font-family: "JetBrains Mono", monospace;
+        font-size: 0.72rem;
+      }
+
+      .register-btn {
+        width: 100%;
+        padding: 0.65rem;
         background: var(--success);
-      }
-      .status-resolved {
-        background: #6b7280;
-      }
-      .status-rejected {
-        background: var(--danger);
+        color: white;
+        border: none;
+        border-radius: var(--radius-sm);
+        font-size: 0.9rem;
+        font-weight: 600;
+        font-family: inherit;
+        cursor: pointer;
+        margin-top: 0.75rem;
+        transition: all var(--transition);
       }
 
-      /* Leaflet Customizations */
+      .register-btn:hover {
+        opacity: 0.9;
+      }
+      .register-btn:disabled {
+        background: var(--text-muted);
+        cursor: not-allowed;
+      }
+
+      .registration-status {
+        margin-top: 0.4rem;
+        padding: 0.5rem;
+        border-radius: 6px;
+        font-size: 0.82rem;
+        text-align: center;
+      }
+
+      .registration-status.success {
+        background: rgba(16, 185, 129, 0.12);
+        color: var(--success);
+      }
+      .registration-status.error {
+        background: rgba(239, 68, 68, 0.12);
+        color: var(--danger);
+      }
+
+      /* ============== RESOURCE SECTION ============== */
+      .res-section {
+        background: var(--bg-card);
+        border-radius: var(--radius-md);
+        padding: 0.85rem;
+        border: 1px solid var(--border-subtle);
+      }
+
+      .res-section-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 0.6rem;
+      }
+
+      .res-section-title {
+        font-size: 0.88rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+      }
+
+      .res-section-badge {
+        font-size: 0.7rem;
+        padding: 0.1rem 0.45rem;
+        border-radius: 6px;
+        font-weight: 600;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .res-section-badge.fleet {
+        background: rgba(59, 130, 246, 0.12);
+        color: #60a5fa;
+      }
+      .res-section-badge.staff {
+        background: rgba(139, 92, 246, 0.12);
+        color: #c4b5fd;
+      }
+      .res-section-badge.supply {
+        background: rgba(16, 185, 129, 0.12);
+        color: #6ee7b7;
+      }
+
+      .res-add-btn {
+        padding: 0.2rem 0.5rem;
+        border: 1px solid var(--border-subtle);
+        border-radius: 6px;
+        background: transparent;
+        color: var(--text-muted);
+        cursor: pointer;
+        font-size: 0.75rem;
+        transition: all var(--transition);
+      }
+      .res-add-btn:hover {
+        background: rgba(255, 255, 255, 0.06);
+        color: var(--text-primary);
+      }
+
+      .res-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.45rem 0;
+        border-bottom: 1px solid var(--border-subtle);
+      }
+
+      .res-item:last-child {
+        border-bottom: none;
+      }
+
+      .res-item-name {
+        font-size: 0.82rem;
+        font-weight: 500;
+        flex: 1;
+      }
+
+      .res-item-counts {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        font-size: 0.78rem;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .res-avail {
+        color: #4ade80;
+        font-weight: 700;
+      }
+      .res-total {
+        color: var(--text-muted);
+      }
+
+      .res-deployed {
+        color: #93c5fd;
+        font-size: 0.68rem;
+        font-weight: 500;
+        padding: 0.08rem 0.35rem;
+        background: rgba(59, 130, 246, 0.1);
+        border-radius: 4px;
+      }
+
+      .res-num-input {
+        width: 50px;
+        padding: 0.2rem 0.3rem;
+        border: 1px solid var(--border-subtle);
+        border-radius: 4px;
+        background: rgba(0, 0, 0, 0.3);
+        color: white;
+        text-align: center;
+        font-size: 0.82rem;
+        font-family: "JetBrains Mono", monospace;
+      }
+
+      .res-num-input:focus {
+        outline: none;
+        border-color: var(--primary-color);
+      }
+
+      /* Supply Bar */
+      .supply-bar-container {
+        width: 100%;
+        margin-top: 0.25rem;
+      }
+
+      .supply-bar-bg {
+        height: 5px;
+        background: rgba(255, 255, 255, 0.06);
+        border-radius: 3px;
+        overflow: hidden;
+      }
+
+      .supply-bar-fill {
+        height: 100%;
+        border-radius: 3px;
+        transition: width 0.4s ease;
+      }
+
+      .supply-bar-fill.good {
+        background: linear-gradient(90deg, #22c55e, #4ade80);
+      }
+      .supply-bar-fill.warning {
+        background: linear-gradient(90deg, #eab308, #fde047);
+      }
+      .supply-bar-fill.critical {
+        background: linear-gradient(90deg, #dc2626, #ef4444);
+      }
+
+      .supply-text {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.68rem;
+        color: var(--text-muted);
+        margin-top: 0.15rem;
+      }
+
+      /* Resource Actions */
+      .res-actions {
+        display: flex;
+        gap: 0.4rem;
+        margin-top: 0.75rem;
+      }
+
+      .res-save-btn {
+        flex: 1;
+        padding: 0.5rem;
+        border: none;
+        border-radius: var(--radius-sm);
+        font-weight: 600;
+        font-family: inherit;
+        cursor: pointer;
+        transition: all var(--transition);
+        font-size: 0.82rem;
+      }
+
+      .res-save-btn.primary {
+        background: var(--primary-color);
+        color: white;
+      }
+      .res-save-btn.primary:hover {
+        opacity: 0.9;
+      }
+      .res-save-btn.secondary {
+        background: rgba(255, 255, 255, 0.06);
+        color: var(--text-secondary);
+        border: 1px solid var(--border-subtle);
+      }
+      .res-save-btn.secondary:hover {
+        background: rgba(255, 255, 255, 0.1);
+      }
+      .res-save-btn:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+      }
+
+      .res-status {
+        text-align: center;
+        padding: 0.4rem 0.6rem;
+        border-radius: 6px;
+        font-size: 0.82rem;
+        display: none;
+      }
+
+      .res-status.success {
+        background: rgba(16, 185, 129, 0.1);
+        color: #6ee7b7;
+        display: block;
+      }
+      .res-status.error {
+        background: rgba(239, 68, 68, 0.1);
+        color: #fca5a5;
+        display: block;
+      }
+      .res-status.info {
+        background: rgba(59, 130, 246, 0.1);
+        color: #93c5fd;
+        display: block;
+      }
+
+      .res-empty {
+        text-align: center;
+        padding: 2rem 1rem;
+        color: var(--text-muted);
+      }
+
+      .res-empty-icon {
+        font-size: 2.5rem;
+        margin-bottom: 0.75rem;
+      }
+      .res-empty h3 {
+        margin: 0 0 0.4rem;
+        color: var(--text-primary);
+        font-size: 1rem;
+      }
+      .res-empty p {
+        margin: 0 0 1rem;
+        font-size: 0.85rem;
+        line-height: 1.5;
+      }
+
+      .res-register-btn {
+        padding: 0.65rem 1.5rem;
+        border: none;
+        border-radius: var(--radius-sm);
+        background: var(--primary-color);
+        color: white;
+        font-weight: 600;
+        font-family: inherit;
+        cursor: pointer;
+        font-size: 0.88rem;
+        transition: all var(--transition);
+      }
+
+      .res-register-btn:hover {
+        opacity: 0.9;
+        transform: translateY(-1px);
+      }
+
+      /* ============== SOUND CONTROL ============== */
+      .sound-control {
+        position: fixed;
+        bottom: 0.75rem;
+        right: 0.75rem;
+        background: var(--bg-glass);
+        backdrop-filter: blur(12px);
+        border: 1px solid var(--border-subtle);
+        padding: 0.5rem 0.85rem;
+        border-radius: var(--radius-sm);
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        cursor: pointer;
+        z-index: 1500;
+        font-size: 0.78rem;
+        color: var(--text-secondary);
+        transition: all var(--transition);
+      }
+
+      .sound-control:hover {
+        background: rgba(255, 255, 255, 0.08);
+        color: var(--text-primary);
+      }
+
+      /* ============== LEAFLET OVERRIDES ============== */
       .emergency-marker {
-        animation: markerPulse 1s infinite;
+        animation: markerPulse 1.5s ease-in-out infinite;
       }
 
       @keyframes markerPulse {
@@ -472,66 +1290,29 @@
           transform: scale(1);
         }
         50% {
-          transform: scale(1.2);
+          transform: scale(1.15);
         }
       }
 
       .leaflet-popup-content-wrapper {
         background: var(--bg-card);
         color: var(--text-primary);
+        border-radius: var(--radius-sm);
+        border: 1px solid var(--border-subtle);
+        box-shadow: var(--shadow-md);
       }
 
       .leaflet-popup-tip {
         background: var(--bg-card);
       }
-
-      /* Route styling */
       .leaflet-routing-container {
         display: none !important;
-      }
-
-      .route-info-panel {
-        position: absolute;
-        bottom: 1rem;
-        left: 1rem;
-        background: var(--bg-card);
-        padding: 1rem;
-        border-radius: 8px;
-        z-index: 1000;
-        min-width: 200px;
-        display: none;
-      }
-
-      .route-info-panel.active {
-        display: block;
-      }
-
-      .route-info-title {
-        font-weight: bold;
-        margin-bottom: 0.5rem;
-        color: var(--primary-color);
-      }
-
-      .route-info-item {
-        display: flex;
-        justify-content: space-between;
-        padding: 0.25rem 0;
-        font-size: 0.9rem;
-      }
-
-      .route-info-label {
-        color: var(--text-secondary);
-      }
-
-      .route-info-value {
-        font-weight: bold;
       }
 
       /* Alert pin marker */
       .alert-pin {
         position: relative;
       }
-
       .alert-pin::after {
         content: "";
         position: absolute;
@@ -545,157 +1326,16 @@
         border-top: 10px solid var(--danger);
       }
 
-      /* Settings Button */
-      .settings-btn {
-        background: var(--bg-card);
-        border: 2px solid var(--primary-color);
-        color: var(--text-primary);
-        padding: 0.5rem 1rem;
-        border-radius: 8px;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        font-size: 0.9rem;
-        transition: all 0.2s;
-      }
-
-      .settings-btn:hover {
-        background: var(--primary-color);
-        color: white;
-      }
-
-      /* API Key Info Panel */
-      .api-info-panel {
-        background: var(--bg-card);
-        border-radius: 8px;
-        padding: 1rem;
-        margin-bottom: 0.5rem;
-      }
-
-      .api-info-title {
-        font-size: 0.8rem;
-        color: var(--text-secondary);
-        margin-bottom: 0.5rem;
-      }
-
-      .api-key-display {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        background: rgba(0, 0, 0, 0.3);
-        padding: 0.5rem;
-        border-radius: 4px;
-        font-family: monospace;
-        font-size: 0.85rem;
-        word-break: break-all;
-      }
-
-      .api-key-display .key-text {
-        flex: 1;
-        color: var(--primary-color);
-      }
-
-      .copy-btn {
-        background: var(--primary-color);
-        border: none;
-        color: white;
-        padding: 0.25rem 0.5rem;
-        border-radius: 4px;
-        cursor: pointer;
-        font-size: 0.75rem;
-      }
-
-      .copy-btn:hover {
-        opacity: 0.8;
-      }
-
-      .api-endpoint {
-        margin-top: 0.5rem;
-        font-size: 0.75rem;
-        color: var(--text-secondary);
-      }
-
-      .api-endpoint code {
-        background: rgba(0, 0, 0, 0.3);
-        padding: 0.2rem 0.4rem;
-        border-radius: 4px;
-        color: #10b981;
-      }
-
-      /* Settings Modal */
-      .settings-modal {
-        max-width: 600px;
-      }
-
-      .settings-section {
-        margin-bottom: 1.5rem;
-      }
-
-      .settings-section h3 {
-        font-size: 1rem;
-        margin-bottom: 0.75rem;
-        color: var(--primary-color);
-        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        padding-bottom: 0.5rem;
-      }
-
-      .settings-row {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 0.5rem 0;
-      }
-
-      .settings-label {
-        color: var(--text-secondary);
-      }
-
-      .settings-value {
-        font-family: monospace;
-        background: rgba(0, 0, 0, 0.3);
-        padding: 0.25rem 0.5rem;
-        border-radius: 4px;
-      }
-
-      .register-btn {
-        width: 100%;
-        padding: 0.75rem;
-        background: var(--success);
-        color: white;
-        border: none;
-        border-radius: 8px;
-        font-size: 1rem;
-        font-weight: bold;
-        cursor: pointer;
-        margin-top: 1rem;
-      }
-
-      .register-btn:hover {
-        opacity: 0.9;
-      }
-
-      .register-btn:disabled {
-        background: #6b7280;
-        cursor: not-allowed;
-      }
-
-      .registration-status {
-        margin-top: 0.5rem;
-        padding: 0.5rem;
-        border-radius: 4px;
-        font-size: 0.85rem;
-        text-align: center;
-      }
-
-      .registration-status.success {
-        background: rgba(16, 185, 129, 0.2);
-        color: #10b981;
-      }
-
-      .registration-status.error {
-        background: rgba(239, 68, 68, 0.2);
-        color: #ef4444;
+      /* ============== RESPONSIVE ============== */
+      @media (max-width: 900px) {
+        .main-content {
+          grid-template-columns: 1fr;
+          grid-template-rows: 300px 1fr;
+        }
+        .map-section {
+          border-right: none;
+          border-bottom: 1px solid var(--border-subtle);
+        }
       }
     </style>
   </head>
@@ -709,9 +1349,9 @@
           <div class="station-type" id="stationType">Loading...</div>
         </div>
       </div>
-      <div style="display: flex; align-items: center; gap: 1rem">
+      <div class="header-actions">
         <button class="settings-btn" onclick="openSettings()">
-          ⚙️ Settings & API
+          ⚙️ Settings
         </button>
         <div class="status-indicator">
           <div class="status-dot"></div>
@@ -742,31 +1382,56 @@
         </div>
       </section>
 
-      <!-- Alerts Panel -->
+      <!-- Side Panel -->
       <aside class="alerts-panel">
-        <div class="panel-header">
-          <span class="panel-title">Active Alerts</span>
-          <span class="alert-count" id="alertCount">0</span>
+        <!-- Tab Switcher -->
+        <div class="panel-tabs">
+          <button
+            class="panel-tab active"
+            id="tabAlerts"
+            onclick="switchTab('alerts')"
+          >
+            🚨 Alerts <span class="tab-badge" id="alertCount">0</span>
+          </button>
+          <button
+            class="panel-tab"
+            id="tabResources"
+            onclick="switchTab('resources')"
+          >
+            📦 Resources
+          </button>
         </div>
 
-        <!-- Stats -->
-        <div class="stats-grid">
-          <div class="stat-card critical">
-            <div class="stat-value" id="criticalCount">0</div>
-            <div class="stat-label">Critical</div>
+        <!-- Alerts Content -->
+        <div class="alerts-content" id="alertsContent">
+          <!-- Stats -->
+          <div class="stats-grid">
+            <div class="stat-card critical">
+              <div class="stat-value" id="criticalCount">0</div>
+              <div class="stat-label">Critical</div>
+            </div>
+            <div class="stat-card active">
+              <div class="stat-value" id="activeCount">0</div>
+              <div class="stat-label">Active</div>
+            </div>
           </div>
-          <div class="stat-card active">
-            <div class="stat-value" id="activeCount">0</div>
-            <div class="stat-label">Active</div>
+
+          <!-- Alerts List -->
+          <div class="alerts-list" id="alertsList">
+            <div class="no-alerts">
+              <div class="no-alerts-icon">✅</div>
+              <div>No active alerts</div>
+              <div>All clear!</div>
+            </div>
           </div>
         </div>
 
-        <!-- Alerts List -->
-        <div class="alerts-list" id="alertsList">
-          <div class="no-alerts">
-            <div class="no-alerts-icon">✅</div>
-            <div>No active alerts</div>
-            <div>All clear!</div>
+        <!-- Resources Content -->
+        <div class="resources-panel" id="resourcesContent">
+          <div id="resourcesBody">
+            <div class="res-status info" id="resLoadingMsg">
+              Loading resources...
+            </div>
           </div>
         </div>
       </aside>
@@ -780,6 +1445,21 @@
           <button class="modal-close" onclick="closeModal()">&times;</button>
         </div>
         <div class="modal-body" id="modalBody">
+          <!-- Dynamic content -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Dispatch Resource Picker Modal -->
+    <div class="modal-overlay" id="dispatchModal">
+      <div class="modal" style="max-width: 550px">
+        <div class="modal-header">
+          <h2>🚀 Dispatch Resources</h2>
+          <button class="modal-close" onclick="closeDispatchModal()">
+            &times;
+          </button>
+        </div>
+        <div class="modal-body" id="dispatchModalBody">
           <!-- Dynamic content -->
         </div>
       </div>
@@ -912,12 +1592,15 @@
 
         // Fetch initial stats
         fetchStats();
+
+        // Preload resources so dispatch picker has data ready
+        preloadResources();
       }
 
       // Update station UI with config
       function updateStationUI() {
         document.getElementById("stationEmoji").textContent = getStationEmoji(
-          stationConfig.type
+          stationConfig.type,
         );
         document.getElementById("stationName").textContent = stationConfig.name;
         document.getElementById("stationType").textContent =
@@ -932,7 +1615,7 @@
         };
         document.documentElement.style.setProperty(
           "--primary-color",
-          themeColors[stationConfig.type] || "#f97316"
+          themeColors[stationConfig.type] || "#f97316",
         );
         document.title = stationConfig.name + " Dashboard";
       }
@@ -962,7 +1645,7 @@
         const stationIcon = L.divIcon({
           className: "station-marker",
           html: `<div style="background: var(--primary-color); width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; border: 4px solid white; box-shadow: 0 4px 15px rgba(0,0,0,0.4);">${getStationEmoji(
-            stationConfig.type
+            stationConfig.type,
           )}</div>`,
           iconSize: [40, 40],
           iconAnchor: [20, 20],
@@ -973,7 +1656,7 @@
           .bindPopup(
             `<b>${stationConfig.name}</b><br>📍 Station Location<br><small>${
               stationConfig.location?.address || "Command Center"
-            }</small>`
+            }</small>`,
           );
       }
 
@@ -1007,13 +1690,13 @@
         const activeAlerts = initialAlerts.filter(
           (a) =>
             (a.status === "received" || a.status === "acknowledged") &&
-            a.severity > 4
+            a.severity > 4,
         );
         if (activeAlerts.length > 0 && soundEnabled) {
           const hasCritical = activeAlerts.some((a) => a.severity >= 7);
           playAlertSound(hasCritical);
           console.log(
-            `Playing alert sound for ${activeAlerts.length} active alerts with severity > 4`
+            `Playing alert sound for ${activeAlerts.length} active alerts with severity > 4`,
           );
         }
       });
@@ -1040,7 +1723,7 @@
 
       socket.on("alertUpdated", (updatedAlert) => {
         const index = alerts.findIndex(
-          (a) => a.alertId === updatedAlert.alertId
+          (a) => a.alertId === updatedAlert.alertId,
         );
         if (index !== -1) {
           alerts[index] = updatedAlert;
@@ -1070,7 +1753,7 @@
       function renderAlerts(isNew = false) {
         const container = document.getElementById("alertsList");
         const activeAlerts = alerts.filter(
-          (a) => a.status !== "resolved" && a.status !== "rejected"
+          (a) => a.status !== "resolved" && a.status !== "rejected",
         );
 
         document.getElementById("alertCount").textContent = activeAlerts.length;
@@ -1092,17 +1775,17 @@
               alert.severity >= 7
                 ? "critical"
                 : alert.severity >= 5
-                ? "high"
-                : alert.severity >= 3
-                ? "medium"
-                : "low";
+                  ? "high"
+                  : alert.severity >= 3
+                    ? "medium"
+                    : "low";
 
             const isNewAlert = isNew && index === 0;
 
             return `
           <div class="alert-card ${alert.severity >= 7 ? "critical" : ""} ${
-              isNewAlert ? "new" : ""
-            }" 
+            isNewAlert ? "new" : ""
+          }" 
                onclick="showAlertDetail('${alert.alertId}')">
             <div class="alert-header">
               <span class="alert-title">${alert.title}</span>
@@ -1116,8 +1799,8 @@
             <div class="alert-meta">
               <span class="alert-type">${alert.emergencyType}</span>
               <span class="status-badge status-${alert.status}">${
-              alert.status
-            }</span>
+                alert.status
+              }</span>
             </div>
             <div class="alert-actions">
               ${
@@ -1170,7 +1853,7 @@
           alert.alertId,
           "at",
           alert.location.lat,
-          alert.location.lng
+          alert.location.lng,
         );
 
         // Get severity-based color
@@ -1178,8 +1861,8 @@
           alert.severity >= 7
             ? "#ef4444"
             : alert.severity >= 5
-            ? "#f59e0b"
-            : "#3b82f6";
+              ? "#f59e0b"
+              : "#3b82f6";
 
         // Use a simple, highly visible red marker icon
         const redIcon = L.icon({
@@ -1198,8 +1881,8 @@
         }).addTo(map).bindPopup(`
           <div style="min-width: 220px; color: #333;">
             <h4 style="margin: 0 0 8px 0; color: ${severityColor};">${
-          alert.title
-        }</h4>
+              alert.title
+            }</h4>
             <p style="margin: 0 0 8px 0; font-size: 12px;">${
               alert.description || "Emergency alert"
             }</p>
@@ -1209,7 +1892,7 @@
               <b>📋 Status:</b> ${alert.status}<br>
               <b>🏷️ Type:</b> ${alert.emergencyType}<br>
               <b>📍 Location:</b> ${alert.location.lat.toFixed(
-                4
+                4,
               )}, ${alert.location.lng.toFixed(4)}
             </div>
           </div>
@@ -1221,7 +1904,7 @@
         if (stationConfig?.location) {
           const bounds = L.latLngBounds(
             [stationConfig.location.lat, stationConfig.location.lng],
-            [alert.location.lat, alert.location.lng]
+            [alert.location.lat, alert.location.lng],
           );
           map.fitBounds(bounds, { padding: [80, 80] });
         }
@@ -1255,8 +1938,8 @@
           alert.severity >= 7
             ? "#ef4444"
             : alert.severity >= 5
-            ? "#f59e0b"
-            : "#3b82f6";
+              ? "#f59e0b"
+              : "#3b82f6";
 
         // Create routing control
         const routeControl = L.Routing.control({
@@ -1286,9 +1969,8 @@
           const time = Math.round(route.summary.totalTime / 60);
 
           // Update route info panel
-          document.getElementById(
-            "routeDistance"
-          ).textContent = `${distance} km`;
+          document.getElementById("routeDistance").textContent =
+            `${distance} km`;
           document.getElementById("routeTime").textContent = `${time} min`;
           document.getElementById("routeAlertType").textContent =
             alert.emergencyType;
@@ -1308,7 +1990,7 @@
         // Fit bounds to show both station and alert
         const bounds = L.latLngBounds(
           [stationLat, stationLng],
-          [alert.location.lat, alert.location.lng]
+          [alert.location.lat, alert.location.lng],
         );
         map.fitBounds(bounds, { padding: [50, 50] });
       }
@@ -1325,22 +2007,21 @@
             weight: 4,
             opacity: 0.7,
             dashArray: "10, 10",
-          }
+          },
         ).addTo(map);
 
         // Calculate straight-line distance
         const distance =
           map.distance(
             [stationLat, stationLng],
-            [alert.location.lat, alert.location.lng]
+            [alert.location.lat, alert.location.lng],
           ) / 1000;
 
         // Estimate time (assuming 40 km/h average speed for emergency vehicles)
         const time = Math.round((distance / 40) * 60);
 
-        document.getElementById(
-          "routeDistance"
-        ).textContent = `~${distance.toFixed(1)} km`;
+        document.getElementById("routeDistance").textContent =
+          `~${distance.toFixed(1)} km`;
         document.getElementById("routeTime").textContent = `~${time} min`;
         document.getElementById("routeAlertType").textContent =
           alert.emergencyType;
@@ -1409,13 +2090,13 @@
         <div class="detail-row">
           <span class="detail-label">Status</span>
           <span class="detail-value status-badge status-${alert.status}">${
-          alert.status
-        }</span>
+            alert.status
+          }</span>
         </div>
         <div class="detail-row">
           <span class="detail-label">Location</span>
           <span class="detail-value">${alert.location?.lat?.toFixed(
-            4
+            4,
           )}, ${alert.location?.lng?.toFixed(4)}</span>
         </div>
         <div class="detail-row">
@@ -1429,7 +2110,7 @@
         <div class="detail-row">
           <span class="detail-label">Received</span>
           <span class="detail-value">${new Date(
-            alert.createdAt
+            alert.createdAt,
           ).toLocaleString()}</span>
         </div>
         ${
@@ -1495,7 +2176,7 @@
           if (stationConfig?.location) {
             const bounds = L.latLngBounds(
               [stationConfig.location.lat, stationConfig.location.lng],
-              [alert.location.lat, alert.location.lng]
+              [alert.location.lat, alert.location.lng],
             );
             map.fitBounds(bounds, { padding: [80, 80] });
           } else {
@@ -1520,26 +2201,294 @@
         }
       }
 
-      async function dispatchToAlert(alertId) {
-        const unitName = prompt("Enter unit name/ID to dispatch:");
-        if (!unitName) return;
+      // Track dispatched resources per alert: { alertId: { fleet: [{type, count}], staff: [{role, count}] } }
+      const dispatchedPerAlert = {};
+
+      function dispatchToAlert(alertId) {
+        // Close any other modals first
+        closeModal();
+
+        const alert = alerts.find((a) => a.alertId === alertId);
+        if (!alert) return;
+
+        const modal = document.getElementById("dispatchModal");
+        const body = document.getElementById("dispatchModalBody");
+
+        // Check if resources are loaded
+        if (!myStationResources) {
+          body.innerHTML = `
+            <div class="dispatch-nothing">
+              <p>⚠️ Resources not loaded yet.</p>
+              <p style="font-size:0.8rem; margin-top:0.5rem;">Switch to the Resources tab first to load or register your station resources.</p>
+              <div class="dispatch-actions" style="margin-top:1rem;">
+                <button class="btn-cancel" onclick="closeDispatchModal()">Close</button>
+              </div>
+            </div>
+          `;
+          modal.classList.add("active");
+          return;
+        }
+
+        const fleet = filterFleetByType(myStationResources.fleet || []);
+        const staff = filterStaffByType(myStationResources.staff || []);
+        const availableFleet = fleet.filter((f) => f.available > 0);
+        const availableStaff = staff.filter((s) => s.available > 0);
+
+        if (availableFleet.length === 0 && availableStaff.length === 0) {
+          body.innerHTML = `
+            <div class="dispatch-nothing">
+              <p>⚠️ No resources available to dispatch.</p>
+              <p style="font-size:0.8rem; margin-top:0.5rem;">All fleet and staff are currently deployed.</p>
+              <div class="dispatch-actions" style="margin-top:1rem;">
+                <button class="btn-cancel" onclick="closeDispatchModal()">Close</button>
+              </div>
+            </div>
+          `;
+          modal.classList.add("active");
+          return;
+        }
+
+        body.innerHTML = `
+          <div class="dispatch-alert-info">
+            <div class="dai-title">${alert.title || alert.emergencyType}</div>
+            <div class="dai-sub">Severity: ${alert.severity}/10 · ${alert.location?.address || "Unknown location"}</div>
+          </div>
+
+          ${
+            availableFleet.length > 0
+              ? `
+          <div class="dispatch-section">
+            <h3>🚗 Select Vehicles</h3>
+            <div class="dispatch-grid">
+              ${availableFleet
+                .map(
+                  (f) => `
+                <div class="dispatch-item">
+                  <label>
+                    <input type="checkbox" class="dispatch-fleet-cb" data-type="${f.type}" data-max="${f.available}" onchange="updateDispatchQty(this)">
+                    ${FLEET_LABELS[f.type] || f.type}
+                  </label>
+                  <div class="dispatch-qty">
+                    <input type="number" class="dispatch-fleet-qty" data-type="${f.type}" min="1" max="${f.available}" value="1" disabled>
+                    <span class="avail-badge">${f.available} avail</span>
+                  </div>
+                </div>
+              `,
+                )
+                .join("")}
+            </div>
+          </div>`
+              : ""
+          }
+
+          ${
+            availableStaff.length > 0
+              ? `
+          <div class="dispatch-section">
+            <h3>👥 Select Personnel</h3>
+            <div class="dispatch-grid">
+              ${availableStaff
+                .map(
+                  (s) => `
+                <div class="dispatch-item">
+                  <label>
+                    <input type="checkbox" class="dispatch-staff-cb" data-role="${s.role}" data-max="${s.available}" onchange="updateDispatchQty(this)">
+                    ${STAFF_LABELS[s.role] || s.role}
+                  </label>
+                  <div class="dispatch-qty">
+                    <input type="number" class="dispatch-staff-qty" data-role="${s.role}" min="1" max="${s.available}" value="1" disabled>
+                    <span class="avail-badge">${s.available} avail</span>
+                  </div>
+                </div>
+              `,
+                )
+                .join("")}
+            </div>
+          </div>`
+              : ""
+          }
+
+          <div class="dispatch-actions">
+            <button class="btn-cancel" onclick="closeDispatchModal()">Cancel</button>
+            <button class="btn-confirm-dispatch" id="confirmDispatchBtn" onclick="confirmDispatch('${alertId}')">
+              🚀 Dispatch Selected
+            </button>
+          </div>
+          <div class="res-status" id="dispatchStatus"></div>
+        `;
+
+        modal.classList.add("active");
+      }
+
+      function updateDispatchQty(checkbox) {
+        const item = checkbox.closest(".dispatch-item");
+        const qtyInput = item.querySelector("input[type=number]");
+        qtyInput.disabled = !checkbox.checked;
+        if (!checkbox.checked) qtyInput.value = 1;
+      }
+
+      function closeDispatchModal() {
+        document.getElementById("dispatchModal").classList.remove("active");
+      }
+
+      async function confirmDispatch(alertId) {
+        const btn = document.getElementById("confirmDispatchBtn");
+        const status = document.getElementById("dispatchStatus");
+        btn.disabled = true;
+        btn.textContent = "⏳ Dispatching...";
+
+        // Collect selected fleet
+        const selectedFleet = [];
+        document
+          .querySelectorAll(".dispatch-fleet-cb:checked")
+          .forEach((cb) => {
+            const type = cb.dataset.type;
+            const qty =
+              parseInt(
+                document.querySelector(
+                  `.dispatch-fleet-qty[data-type="${type}"]`,
+                ).value,
+              ) || 1;
+            selectedFleet.push({
+              type,
+              count: Math.min(qty, parseInt(cb.dataset.max)),
+            });
+          });
+
+        // Collect selected staff
+        const selectedStaff = [];
+        document
+          .querySelectorAll(".dispatch-staff-cb:checked")
+          .forEach((cb) => {
+            const role = cb.dataset.role;
+            const qty =
+              parseInt(
+                document.querySelector(
+                  `.dispatch-staff-qty[data-role="${role}"]`,
+                ).value,
+              ) || 1;
+            selectedStaff.push({
+              role,
+              count: Math.min(qty, parseInt(cb.dataset.max)),
+            });
+          });
+
+        if (selectedFleet.length === 0 && selectedStaff.length === 0) {
+          status.textContent =
+            "⚠️ Please select at least one resource to dispatch.";
+          status.className = "res-status error";
+          btn.disabled = false;
+          btn.textContent = "🚀 Dispatch Selected";
+          return;
+        }
+
+        // Build a human-readable unit name
+        const parts = [];
+        selectedFleet.forEach((f) =>
+          parts.push(
+            `${f.count}x ${(FLEET_LABELS[f.type] || f.type).replace(/^\S+\s/, "")}`,
+          ),
+        );
+        selectedStaff.forEach((s) =>
+          parts.push(
+            `${s.count}x ${(STAFF_LABELS[s.role] || s.role).replace(/^\S+\s/, "")}`,
+          ),
+        );
+        const unitName = parts.join(", ");
 
         try {
+          // 1. Send dispatch to alert system
           const response = await fetch(`/api/alerts/${alertId}/dispatch`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ unitId: Date.now().toString(), unitName }),
           });
 
-          if (response.ok) {
-            // Show route to the alert after dispatching
-            const alert = alerts.find((a) => a.alertId === alertId);
-            if (alert) {
-              showRouteToAlert(alert);
-            }
+          if (!response.ok) throw new Error("Failed to dispatch alert");
+
+          // 2. Update local resource counts
+          if (myStationResources) {
+            selectedFleet.forEach(({ type, count }) => {
+              const item = myStationResources.fleet.find(
+                (f) => f.type === type,
+              );
+              if (item) {
+                item.available = Math.max(0, item.available - count);
+                item.inUse = (item.inUse || 0) + count;
+              }
+            });
+            selectedStaff.forEach(({ role, count }) => {
+              const item = myStationResources.staff.find(
+                (s) => s.role === role,
+              );
+              if (item) {
+                item.available = Math.max(0, item.available - count);
+                item.deployed = (item.deployed || 0) + count;
+              }
+            });
+          }
+
+          // 3. Track what was dispatched to this alert (for return on resolve)
+          if (!dispatchedPerAlert[alertId]) {
+            dispatchedPerAlert[alertId] = { fleet: [], staff: [] };
+          }
+          selectedFleet.forEach(({ type, count }) => {
+            const existing = dispatchedPerAlert[alertId].fleet.find(
+              (f) => f.type === type,
+            );
+            if (existing) existing.count += count;
+            else dispatchedPerAlert[alertId].fleet.push({ type, count });
+          });
+          selectedStaff.forEach(({ role, count }) => {
+            const existing = dispatchedPerAlert[alertId].staff.find(
+              (s) => s.role === role,
+            );
+            if (existing) existing.count += count;
+            else dispatchedPerAlert[alertId].staff.push({ role, count });
+          });
+
+          // 4. Sync updated counts to main backend
+          syncResourcesToBackend();
+
+          // 5. Show route and close
+          closeDispatchModal();
+          const alertObj = alerts.find((a) => a.alertId === alertId);
+          if (alertObj) showRouteToAlert(alertObj);
+
+          // Refresh resources panel if visible
+          if (
+            document
+              .getElementById("resourcesContent")
+              .classList.contains("active")
+          ) {
+            const body = document.getElementById("resourcesBody");
+            renderResources(body);
           }
         } catch (error) {
-          console.error("Failed to dispatch unit:", error);
+          console.error("Failed to dispatch:", error);
+          status.textContent = `❌ ${error.message}`;
+          status.className = "res-status error";
+          btn.disabled = false;
+          btn.textContent = "🚀 Dispatch Selected";
+        }
+      }
+
+      // Sync resource changes to the main backend (fire-and-forget)
+      async function syncResourcesToBackend() {
+        if (!myStationResources) return;
+        try {
+          await fetch("/api/resources/update", {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              fleet: myStationResources.fleet,
+              staff: myStationResources.staff,
+              supplies: myStationResources.supplies,
+            }),
+          });
+          console.log("[Resources] Synced to backend after dispatch");
+        } catch (err) {
+          console.warn("[Resources] Failed to sync:", err.message);
         }
       }
 
@@ -1557,6 +2506,41 @@
           });
 
           if (response.ok) {
+            // Return dispatched resources to available
+            if (dispatchedPerAlert[alertId] && myStationResources) {
+              const dispatched = dispatchedPerAlert[alertId];
+              dispatched.fleet.forEach(({ type, count }) => {
+                const item = myStationResources.fleet.find(
+                  (f) => f.type === type,
+                );
+                if (item) {
+                  item.available = Math.min(item.total, item.available + count);
+                  item.inUse = Math.max(0, (item.inUse || 0) - count);
+                }
+              });
+              dispatched.staff.forEach(({ role, count }) => {
+                const item = myStationResources.staff.find(
+                  (s) => s.role === role,
+                );
+                if (item) {
+                  item.available = Math.min(item.total, item.available + count);
+                  item.deployed = Math.max(0, (item.deployed || 0) - count);
+                }
+              });
+              delete dispatchedPerAlert[alertId];
+              syncResourcesToBackend();
+
+              // Refresh resources panel if visible
+              if (
+                document
+                  .getElementById("resourcesContent")
+                  .classList.contains("active")
+              ) {
+                const body = document.getElementById("resourcesBody");
+                renderResources(body);
+              }
+            }
+
             // Clear route if this was the active route
             if (activeRouteAlertId === alertId) {
               clearRoute();
@@ -1581,7 +2565,7 @@
             // Close modal if open
             closeModal();
 
-            console.log("Alert resolved successfully");
+            console.log("Alert resolved successfully — resources returned");
           } else {
             alert("Failed to resolve alert. Please try again.");
           }
@@ -1594,7 +2578,7 @@
       async function rejectAlert(alertId) {
         const reason = prompt(
           "Please provide a reason for rejecting this alert:",
-          "Unable to respond at this time"
+          "Unable to respond at this time",
         );
 
         if (reason === null) return; // User cancelled
@@ -1741,16 +2725,14 @@
             stationConfig.name;
           document.getElementById("settingsStationType").textContent =
             stationConfig.type.toUpperCase();
-          document.getElementById(
-            "settingsLocation"
-          ).textContent = `${stationConfig.location?.lat?.toFixed(
-            4
-          )}, ${stationConfig.location?.lng?.toFixed(4)}`;
+          document.getElementById("settingsLocation").textContent =
+            `${stationConfig.location?.lat?.toFixed(
+              4,
+            )}, ${stationConfig.location?.lng?.toFixed(4)}`;
           document.getElementById("apiKeyText").textContent =
             stationConfig.apiKey || "Not configured";
-          document.getElementById(
-            "alertEndpoint"
-          ).textContent = `http://localhost:${window.location.port}/api/alerts/receive`;
+          document.getElementById("alertEndpoint").textContent =
+            `http://localhost:${window.location.port}/api/alerts/receive`;
         }
 
         modal.classList.add("active");
@@ -1865,6 +2847,520 @@
           status.style.display = "block";
         }
       }
+
+      // ==================== RESOURCE MANAGEMENT ====================
+
+      let myStationResources = null; // Cached resource data
+      let resourceEditMode = false;
+
+      // Preload resources silently on startup (for dispatch picker)
+      async function preloadResources() {
+        try {
+          const response = await fetch("/api/resources/my-station");
+          if (response.ok) {
+            const data = await response.json();
+            if (data.data) {
+              myStationResources = data.data;
+              console.log("[Resources] Preloaded station resources");
+            }
+          }
+        } catch (e) {
+          console.warn(
+            "[Resources] Preload failed (backend may be offline):",
+            e.message,
+          );
+        }
+      }
+
+      // Fleet types available per station type
+      const FLEET_OPTIONS = {
+        fire: ["fire_truck", "ambulance", "rescue_boat"],
+        hospital: ["ambulance", "mobile_command", "supply_truck"],
+        police: ["patrol_car", "supply_truck"],
+        rescue: [
+          "rescue_helicopter",
+          "rescue_boat",
+          "ambulance",
+          "supply_truck",
+        ],
+      };
+
+      // Staff roles available per station type
+      const STAFF_OPTIONS = {
+        fire: ["firefighter", "paramedic", "driver"],
+        hospital: ["medical_doctor", "paramedic", "volunteer", "driver"],
+        police: ["police_officer", "driver", "logistics"],
+        rescue: ["search_rescue", "paramedic", "driver", "logistics"],
+      };
+
+      // Human-readable labels
+      const FLEET_LABELS = {
+        ambulance: "🚑 Ambulance",
+        fire_truck: "🚒 Fire Truck",
+        supply_truck: "🚚 Supply Truck",
+        rescue_helicopter: "🚁 Rescue Helicopter",
+        mobile_command: "🚐 Mobile Command",
+        patrol_car: "🚔 Patrol Car",
+        rescue_boat: "🚤 Rescue Boat",
+      };
+
+      const STAFF_LABELS = {
+        paramedic: "🩺 Paramedic",
+        firefighter: "🧑‍🚒 Firefighter",
+        search_rescue: "🔍 Search & Rescue",
+        medical_doctor: "👨‍⚕️ Doctor",
+        logistics: "📋 Logistics",
+        police_officer: "👮 Police Officer",
+        volunteer: "🤝 Volunteer",
+        driver: "🚗 Driver",
+      };
+
+      const SUPPLY_LABELS = {
+        water: "💧 Water (L)",
+        medical: "🏥 Medical Kits",
+        blankets: "🛏️ Blankets",
+        food: "🍱 Food Packets",
+      };
+
+      // Filter fleet/staff to only show items relevant to this station type
+      function filterFleetByType(fleet) {
+        const stationType = stationConfig?.type || "fire";
+        const allowed = FLEET_OPTIONS[stationType] || FLEET_OPTIONS.fire;
+        return fleet.filter((f) => allowed.includes(f.type));
+      }
+
+      function filterStaffByType(staff) {
+        const stationType = stationConfig?.type || "fire";
+        const allowed = STAFF_OPTIONS[stationType] || STAFF_OPTIONS.fire;
+        return staff.filter((s) => allowed.includes(s.role));
+      }
+
+      // Tab switching
+      function switchTab(tab) {
+        const alertsContent = document.getElementById("alertsContent");
+        const resourcesContent = document.getElementById("resourcesContent");
+        const tabAlerts = document.getElementById("tabAlerts");
+        const tabResources = document.getElementById("tabResources");
+
+        if (tab === "alerts") {
+          alertsContent.classList.remove("hidden");
+          resourcesContent.classList.remove("active");
+          tabAlerts.classList.add("active");
+          tabResources.classList.remove("active");
+        } else {
+          alertsContent.classList.add("hidden");
+          resourcesContent.classList.add("active");
+          tabAlerts.classList.remove("active");
+          tabResources.classList.add("active");
+          loadResources();
+        }
+      }
+
+      // Load resources from server
+      async function loadResources() {
+        const body = document.getElementById("resourcesBody");
+        body.innerHTML =
+          '<div class="res-status info">Loading resources...</div>';
+
+        try {
+          const response = await fetch("/api/resources/my-station");
+          const data = await response.json();
+
+          if (!response.ok) {
+            body.innerHTML = `<div class="res-status error">${data.message || "Failed to load"}</div>`;
+            return;
+          }
+
+          if (!data.data) {
+            // Not registered yet — show registration prompt
+            renderResourceRegistration(body);
+            return;
+          }
+
+          myStationResources = data.data;
+          renderResources(body);
+        } catch (error) {
+          console.error("Failed to load resources:", error);
+          body.innerHTML =
+            '<div class="res-status error">Cannot connect to main platform. Is the backend running?</div>';
+        }
+      }
+
+      // Render registration prompt (first time)
+      function renderResourceRegistration(container) {
+        const stationType = stationConfig?.type || "fire";
+        const defaultFleet = (
+          FLEET_OPTIONS[stationType] || FLEET_OPTIONS.fire
+        ).map((type) => ({ type, total: 2, available: 2, inUse: 0 }));
+        const defaultStaff = (
+          STAFF_OPTIONS[stationType] || STAFF_OPTIONS.fire
+        ).map((role) => ({ role, total: 5, available: 5, deployed: 0 }));
+
+        container.innerHTML = `
+          <div class="res-empty">
+            <div class="res-empty-icon">📦</div>
+            <h3>Register Station Resources</h3>
+            <p>This station hasn't registered its resources with the command center yet. Register to start managing your fleet, staff, and supplies.</p>
+            <button class="res-register-btn" id="resRegisterBtn" onclick="registerResources()">
+              📋 Register Resources
+            </button>
+            <div class="res-status" id="resRegisterStatus"></div>
+          </div>
+        `;
+      }
+
+      // Register resources for the first time
+      async function registerResources() {
+        const btn = document.getElementById("resRegisterBtn");
+        const status = document.getElementById("resRegisterStatus");
+        const stationType = stationConfig?.type || "fire";
+
+        btn.disabled = true;
+        btn.textContent = "⏳ Registering...";
+
+        const fleet = (FLEET_OPTIONS[stationType] || FLEET_OPTIONS.fire).map(
+          (type) => ({ type, total: 3, available: 3, inUse: 0 }),
+        );
+        const staff = (STAFF_OPTIONS[stationType] || STAFF_OPTIONS.fire).map(
+          (role) => ({ role, total: 5, available: 5, deployed: 0 }),
+        );
+        const supplies = {
+          water: { current: 500, minimum: 200, maximum: 2000 },
+          medical: { current: 50, minimum: 20, maximum: 100 },
+          blankets: { current: 100, minimum: 30, maximum: 200 },
+          food: { current: 200, minimum: 80, maximum: 500 },
+        };
+
+        try {
+          const response = await fetch("/api/resources/register", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ fleet, staff, supplies }),
+          });
+
+          const data = await response.json();
+
+          if (data.success) {
+            status.textContent = "✅ Resources registered! Loading...";
+            status.className = "res-status success";
+            myStationResources = data.data;
+            setTimeout(() => loadResources(), 500);
+          } else {
+            throw new Error(data.message);
+          }
+        } catch (error) {
+          status.textContent = `❌ ${error.message}`;
+          status.className = "res-status error";
+          btn.disabled = false;
+          btn.textContent = "📋 Register Resources";
+        }
+      }
+
+      // Render the full resource management panel
+      function renderResources(container) {
+        const station = myStationResources;
+        if (!station) return;
+
+        const fleet = filterFleetByType(station.fleet || []);
+        const staff = filterStaffByType(station.staff || []);
+        const supplies = station.supplies || {};
+
+        container.innerHTML = `
+          <!-- Fleet Section -->
+          <div class="res-section">
+            <div class="res-section-header">
+              <span class="res-section-title">
+                🚗 Fleet <span class="res-section-badge fleet">${fleet.reduce((s, f) => s + (f.available || 0), 0)}/${fleet.reduce((s, f) => s + (f.total || 0), 0)} avail</span>
+              </span>
+            </div>
+            <div id="fleetItems">
+              ${fleet.map((f) => renderFleetItem(f)).join("")}
+              ${fleet.length === 0 ? '<div style="color: var(--text-secondary); font-size: 0.85rem;">No vehicles registered</div>' : ""}
+            </div>
+          </div>
+
+          <!-- Staff Section -->
+          <div class="res-section">
+            <div class="res-section-header">
+              <span class="res-section-title">
+                👥 Personnel <span class="res-section-badge staff">${staff.reduce((s, p) => s + (p.available || 0), 0)}/${staff.reduce((s, p) => s + (p.total || 0), 0)} avail</span>
+              </span>
+            </div>
+            <div id="staffItems">
+              ${staff.map((s) => renderStaffItem(s)).join("")}
+              ${staff.length === 0 ? '<div style="color: var(--text-secondary); font-size: 0.85rem;">No personnel registered</div>' : ""}
+            </div>
+          </div>
+
+          <!-- Supplies Section -->
+          <div class="res-section">
+            <div class="res-section-header">
+              <span class="res-section-title">
+                📦 Supplies
+              </span>
+            </div>
+            <div id="supplyItems">
+              ${Object.entries(supplies)
+                .filter(([, v]) => v && v.maximum > 0)
+                .map(([type, data]) => renderSupplyItem(type, data))
+                .join("")}
+            </div>
+          </div>
+
+          <!-- Edit Mode Controls -->
+          <div id="resEditControls">
+            <button class="res-save-btn primary" onclick="enterEditMode()" id="resEditBtn">
+              ✏️ Edit Resources
+            </button>
+          </div>
+
+          <div class="res-status" id="resUpdateStatus"></div>
+        `;
+      }
+
+      function renderFleetItem(f) {
+        const label = FLEET_LABELS[f.type] || f.type;
+        return `
+          <div class="res-item" data-fleet-type="${f.type}">
+            <span class="res-item-name">${label}</span>
+            <div class="res-item-counts">
+              ${f.inUse > 0 ? `<span class="res-deployed">${f.inUse} deployed</span>` : ""}
+              <span class="res-avail">${f.available}</span>
+              <span class="res-total">/ ${f.total}</span>
+            </div>
+          </div>
+        `;
+      }
+
+      function renderStaffItem(s) {
+        const label = STAFF_LABELS[s.role] || s.role;
+        return `
+          <div class="res-item" data-staff-role="${s.role}">
+            <span class="res-item-name">${label}</span>
+            <div class="res-item-counts">
+              ${s.deployed > 0 ? `<span class="res-deployed">${s.deployed} deployed</span>` : ""}
+              <span class="res-avail">${s.available}</span>
+              <span class="res-total">/ ${s.total}</span>
+            </div>
+          </div>
+        `;
+      }
+
+      function renderSupplyItem(type, data) {
+        const label = SUPPLY_LABELS[type] || type;
+        const pct =
+          data.maximum > 0
+            ? Math.round((data.current / data.maximum) * 100)
+            : 0;
+        const barClass =
+          pct >= 60 ? "good" : pct >= 30 ? "warning" : "critical";
+        const isLow = data.current < data.minimum;
+
+        return `
+          <div class="res-item" data-supply-type="${type}" style="flex-direction: column; align-items: stretch;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <span class="res-item-name">${label} ${isLow ? "⚠️" : ""}</span>
+              <span class="res-avail">${data.current}</span>
+            </div>
+            <div class="supply-bar-container">
+              <div class="supply-bar-bg">
+                <div class="supply-bar-fill ${barClass}" style="width: ${Math.min(pct, 100)}%"></div>
+              </div>
+              <div class="supply-text">
+                <span>Min: ${data.minimum}</span>
+                <span>Max: ${data.maximum}</span>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      // Edit mode — allow station commanders to update numbers
+      function enterEditMode() {
+        const station = myStationResources;
+        if (!station) return;
+
+        const fleet = filterFleetByType(station.fleet || []);
+        const staff = filterStaffByType(station.staff || []);
+        const supplies = station.supplies || {};
+
+        // Replace fleet items with editable inputs
+        const fleetContainer = document.getElementById("fleetItems");
+        fleetContainer.innerHTML = fleet
+          .map(
+            (f) => `
+          <div class="res-item" data-fleet-type="${f.type}">
+            <span class="res-item-name">${FLEET_LABELS[f.type] || f.type}</span>
+            <div class="res-item-counts">
+              <label style="font-size:0.75rem; color:var(--text-secondary)">Total:</label>
+              <input class="res-num-input fleet-total" data-type="${f.type}" type="number" min="0" value="${f.total}">
+              <label style="font-size:0.75rem; color:var(--text-secondary)">Avail:</label>
+              <input class="res-num-input fleet-avail" data-type="${f.type}" type="number" min="0" value="${f.available}">
+            </div>
+          </div>
+        `,
+          )
+          .join("");
+
+        // Replace staff items with editable inputs
+        const staffContainer = document.getElementById("staffItems");
+        staffContainer.innerHTML = staff
+          .map(
+            (s) => `
+          <div class="res-item" data-staff-role="${s.role}">
+            <span class="res-item-name">${STAFF_LABELS[s.role] || s.role}</span>
+            <div class="res-item-counts">
+              <label style="font-size:0.75rem; color:var(--text-secondary)">Total:</label>
+              <input class="res-num-input staff-total" data-role="${s.role}" type="number" min="0" value="${s.total}">
+              <label style="font-size:0.75rem; color:var(--text-secondary)">Avail:</label>
+              <input class="res-num-input staff-avail" data-role="${s.role}" type="number" min="0" value="${s.available}">
+            </div>
+          </div>
+        `,
+          )
+          .join("");
+
+        // Replace supply items with editable inputs
+        const supplyContainer = document.getElementById("supplyItems");
+        supplyContainer.innerHTML = Object.entries(supplies)
+          .filter(([, v]) => v && v.maximum > 0)
+          .map(
+            ([type, data]) => `
+            <div class="res-item" data-supply-type="${type}" style="flex-direction:column; align-items:stretch; gap:0.5rem;">
+              <span class="res-item-name">${SUPPLY_LABELS[type] || type}</span>
+              <div style="display:flex; gap:0.5rem; align-items:center;">
+                <label style="font-size:0.75rem; color:var(--text-secondary)">Current:</label>
+                <input class="res-num-input supply-current" data-type="${type}" type="number" min="0" value="${data.current}">
+                <label style="font-size:0.75rem; color:var(--text-secondary)">Min:</label>
+                <input class="res-num-input supply-min" data-type="${type}" type="number" min="0" value="${data.minimum}">
+                <label style="font-size:0.75rem; color:var(--text-secondary)">Max:</label>
+                <input class="res-num-input supply-max" data-type="${type}" type="number" min="0" value="${data.maximum}">
+              </div>
+            </div>
+          `,
+          )
+          .join("");
+
+        // Replace edit button with save/cancel
+        const controls = document.getElementById("resEditControls");
+        controls.innerHTML = `
+          <div class="res-actions">
+            <button class="res-save-btn secondary" onclick="cancelEditMode()">Cancel</button>
+            <button class="res-save-btn primary" onclick="saveResources()" id="resSaveBtn">💾 Save Changes</button>
+          </div>
+        `;
+
+        resourceEditMode = true;
+      }
+
+      function cancelEditMode() {
+        resourceEditMode = false;
+        const body = document.getElementById("resourcesBody");
+        renderResources(body);
+      }
+
+      // Save updated resources to the main backend
+      async function saveResources() {
+        const btn = document.getElementById("resSaveBtn");
+        const status = document.getElementById("resUpdateStatus");
+        btn.disabled = true;
+        btn.textContent = "⏳ Saving...";
+
+        // Gather edited values
+        const fleet = [];
+        document.querySelectorAll(".fleet-total").forEach((input) => {
+          const type = input.dataset.type;
+          const total = parseInt(input.value) || 0;
+          const availInput = document.querySelector(
+            `.fleet-avail[data-type="${type}"]`,
+          );
+          const available = parseInt(availInput?.value) || 0;
+          const orig = myStationResources.fleet?.find((f) => f.type === type);
+          fleet.push({
+            type,
+            total,
+            available: Math.min(available, total),
+            inUse: Math.max(0, total - Math.min(available, total)),
+          });
+        });
+
+        const staff = [];
+        document.querySelectorAll(".staff-total").forEach((input) => {
+          const role = input.dataset.role;
+          const total = parseInt(input.value) || 0;
+          const availInput = document.querySelector(
+            `.staff-avail[data-role="${role}"]`,
+          );
+          const available = parseInt(availInput?.value) || 0;
+          staff.push({
+            role,
+            total,
+            available: Math.min(available, total),
+            deployed: Math.max(0, total - Math.min(available, total)),
+          });
+        });
+
+        const supplies = {};
+        document.querySelectorAll(".supply-current").forEach((input) => {
+          const type = input.dataset.type;
+          const current = parseInt(input.value) || 0;
+          const minInput = document.querySelector(
+            `.supply-min[data-type="${type}"]`,
+          );
+          const maxInput = document.querySelector(
+            `.supply-max[data-type="${type}"]`,
+          );
+          supplies[type] = {
+            current,
+            minimum: parseInt(minInput?.value) || 0,
+            maximum: parseInt(maxInput?.value) || 0,
+          };
+        });
+
+        try {
+          const response = await fetch("/api/resources/update", {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ fleet, staff, supplies }),
+          });
+
+          const data = await response.json();
+
+          if (data.success) {
+            myStationResources = {
+              ...myStationResources,
+              fleet,
+              staff,
+              supplies,
+            };
+            resourceEditMode = false;
+            const body = document.getElementById("resourcesBody");
+            renderResources(body);
+
+            // Show brief success
+            const statusEl = document.getElementById("resUpdateStatus");
+            if (statusEl) {
+              statusEl.textContent =
+                "✅ Resources updated — command center notified!";
+              statusEl.className = "res-status success";
+              setTimeout(() => {
+                statusEl.className = "res-status";
+              }, 3000);
+            }
+          } else {
+            throw new Error(data.message);
+          }
+        } catch (error) {
+          if (status) {
+            status.textContent = `❌ ${error.message}`;
+            status.className = "res-status error";
+          }
+          btn.disabled = false;
+          btn.textContent = "💾 Save Changes";
+        }
+      }
+
+      // ==================== END RESOURCE MANAGEMENT ====================
 
       // Request notification permission on load
       if ("Notification" in window && Notification.permission === "default") {

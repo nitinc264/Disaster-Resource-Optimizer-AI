@@ -85,6 +85,116 @@
   color: var(--warning);
 }
 
+/* Shelter Icons */
+.shelter-icon {
+  background: transparent !important;
+  border: none !important;
+}
+
+.shelter-marker {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.shelter-label {
+  font-size: 16px;
+  line-height: 1;
+}
+
+/* Shelter Popup */
+.shelter-popup {
+  min-width: 180px;
+  max-width: 260px;
+  padding: 4px 2px;
+}
+
+.shelter-popup strong {
+  font-size: 0.9rem;
+  color: var(--text-primary, #1a1a2e);
+  display: block;
+  margin-bottom: 4px;
+}
+
+.shelter-popup-type {
+  display: inline-block;
+  padding: 2px 8px;
+  font-size: 0.65rem;
+  font-weight: 600;
+  border-radius: 4px;
+  background: #e0e7ff;
+  color: #4338ca;
+  margin-bottom: 6px;
+}
+
+.shelter-popup-status {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.shelter-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.shelter-status-dot.open {
+  background: #10b981;
+}
+
+.shelter-status-dot.full {
+  background: #ef4444;
+}
+
+.shelter-status-dot.closed {
+  background: #6b7280;
+}
+
+.shelter-popup-capacity {
+  font-size: 0.78rem;
+  color: #374151;
+  margin-bottom: 4px;
+}
+
+.shelter-popup-label {
+  font-weight: 600;
+}
+
+.shelter-popup-avail {
+  font-size: 0.7rem;
+  color: #6b7280;
+  margin-left: 2px;
+}
+
+.shelter-popup-address,
+.shelter-popup-phone {
+  font-size: 0.73rem;
+  color: #6b7280;
+  margin-bottom: 2px;
+}
+
+.shelter-popup-facilities {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+  font-size: 14px;
+}
+
+.shelter-popup-facilities span {
+  cursor: default;
+}
+
 /* Map Loading */
 .map-loading {
   display: flex;
@@ -162,7 +272,9 @@
   align-items: center;
   justify-content: center;
   box-shadow: var(--shadow-lg);
-  transition: transform 0.15s ease, background 0.15s ease;
+  transition:
+    transform 0.15s ease,
+    background 0.15s ease;
 }
 
 .map-fab:hover {

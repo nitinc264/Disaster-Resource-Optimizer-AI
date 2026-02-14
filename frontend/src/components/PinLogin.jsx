@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
+import { useTranslation } from "react-i18next";
 import {
   ShieldCheck,
   AlertCircle,
@@ -12,6 +13,7 @@ import "./PinLogin.css";
 
 export default function PinLogin({ onBack, selectedRole }) {
   const { login } = useAuth();
+  const { t } = useTranslation();
   const [pin, setPin] = useState(["", "", "", ""]);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -83,7 +85,7 @@ export default function PinLogin({ onBack, selectedRole }) {
     const fullPin = pinValue || pin.join("");
 
     if (fullPin.length !== 4) {
-      setError("Please enter all 4 digits");
+      setError(t("auth.enterAllDigits"));
       return;
     }
 
@@ -93,12 +95,12 @@ export default function PinLogin({ onBack, selectedRole }) {
     try {
       const result = await login(fullPin);
       if (!result.success) {
-        setError(result.message || "Invalid PIN");
+        setError(result.message || t("auth.invalidPin"));
         setPin(["", "", "", ""]);
         inputRefs[0].current?.focus();
       }
     } catch (err) {
-      setError("Login failed. Please try again.");
+      setError(t("auth.loginFailed"));
       setPin(["", "", "", ""]);
       inputRefs[0].current?.focus();
     } finally {
@@ -107,7 +109,10 @@ export default function PinLogin({ onBack, selectedRole }) {
   };
 
   // Get role display text
-  const roleText = selectedRole === "manager" ? "Manager" : "Volunteer";
+  const roleText =
+    selectedRole === "manager"
+      ? t("roleSelector.manager")
+      : t("roleSelector.volunteer");
 
   return (
     <div className="pin-login-container">
@@ -116,7 +121,7 @@ export default function PinLogin({ onBack, selectedRole }) {
         {onBack && (
           <button className="pin-back-btn" onClick={onBack}>
             <ChevronLeft size={20} />
-            <span>Back</span>
+            <span>{t("common.back")}</span>
           </button>
         )}
 
@@ -127,21 +132,27 @@ export default function PinLogin({ onBack, selectedRole }) {
             </div>
             <span className="logo-text">AEGIS</span>
           </div>
-          <h1>Emergency Response Portal</h1>
+          <h1>{t("auth.portalTitle")}</h1>
           <p className="login-subtitle">
-            {selectedRole ? `${roleText} Login` : "Secure access for authorized personnel"}
+            {selectedRole
+              ? t("auth.roleLogin", { role: roleText })
+              : t("auth.secureAccess")}
           </p>
         </div>
 
         <div className="location-granted-badge">
           <MapPin size={12} />
-          <span>Location Active</span>
+          <span>{t("auth.locationActive")}</span>
         </div>
 
         <div className="pin-section">
           <div className="pin-label">
             <Lock size={14} />
-            <span>Enter {selectedRole ? roleText : "Access"} PIN</span>
+            <span>
+              {t("auth.enterPin", {
+                role: selectedRole ? roleText : t("common.user"),
+              })}
+            </span>
           </div>
 
           <div className="pin-input-group">
@@ -160,7 +171,7 @@ export default function PinLogin({ onBack, selectedRole }) {
                   error ? "error" : ""
                 }`}
                 disabled={loading}
-                aria-label={`PIN digit ${index + 1}`}
+                aria-label={t("auth.pinDigit", { index: index + 1 })}
               />
             ))}
           </div>
@@ -175,18 +186,18 @@ export default function PinLogin({ onBack, selectedRole }) {
           {loading && (
             <div className="pin-loading">
               <Loader2 size={18} className="spin" />
-              <span>Authenticating...</span>
+              <span>{t("auth.authenticating")}</span>
             </div>
           )}
         </div>
 
         <div className="pin-login-footer">
-          <p>Authorized access only. All activities are monitored.</p>
+          <p>{t("auth.authorizedOnly")}</p>
         </div>
       </div>
 
       <div className="login-branding">
-        <span>Disaster Response Resource Optimization Platform</span>
+        <span>{t("auth.platformName")}</span>
       </div>
     </div>
   );

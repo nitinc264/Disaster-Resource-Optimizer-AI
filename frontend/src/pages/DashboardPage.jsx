@@ -25,6 +25,7 @@ import {
   rerouteMission,
   getUnverifiedTasks,
   getRoadConditions,
+  getShelters,
 } from "../services";
 import { SYNC_COMPLETE_EVENT } from "../services/syncService";
 import "./DashboardPage.css";
@@ -67,7 +68,7 @@ function DashboardPage() {
           console.log("Geolocation error:", error);
           // Default to a sample location
           setCurrentLocation({ lat: 19.076, lng: 72.8777 });
-        }
+        },
       );
     }
   }, []);
@@ -85,8 +86,8 @@ function DashboardPage() {
 
   useEffect(() => {
     const hideTarget = () => {
-      const elements = document.querySelectorAll('*');
-      elements.forEach(el => {
+      const elements = document.querySelectorAll("*");
+      elements.forEach((el) => {
         if (el.textContent === "Report Missing Person") {
           el.style.display = "none";
         }
@@ -107,7 +108,7 @@ function DashboardPage() {
       const { synced } = event.detail;
       if (synced > 0) {
         console.log(
-          `Sync complete: ${synced} verifications synced, refreshing map data...`
+          `Sync complete: ${synced} verifications synced, refreshing map data...`,
         );
         // Invalidate all map-related queries to refresh data
         queryClient.invalidateQueries({ queryKey: ["map-needs"] });
@@ -150,6 +151,14 @@ function DashboardPage() {
       refetchInterval: 30000,
       enabled: isManager || isVolunteer,
     });
+
+  // Fetch shelters for map markers (visible to all authenticated roles)
+  const { data: sheltersData = [] } = useQuery({
+    queryKey: ["shelters-map"],
+    queryFn: () => getShelters(),
+    refetchInterval: 30000,
+    enabled: isManager || isVolunteer,
+  });
 
   // Fetch reports
   const {
@@ -208,9 +217,9 @@ function DashboardPage() {
           typeof need.lat === "number" &&
           typeof need.lon === "number" &&
           need.status !== "Completed" &&
-          need.emergencyStatus !== "resolved" // Exclude resolved emergencies
+          need.emergencyStatus !== "resolved", // Exclude resolved emergencies
       ),
-    [needsData]
+    [needsData],
   );
 
   // Map SOS alerts to map items when location is available
@@ -229,7 +238,7 @@ function DashboardPage() {
           text: alert.message || "Emergency SOS",
           isReport: false,
         })),
-    [sosAlerts]
+    [sosAlerts],
   );
 
   // Get analyzed reports with valid coordinates to show on map
@@ -245,16 +254,16 @@ function DashboardPage() {
             report.status === "InProgress") &&
           typeof report.lat === "number" &&
           typeof report.lon === "number" &&
-          report.emergencyStatus !== "resolved" // Exclude resolved emergencies
+          report.emergencyStatus !== "resolved", // Exclude resolved emergencies
       ),
-    [reportsData]
+    [reportsData],
   );
 
   // Convert volunteer tasks to map items (for volunteer mode)
   const volunteerMapItems = useMemo(() => {
     return (volunteerTasks || [])
       .filter(
-        (task) => typeof task.lat === "number" && typeof task.lon === "number"
+        (task) => typeof task.lat === "number" && typeof task.lon === "number",
       )
       .map((task) => ({
         id: task.id,
@@ -275,7 +284,7 @@ function DashboardPage() {
       .filter(
         (condition) =>
           typeof condition?.startPoint?.lat === "number" &&
-          typeof condition?.startPoint?.lng === "number"
+          typeof condition?.startPoint?.lng === "number",
       )
       .map((condition) => ({
         id: condition.conditionId || condition._id,
@@ -345,7 +354,7 @@ function DashboardPage() {
     });
 
     return (reportsData || []).filter(
-      (report) => !routedReportIds.has(report.id)
+      (report) => !routedReportIds.has(report.id),
     );
   }, [missionsData, reportsData]);
 
@@ -368,7 +377,7 @@ function DashboardPage() {
       "Re-routing mission",
       reroutingMissionId,
       "to station",
-      station.name
+      station.name,
     );
 
     try {
@@ -377,9 +386,7 @@ function DashboardPage() {
 
       // The logistics agent processes rerouted needs every 5 seconds
       // Show user feedback and poll for new mission
-      alert(
-        `Mission re-routed to ${station.name}. The logistics agent will create a new route shortly.`
-      );
+      alert(t("mission.rerouteSuccess", { name: station.name }));
 
       // Immediate refresh
       queryClient.invalidateQueries({ queryKey: ["missions"] });
@@ -394,7 +401,9 @@ function DashboardPage() {
     } catch (error) {
       console.error("Failed to re-route mission:", error);
       alert(
-        "Failed to re-route mission: " + (error.message || "Unknown error")
+        t("mission.rerouteFailed") +
+          ": " +
+          (error.message || t("common.unknownError")),
       );
     }
   };
@@ -407,16 +416,16 @@ function DashboardPage() {
 
   // Calculate stats
   const pendingCount = allMapItems.filter(
-    (item) => item.status === "Verified" || item.status === "Report"
+    (item) => item.status === "Verified" || item.status === "Report",
   ).length;
   const inProgressCount = allMapItems.filter(
-    (item) => item.status === "InProgress"
+    (item) => item.status === "InProgress",
   ).length;
 
   // Calculate critical items for triage alert
   const criticalItems = allMapItems.filter((item) => {
     const category = getTriageCategoryFromUrgency(
-      item.severity || item.urgency || 5
+      item.severity || item.urgency || 5,
     );
     return category === "critical";
   });
@@ -577,16 +586,17 @@ function DashboardPage() {
                   volunteerLocation={volunteerLocation}
                   volunteerRoute={activeRoute}
                   isRouteFallback={routeInfo?.isFallback || false}
+                  shelters={sheltersData}
                 />
                 {(isNeedsLoading ||
                   isReportsLoading ||
                   isRoadConditionsLoading) &&
                   !isVolunteer && (
-                  <div className="map-loading-overlay">
-                    <div className="spinner"></div>
-                    <span>{t("common.loading")}</span>
-                  </div>
-                )}
+                    <div className="map-loading-overlay">
+                      <div className="spinner"></div>
+                      <span>{t("common.loading")}</span>
+                    </div>
+                  )}
               </main>
 
               {/* Bottom Panel - Missions & Reports (Only for managers) */}

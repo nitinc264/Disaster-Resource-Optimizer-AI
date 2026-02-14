@@ -38,7 +38,9 @@ export default function EmergencyStations() {
       setStations(stationsRes.data?.stations || []);
       setAlerts(alertsRes.data?.alerts || []);
     } catch (err) {
-      setError(err.response?.data?.message || "Failed to load data");
+      setError(
+        err.response?.data?.message || t("emergencyStations.failedToLoad"),
+      );
     } finally {
       setLoading(false);
     }
@@ -52,23 +54,31 @@ export default function EmergencyStations() {
   const handlePing = async (stationId) => {
     try {
       const result = await pingStation(stationId);
-      alert(`Station is ${result.data?.status || "unknown"}`);
+      alert(
+        t("emergencyStations.pingResult", {
+          status: result.data?.status || "unknown",
+        }),
+      );
       fetchData();
     } catch (err) {
-      alert("Failed to ping station");
+      alert(t("emergencyStations.failedToPing"));
     }
   };
 
   // Handle station delete
   const handleDelete = async (stationId, stationName) => {
-    if (!window.confirm(`Are you sure you want to delete "${stationName}"?`)) {
+    if (
+      !window.confirm(
+        t("emergencyStations.confirmDelete", { name: stationName }),
+      )
+    ) {
       return;
     }
     try {
       await deleteStation(stationId);
       fetchData();
     } catch (err) {
-      alert("Failed to delete station");
+      alert(t("emergencyStations.failedToDelete"));
     }
   };
 
@@ -78,15 +88,15 @@ export default function EmergencyStations() {
       await updateAlertStatus(alertId, newStatus);
       fetchData();
     } catch (err) {
-      alert("Failed to update alert status");
+      alert(t("emergencyStations.failedToUpdateAlert"));
     }
   };
 
   return (
     <div className="emergency-stations">
       <header className="es-header">
-        <h1>🚨 Emergency Station Management</h1>
-        <p>Manage registered emergency stations and monitor alerts</p>
+        <h1>🚨 {t("emergencyStations.title")}</h1>
+        <p>{t("emergencyStations.subtitle")}</p>
       </header>
 
       {/* Tabs */}
@@ -95,13 +105,14 @@ export default function EmergencyStations() {
           className={`es-tab ${activeTab === "stations" ? "active" : ""}`}
           onClick={() => setActiveTab("stations")}
         >
-          🏢 Stations ({stations.length})
+          🏢 {t("emergencyStations.stationsTab")} ({stations.length})
         </button>
         <button
           className={`es-tab ${activeTab === "alerts" ? "active" : ""}`}
           onClick={() => setActiveTab("alerts")}
         >
-          🚨 Alerts ({alerts.filter((a) => a.status !== "resolved").length})
+          🚨 {t("emergencyStations.alertsTab")} (
+          {alerts.filter((a) => a.status !== "resolved").length})
         </button>
       </div>
 
@@ -116,42 +127,54 @@ export default function EmergencyStations() {
                 value={filterType}
                 onChange={(e) => setFilterType(e.target.value)}
               >
-                <option value="">All Types</option>
-                <option value="fire">🚒 Fire Stations</option>
-                <option value="hospital">🏥 Hospitals</option>
-                <option value="police">🚔 Police Stations</option>
-                <option value="rescue">🚑 Rescue Teams</option>
+                <option value="">{t("emergencyStations.allTypes")}</option>
+                <option value="fire">
+                  🚒 {t("emergencyStations.fireStations")}
+                </option>
+                <option value="hospital">
+                  🏥 {t("emergencyStations.hospitals")}
+                </option>
+                <option value="police">
+                  🚔 {t("emergencyStations.policeStations")}
+                </option>
+                <option value="rescue">
+                  🚑 {t("emergencyStations.rescueTeams")}
+                </option>
               </select>
               <select
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value)}
               >
-                <option value="">All Status</option>
-                <option value="active">Active</option>
-                <option value="inactive">Inactive</option>
-                <option value="offline">Offline</option>
+                <option value="">{t("emergencyStations.allStatus")}</option>
+                <option value="active">{t("emergencyStations.active")}</option>
+                <option value="inactive">
+                  {t("emergencyStations.inactive")}
+                </option>
+                <option value="offline">
+                  {t("emergencyStations.offline")}
+                </option>
               </select>
             </div>
             <button
               className="btn btn-primary"
               onClick={() => setShowRegisterForm(true)}
             >
-              + Register Station
+              + {t("emergencyStations.registerStation")}
             </button>
           </div>
 
           {loading ? (
-            <div className="es-loading">Loading stations...</div>
+            <div className="es-loading">{t("emergencyStations.loading")}</div>
           ) : stations.length === 0 ? (
             <div className="es-empty">
               <span className="es-empty-icon">🏢</span>
-              <h3>No Stations Registered</h3>
-              <p>Register emergency stations to receive alerts</p>
+              <h3>{t("emergencyStations.noStations")}</h3>
+              <p>{t("emergencyStations.noStationsHint")}</p>
               <button
                 className="btn btn-primary"
                 onClick={() => setShowRegisterForm(true)}
               >
-                Register First Station
+                {t("emergencyStations.registerFirst")}
               </button>
             </div>
           ) : (
@@ -187,25 +210,32 @@ export default function EmergencyStations() {
                         <span className="detail-value">
                           {station.location?.address ||
                             `${station.location?.lat?.toFixed(
-                              4
+                              4,
                             )}, ${station.location?.lng?.toFixed(4)}`}
                         </span>
                       </div>
                       <div className="detail-row">
-                        <span className="detail-label">🔗 API URL</span>
+                        <span className="detail-label">
+                          🔗 {t("emergencyStations.apiUrl")}
+                        </span>
                         <span className="detail-value">
                           {station.apiConfig?.baseUrl}
                         </span>
                       </div>
                       <div className="detail-row">
-                        <span className="detail-label">📊 Alerts</span>
+                        <span className="detail-label">
+                          📊 {t("emergencyStations.alerts")}
+                        </span>
                         <span className="detail-value">
-                          {station.stats?.totalAlertsReceived || 0} received
+                          {station.stats?.totalAlertsReceived || 0}{" "}
+                          {t("emergencyStations.received")}
                         </span>
                       </div>
                       {station.lastPingAt && (
                         <div className="detail-row">
-                          <span className="detail-label">🕐 Last Ping</span>
+                          <span className="detail-label">
+                            🕐 {t("emergencyStations.lastPing")}
+                          </span>
                           <span className="detail-value">
                             {new Date(station.lastPingAt).toLocaleString()}
                           </span>
@@ -229,13 +259,13 @@ export default function EmergencyStations() {
                         className="btn btn-secondary"
                         onClick={() => handlePing(station._id)}
                       >
-                        📡 Ping
+                        📡 {t("emergencyStations.ping")}
                       </button>
                       <button
                         className="btn es-btn-danger"
                         onClick={() => handleDelete(station._id, station.name)}
                       >
-                        🗑️ Delete
+                        🗑️ {t("emergencyStations.delete")}
                       </button>
                     </div>
                   </div>
@@ -251,12 +281,14 @@ export default function EmergencyStations() {
         <div className="es-content">
           <div className="es-toolbar">
             <div className="es-filters">
-              <span className="filter-label">Filter:</span>
+              <span className="filter-label">
+                {t("emergencyStations.filter")}
+              </span>
               <button
                 className={`filter-btn ${filterStatus === "" ? "active" : ""}`}
                 onClick={() => setFilterStatus("")}
               >
-                All
+                {t("emergencyStations.all")}
               </button>
               <button
                 className={`filter-btn ${
@@ -264,7 +296,7 @@ export default function EmergencyStations() {
                 }`}
                 onClick={() => setFilterStatus("dispatched")}
               >
-                Active
+                {t("emergencyStations.active")}
               </button>
               <button
                 className={`filter-btn ${
@@ -272,24 +304,26 @@ export default function EmergencyStations() {
                 }`}
                 onClick={() => setFilterStatus("resolved")}
               >
-                Resolved
+                {t("emergencyStations.resolved")}
               </button>
             </div>
             <button
               className="btn btn-primary"
               onClick={() => setShowDispatchForm(true)}
             >
-              + Manual Alert
+              + {t("emergencyStations.manualAlert")}
             </button>
           </div>
 
           {loading ? (
-            <div className="es-loading">Loading alerts...</div>
+            <div className="es-loading">
+              {t("emergencyStations.loadingAlerts")}
+            </div>
           ) : alerts.length === 0 ? (
             <div className="es-empty">
               <span className="es-empty-icon">✅</span>
-              <h3>No Alerts</h3>
-              <p>No emergency alerts have been dispatched</p>
+              <h3>{t("emergencyStations.noAlerts")}</h3>
+              <p>{t("emergencyStations.noAlertsHint")}</p>
             </div>
           ) : (
             <div className="alerts-list">
@@ -326,24 +360,29 @@ export default function EmergencyStations() {
                     <p className="alert-description">{alert.description}</p>
                     <div className="alert-details">
                       <div className="detail-row">
-                        <span className="detail-label">📍 Location</span>
+                        <span className="detail-label">
+                          📍 {t("emergencyStations.location")}
+                        </span>
                         <span className="detail-value">
                           {alert.location?.address ||
                             `${alert.location?.lat?.toFixed(
-                              4
+                              4,
                             )}, ${alert.location?.lng?.toFixed(4)}`}
                         </span>
                       </div>
                       <div className="detail-row">
                         <span className="detail-label">
-                          🏢 Stations Notified
+                          🏢 {t("emergencyStations.stationsNotified")}
                         </span>
                         <span className="detail-value">
-                          {alert.sentToStations?.length || 0} stations
+                          {alert.sentToStations?.length || 0}{" "}
+                          {t("emergencyStations.stations")}
                         </span>
                       </div>
                       <div className="detail-row">
-                        <span className="detail-label">🕐 Created</span>
+                        <span className="detail-label">
+                          🕐 {t("emergencyStations.created")}
+                        </span>
                         <span className="detail-value">
                           {new Date(alert.createdAt).toLocaleString()}
                         </span>
@@ -351,10 +390,12 @@ export default function EmergencyStations() {
                     </div>
                     {alert.sentToStations?.length > 0 && (
                       <div className="alert-stations">
-                        <span className="stations-label">Sent to:</span>
+                        <span className="stations-label">
+                          {t("emergencyStations.sentTo")}
+                        </span>
                         {alert.sentToStations.map((s, idx) => {
                           const stationTypeInfo = getStationTypeInfo(
-                            s.stationType
+                            s.stationType,
                           );
                           return (
                             <span
@@ -367,8 +408,8 @@ export default function EmergencyStations() {
                                 {s.deliveryStatus === "delivered"
                                   ? "✓"
                                   : s.deliveryStatus === "failed"
-                                  ? "✗"
-                                  : "..."}
+                                    ? "✗"
+                                    : "..."}
                               </span>
                             </span>
                           );
@@ -383,7 +424,7 @@ export default function EmergencyStations() {
                             handleAlertStatusUpdate(alert.alertId, "resolved")
                           }
                         >
-                          ✓ Mark Resolved
+                          ✓ {t("emergencyStations.markResolved")}
                         </button>
                       </div>
                     )}
@@ -422,6 +463,7 @@ export default function EmergencyStations() {
 
 // Register Station Modal Component
 function RegisterStationModal({ onClose, onSuccess }) {
+  const { t } = useTranslation();
   const [formData, setFormData] = useState({
     stationId: "",
     name: "",
@@ -444,13 +486,13 @@ function RegisterStationModal({ onClose, onSuccess }) {
       const lng = parseFloat(formData.lng);
 
       if (Number.isNaN(lat) || Number.isNaN(lng)) {
-        alert("Please enter valid latitude and longitude values.");
+        alert(t("emergencyStations.validCoordinates"));
         setSubmitting(false);
         return;
       }
 
       if (!formData.apiKey.trim()) {
-        alert("API key is required to register a station.");
+        alert(t("emergencyStations.apiKeyRequired"));
         setSubmitting(false);
         return;
       }
@@ -472,7 +514,9 @@ function RegisterStationModal({ onClose, onSuccess }) {
       });
       onSuccess();
     } catch (err) {
-      alert(err.response?.data?.message || "Failed to register station");
+      alert(
+        err.response?.data?.message || t("emergencyStations.failedToRegister"),
+      );
     } finally {
       setSubmitting(false);
     }
@@ -482,53 +526,61 @@ function RegisterStationModal({ onClose, onSuccess }) {
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
-          <h2>Register Emergency Station</h2>
+          <h2>{t("emergencyStations.registerModalTitle")}</h2>
           <button className="modal-close" onClick={onClose}>
             &times;
           </button>
         </div>
         <form onSubmit={handleSubmit} className="modal-form">
           <div className="form-group">
-            <label>Station ID</label>
+            <label>{t("emergencyStations.stationId")}</label>
             <input
               type="text"
               value={formData.stationId}
               onChange={(e) =>
                 setFormData({ ...formData, stationId: e.target.value })
               }
-              placeholder="e.g., FIRE-STATION-001"
+              placeholder={t("emergencyStations.stationIdPlaceholder")}
               required
             />
           </div>
           <div className="form-group">
-            <label>Station Name</label>
+            <label>{t("emergencyStations.stationName")}</label>
             <input
               type="text"
               value={formData.name}
               onChange={(e) =>
                 setFormData({ ...formData, name: e.target.value })
               }
-              placeholder="e.g., Central Fire Station"
+              placeholder={t("emergencyStations.stationNamePlaceholder")}
               required
             />
           </div>
           <div className="form-group">
-            <label>Type</label>
+            <label>{t("emergencyStations.type")}</label>
             <select
               value={formData.type}
               onChange={(e) =>
                 setFormData({ ...formData, type: e.target.value })
               }
             >
-              <option value="fire">🚒 Fire Station</option>
-              <option value="hospital">🏥 Hospital</option>
-              <option value="police">🚔 Police Station</option>
-              <option value="rescue">🚑 Rescue Team</option>
+              <option value="fire">
+                🚒 {t("emergencyStations.fireStation")}
+              </option>
+              <option value="hospital">
+                🏥 {t("emergencyStations.hospital")}
+              </option>
+              <option value="police">
+                🚔 {t("emergencyStations.policeStation")}
+              </option>
+              <option value="rescue">
+                🚑 {t("emergencyStations.rescueTeam")}
+              </option>
             </select>
           </div>
           <div className="form-row">
             <div className="form-group">
-              <label>Latitude</label>
+              <label>{t("emergencyStations.latitude")}</label>
               <input
                 type="number"
                 step="any"
@@ -541,7 +593,7 @@ function RegisterStationModal({ onClose, onSuccess }) {
               />
             </div>
             <div className="form-group">
-              <label>Longitude</label>
+              <label>{t("emergencyStations.longitude")}</label>
               <input
                 type="number"
                 step="any"
@@ -555,18 +607,18 @@ function RegisterStationModal({ onClose, onSuccess }) {
             </div>
           </div>
           <div className="form-group">
-            <label>Address</label>
+            <label>{t("emergencyStations.address")}</label>
             <input
               type="text"
               value={formData.address}
               onChange={(e) =>
                 setFormData({ ...formData, address: e.target.value })
               }
-              placeholder="e.g., Swargate, Pune"
+              placeholder={t("emergencyStations.addressPlaceholder")}
             />
           </div>
           <div className="form-group">
-            <label>Station API URL</label>
+            <label>{t("emergencyStations.stationApiUrl")}</label>
             <input
               type="url"
               value={formData.baseUrl}
@@ -578,14 +630,14 @@ function RegisterStationModal({ onClose, onSuccess }) {
             />
           </div>
           <div className="form-group">
-            <label>API Key</label>
+            <label>{t("emergencyStations.apiKey")}</label>
             <input
               type="text"
               value={formData.apiKey}
               onChange={(e) =>
                 setFormData({ ...formData, apiKey: e.target.value })
               }
-              placeholder="Station's API key for authentication"
+              placeholder={t("emergencyStations.apiKeyPlaceholder")}
               required
             />
           </div>
@@ -595,14 +647,16 @@ function RegisterStationModal({ onClose, onSuccess }) {
               className="btn btn-secondary"
               onClick={onClose}
             >
-              Cancel
+              {t("emergencyStations.cancel")}
             </button>
             <button
               type="submit"
               className="btn btn-primary"
               disabled={submitting}
             >
-              {submitting ? "Registering..." : "Register Station"}
+              {submitting
+                ? t("emergencyStations.registering")
+                : t("emergencyStations.registerStation")}
             </button>
           </div>
         </form>
@@ -613,6 +667,7 @@ function RegisterStationModal({ onClose, onSuccess }) {
 
 // Dispatch Alert Modal Component
 function DispatchAlertModal({ onClose, onSuccess }) {
+  const { t } = useTranslation();
   const [formData, setFormData] = useState({
     emergencyType: "fire",
     severity: 5,
@@ -640,7 +695,9 @@ function DispatchAlertModal({ onClose, onSuccess }) {
       });
       onSuccess();
     } catch (err) {
-      alert(err.response?.data?.message || "Failed to dispatch alert");
+      alert(
+        err.response?.data?.message || t("emergencyStations.failedToDispatch"),
+      );
     } finally {
       setSubmitting(false);
     }
@@ -650,32 +707,42 @@ function DispatchAlertModal({ onClose, onSuccess }) {
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
-          <h2>Manual Emergency Alert</h2>
+          <h2>{t("emergencyStations.dispatchTitle")}</h2>
           <button className="modal-close" onClick={onClose}>
             &times;
           </button>
         </div>
         <form onSubmit={handleSubmit} className="modal-form">
           <div className="form-group">
-            <label>Emergency Type</label>
+            <label>{t("emergencyStations.emergencyType")}</label>
             <select
               value={formData.emergencyType}
               onChange={(e) =>
                 setFormData({ ...formData, emergencyType: e.target.value })
               }
             >
-              <option value="fire">🔥 Fire</option>
-              <option value="flood">🌊 Flood</option>
-              <option value="earthquake">🌍 Earthquake</option>
-              <option value="medical">🏥 Medical</option>
-              <option value="rescue">🆘 Rescue</option>
-              <option value="traffic_accident">🚗 Traffic Accident</option>
-              <option value="building_collapse">🏚️ Building Collapse</option>
-              <option value="general">⚠️ General</option>
+              <option value="fire">🔥 {t("emergencyStations.fire")}</option>
+              <option value="flood">🌊 {t("emergencyStations.flood")}</option>
+              <option value="earthquake">
+                🌍 {t("emergencyStations.earthquake")}
+              </option>
+              <option value="medical">
+                🏥 {t("emergencyStations.medical")}
+              </option>
+              <option value="rescue">🆘 {t("emergencyStations.rescue")}</option>
+              <option value="traffic_accident">
+                🚗 {t("emergencyStations.trafficAccident")}
+              </option>
+              <option value="building_collapse">
+                🏚️ {t("emergencyStations.buildingCollapse")}
+              </option>
+              <option value="general">
+                ⚠️ {t("emergencyStations.general")}
+              </option>
             </select>
           </div>
           <div className="form-group">
-            <label>Severity (1-10)</label>
+            <label>{t("emergencyStations.severity")}</label>
             <input
               type="range"
               min="1"
@@ -689,7 +756,7 @@ function DispatchAlertModal({ onClose, onSuccess }) {
           </div>
           <div className="form-row">
             <div className="form-group">
-              <label>Latitude</label>
+              <label>{t("emergencyStations.latitude")}</label>
               <input
                 type="number"
                 step="any"
@@ -702,7 +769,7 @@ function DispatchAlertModal({ onClose, onSuccess }) {
               />
             </div>
             <div className="form-group">
-              <label>Longitude</label>
+              <label>{t("emergencyStations.longitude")}</label>
               <input
                 type="number"
                 step="any"
@@ -716,25 +783,25 @@ function DispatchAlertModal({ onClose, onSuccess }) {
             </div>
           </div>
           <div className="form-group">
-            <label>Alert Title</label>
+            <label>{t("emergencyStations.alertTitle")}</label>
             <input
               type="text"
               value={formData.title}
               onChange={(e) =>
                 setFormData({ ...formData, title: e.target.value })
               }
-              placeholder="e.g., Fire at residential building"
+              placeholder={t("emergencyStations.alertTitlePlaceholder")}
               required
             />
           </div>
           <div className="form-group">
-            <label>Description</label>
+            <label>{t("emergencyStations.alertDescription")}</label>
             <textarea
               value={formData.description}
               onChange={(e) =>
                 setFormData({ ...formData, description: e.target.value })
               }
-              placeholder="Describe the emergency situation..."
+              placeholder={t("emergencyStations.alertDescPlaceholder")}
               rows="3"
             />
           </div>
@@ -744,14 +811,16 @@ function DispatchAlertModal({ onClose, onSuccess }) {
               className="btn btn-secondary"
               onClick={onClose}
             >
-              Cancel
+              {t("emergencyStations.cancel")}
             </button>
             <button
               type="submit"
               className="btn es-btn-danger"
               disabled={submitting}
             >
-              {submitting ? "Dispatching..." : "🚨 Dispatch Alert"}
+              {submitting
+                ? t("emergencyStations.dispatching")
+                : `🚨 ${t("emergencyStations.dispatchBtn")}`}
             </button>
           </div>
         </form>

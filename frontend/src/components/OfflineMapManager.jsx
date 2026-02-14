@@ -29,11 +29,11 @@ const OfflineMapManager = () => {
     const y = Math.floor(
       ((1 -
         Math.log(
-          Math.tan((lat * Math.PI) / 180) + 1 / Math.cos((lat * Math.PI) / 180)
+          Math.tan((lat * Math.PI) / 180) + 1 / Math.cos((lat * Math.PI) / 180),
         ) /
           Math.PI) /
         2) *
-        Math.pow(2, zoom)
+        Math.pow(2, zoom),
     );
     return { x, y };
   };
@@ -64,7 +64,7 @@ const OfflineMapManager = () => {
       const maxZoom = Math.min(18, currentZoom + 2);
       const tiles = [];
 
-      setProgress({ current: 0, total: 0, status: "Calculating tiles..." });
+      setProgress({ current: 0, total: 0, status: t("map.calculatingTiles") });
 
       // Calculate all tiles needed
       for (let z = minZoom; z <= maxZoom; z++) {
@@ -86,9 +86,7 @@ const OfflineMapManager = () => {
       // Limit total tiles to prevent excessive downloads
       const maxTiles = 500;
       if (tiles.length > maxTiles) {
-        alert(
-          `Too many tiles (${tiles.length}). Please zoom in to download a smaller area (max ${maxTiles} tiles).`
-        );
+        alert(t("map.tooManyTiles", { count: tiles.length, max: maxTiles }));
         setIsDownloading(false);
         return;
       }
@@ -96,7 +94,7 @@ const OfflineMapManager = () => {
       setProgress({
         current: 0,
         total: tiles.length,
-        status: "Downloading...",
+        status: t("map.downloadingStatus"),
       });
 
       let downloaded = 0;
@@ -154,13 +152,13 @@ const OfflineMapManager = () => {
                 console.warn(`Tile ${z}/${x}/${y} failed:`, error.message);
               }
             }
-          })
+          }),
         );
 
         setProgress({
           current: Math.min(i + batch.length, tiles.length),
           total: tiles.length,
-          status: `Downloaded ${downloaded}, Cached ${cached}, Failed ${failed}`,
+          status: t("map.downloadProgress", { downloaded, cached, failed }),
         });
       }
 
@@ -171,7 +169,7 @@ const OfflineMapManager = () => {
       alert(message);
     } catch (error) {
       console.error("Error downloading tiles:", error);
-      alert("Error downloading tiles: " + error.message);
+      alert(t("map.errorDownloading") + ": " + error.message);
     } finally {
       setIsDownloading(false);
       abortControllerRef.current = null;
@@ -192,7 +190,7 @@ const OfflineMapManager = () => {
         await db.mapTiles.clear();
         alert(t("map.cacheCleared"));
       } catch (error) {
-        alert("Error clearing cache: " + error.message);
+        alert(t("map.errorClearingCache") + ": " + error.message);
       }
     }
   };
@@ -229,7 +227,7 @@ const OfflineMapManager = () => {
             />
           </div>
           <div className="progress-text">
-            {progress.current} / {progress.total} tiles
+            {progress.current} / {progress.total} {t("map.tiles")}
           </div>
           {progress.status && (
             <div className="progress-status">{progress.status}</div>

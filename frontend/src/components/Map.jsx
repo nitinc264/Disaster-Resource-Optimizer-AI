@@ -32,6 +32,19 @@ L.Icon.Default.mergeOptions({
 });
 // ---------------------------------
 
+// Shelter Icon
+const createShelterIcon = (status) => {
+  const color =
+    status === "open" ? "#10b981" : status === "full" ? "#ef4444" : "#6b7280";
+  return new L.DivIcon({
+    className: "shelter-icon",
+    html: `<div class="shelter-marker" style="background:${color};"><span class="shelter-label">🏠</span></div>`,
+    iconSize: [36, 36],
+    iconAnchor: [18, 18],
+    popupAnchor: [0, -20],
+  });
+};
+
 // Resource Station Icons
 const createStationIcon = (label, color, isHighlighted = false) =>
   new L.DivIcon({
@@ -62,7 +75,7 @@ const getStationIcon = (type, isRerouteMode) => {
   return createStationIcon(
     labels[type] || "?",
     colors[type] || "#6b7280",
-    isRerouteMode
+    isRerouteMode,
   );
 };
 
@@ -87,6 +100,7 @@ function Map({
   volunteerLocation = null,
   volunteerRoute = null,
   isRouteFallback = false,
+  shelters = [],
 }) {
   const { t } = useTranslation();
   const [registeredStations, setRegisteredStations] = useState([]);
@@ -122,7 +136,7 @@ function Map({
       "Station clicked:",
       station.name,
       "isRerouteMode:",
-      isRerouteMode
+      isRerouteMode,
     );
     if (isRerouteMode && onStationClick) {
       e.originalEvent?.stopPropagation();
@@ -172,7 +186,7 @@ function Map({
                   <small style={{ color: "#666" }}>
                     {station.location.address ||
                       `${station.location.lat.toFixed(
-                        4
+                        4,
                       )}, ${station.location.lng.toFixed(4)}`}
                   </small>
                   <br />
@@ -236,7 +250,84 @@ function Map({
         />
       )}
 
-      {/* 6. Offline Map Manager for downloading tiles */}
+      {/* 6. Render Shelter Markers - Visible to all roles */}
+      {shelters.map((shelter) => (
+        <Marker
+          key={`shelter-${shelter.shelterId || shelter._id}`}
+          position={[shelter.location.lat, shelter.location.lng]}
+          icon={createShelterIcon(shelter.status)}
+        >
+          <Popup>
+            <div className="shelter-popup">
+              <strong>{shelter.name}</strong>
+              <div className="shelter-popup-type">
+                {(shelter.type || "shelter").replace(/_/g, " ").toUpperCase()}
+              </div>
+              <div className="shelter-popup-status">
+                <span
+                  className={`shelter-status-dot ${
+                    shelter.status === "open"
+                      ? "open"
+                      : shelter.status === "full"
+                        ? "full"
+                        : "closed"
+                  }`}
+                ></span>
+                {shelter.status?.toUpperCase() || "UNKNOWN"}
+              </div>
+              <div className="shelter-popup-capacity">
+                <span className="shelter-popup-label">
+                  {t("shelter.capacity", "Capacity")}:
+                </span>{" "}
+                {shelter.capacity?.current || 0} /{" "}
+                {shelter.capacity?.total || 0}
+                <span className="shelter-popup-avail">
+                  (
+                  {shelter.availableSpots ??
+                    (shelter.capacity?.total || 0) -
+                      (shelter.capacity?.current || 0)}{" "}
+                  {t("shelter.spotsAvailable", "spots available")})
+                </span>
+              </div>
+              {shelter.location?.address && (
+                <div className="shelter-popup-address">
+                  📍 {shelter.location.address}
+                </div>
+              )}
+              {shelter.contact?.phone && (
+                <div className="shelter-popup-phone">
+                  📞 {shelter.contact.phone}
+                </div>
+              )}
+              {shelter.facilities && (
+                <div className="shelter-popup-facilities">
+                  {shelter.facilities.hasMedicalFacility && (
+                    <span title="Medical">🏥</span>
+                  )}
+                  {shelter.facilities.hasKitchen && (
+                    <span title="Kitchen">🍳</span>
+                  )}
+                  {shelter.facilities.hasWater && <span title="Water">💧</span>}
+                  {shelter.facilities.hasElectricity && (
+                    <span title="Electricity">⚡</span>
+                  )}
+                  {shelter.facilities.hasInternet && (
+                    <span title="Internet">📶</span>
+                  )}
+                  {shelter.facilities.isAccessible && (
+                    <span title="Accessible">♿</span>
+                  )}
+                  {shelter.facilities.hasPetArea && (
+                    <span title="Pet Friendly">🐾</span>
+                  )}
+                </div>
+              )}
+            </div>
+          </Popup>
+        </Marker>
+      ))}
+
+      {/* 7. Offline Map Manager for downloading tiles */}
       <OfflineMapManager />
     </MapContainer>
   );

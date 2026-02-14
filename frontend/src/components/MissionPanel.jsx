@@ -34,7 +34,7 @@ function MissionPanel({
   };
 
   const formatDistance = (meters) => {
-    if (!meters) return "N/A";
+    if (!meters) return t("common.na");
     return meters >= 1000
       ? `${(meters / 1000).toFixed(1)} km`
       : `${Math.round(meters)} m`;
@@ -44,7 +44,7 @@ function MissionPanel({
   const totalVehicles = missionRoutes.length;
   const totalStops = missionRoutes.reduce(
     (sum, r) => sum + (r.route?.length || 0) - 2, // Exclude depot start/end
-    0
+    0,
   );
 
   return (
@@ -85,11 +85,11 @@ function MissionPanel({
             const isExpanded = expandedMissionId === mission.id;
             const totalDistance = (mission.routes || []).reduce(
               (sum, r) => sum + (r.total_distance || 0),
-              0
+              0,
             );
             const totalRouteStops = (mission.routes || []).reduce(
               (sum, r) => sum + (r.route?.length - 2 || 0),
-              0
+              0,
             );
 
             return (
@@ -116,11 +116,11 @@ function MissionPanel({
                     </span>
                     <div className="mission-details">
                       <span className="mission-name">
-                        {mission.station?.name || "Mission"}
+                        {mission.station?.name || t("mission.mission")}
                       </span>
                       <span className="mission-meta">
                         {formatDistance(totalDistance)} • {totalRouteStops}{" "}
-                        stops
+                        {t("mission.stops")}
                       </span>
                     </div>
                   </div>

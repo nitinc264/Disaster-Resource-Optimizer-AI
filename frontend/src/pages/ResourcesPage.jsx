@@ -1,87 +1,107 @@
-import { useState, useMemo } from "react";
+import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
+import { useQuery } from "@tanstack/react-query";
 import {
   Truck,
   Users,
   Package,
   AlertTriangle,
   RefreshCw,
-  TrendingUp,
   Activity,
+  Building2,
+  Loader2,
+  WifiOff,
 } from "lucide-react";
+import { getResourceSummary } from "../services/apiService";
 import "./ResourcesPage.css";
+
+// Translation key maps for vehicle types
+const FLEET_TYPE_KEYS = {
+  ambulance: "resourcesPage.items.ambulance",
+  fire_truck: "resourcesPage.items.fireTruck",
+  supply_truck: "resourcesPage.items.supplyTruck",
+  rescue_helicopter: "resourcesPage.items.rescueHelicopter",
+  mobile_command: "resourcesPage.items.mobileCommandUnit",
+  patrol_car: "resourcesPage.items.patrolCar",
+  rescue_boat: "resourcesPage.items.rescueBoat",
+};
+
+// Translation key maps for personnel roles
+const STAFF_ROLE_KEYS = {
+  paramedic: "resourcesPage.items.paramedics",
+  firefighter: "resourcesPage.items.firefighters",
+  search_rescue: "resourcesPage.items.searchRescue",
+  medical_doctor: "resourcesPage.items.medicalDoctors",
+  logistics: "resourcesPage.items.logisticsStaff",
+  police_officer: "resourcesPage.items.policeOfficer",
+  volunteer: "resourcesPage.items.volunteers",
+  driver: "resourcesPage.items.drivers",
+};
+
+// Supply type config
+const SUPPLY_CONFIG = {
+  water: {
+    icon: "💧",
+    labelKey: "inventory.water",
+    unitKey: "inventory.unitL",
+  },
+  medical: {
+    icon: "🏥",
+    labelKey: "inventory.medicalKits",
+    unitKey: "inventory.unitKits",
+  },
+  blankets: {
+    icon: "🛏️",
+    labelKey: "inventory.blankets",
+    unitKey: "inventory.unitPcs",
+  },
+  food: {
+    icon: "🍱",
+    labelKey: "inventory.foodPackets",
+    unitKey: "inventory.unitPkts",
+  },
+};
 
 export default function ResourcesPage() {
   const { t } = useTranslation();
-  
-  // Mock data for resources
-  const [resources] = useState({
-    fleet: [
-      { id: 1, type: "Ambulance", total: 15, available: 12, inUse: 3 },
-      { id: 2, type: "Fire Truck", total: 8, available: 6, inUse: 2 },
-      { id: 3, type: "Supply Truck", total: 20, available: 14, inUse: 6 },
-      { id: 4, type: "Rescue Helicopter", total: 4, available: 2, inUse: 2 },
-      { id: 5, type: "Mobile Command Unit", total: 3, available: 3, inUse: 0 },
-    ],
-    personnel: [
-      { id: 1, role: "Paramedics", total: 45, available: 32, deployed: 13 },
-      { id: 2, role: "Firefighters", total: 60, available: 48, deployed: 12 },
-      { id: 3, role: "Search & Rescue", total: 35, available: 22, deployed: 13 },
-      { id: 4, role: "Medical Doctors", total: 18, available: 14, deployed: 4 },
-      { id: 5, role: "Logistics Staff", total: 25, available: 20, deployed: 5 },
-    ],
-    inventory: {
-      medical: [
-        { id: 1, name: "First Aid Kits", available: 450, unit: "kits" },
-        { id: 2, name: "Oxygen Tanks", available: 85, unit: "tanks" },
-        { id: 3, name: "IV Fluids", available: 320, unit: "bags" },
-        { id: 4, name: "Bandages", available: 8, unit: "boxes" },
-        { id: 5, name: "Emergency Medications", available: 150, unit: "doses" },
-      ],
-      supplies: [
-        { id: 6, name: "Water Bottles", available: 5, unit: "cases" },
-        { id: 7, name: "Food Rations", available: 680, unit: "packs" },
-        { id: 8, name: "Blankets", available: 340, unit: "units" },
-        { id: 9, name: "Tents", available: 45, unit: "units" },
-        { id: 10, name: "Flashlights", available: 7, unit: "units" },
-      ],
-    },
+
+  const {
+    data: summary,
+    isLoading,
+    isError,
+    refetch,
+    isFetching,
+  } = useQuery({
+    queryKey: ["resourceSummary"],
+    queryFn: getResourceSummary,
+    refetchInterval: 30000,
+    staleTime: 10000,
   });
 
-  // Compute availability stats for Fleet and Personnel
-  const getAvailabilityStats = () => {
-    const fleetStats = resources.fleet.reduce(
-      (acc, item) => ({
-        total: acc.total + item.total,
-        available: acc.available + item.available,
-      }),
-      { total: 0, available: 0 }
-    );
+  // Convert breakdown objects into sorted arrays
+  const fleetItems = useMemo(() => {
+    if (!summary?.fleetBreakdown) return [];
+    return Object.entries(summary.fleetBreakdown)
+      .map(([type, data]) => ({ type, ...data }))
+      .sort((a, b) => b.total - a.total);
+  }, [summary]);
 
-    const personnelStats = resources.personnel.reduce(
-      (acc, item) => ({
-        total: acc.total + item.total,
-        available: acc.available + item.available,
-      }),
-      { total: 0, available: 0 }
-    );
+  const staffItems = useMemo(() => {
+    if (!summary?.staffBreakdown) return [];
+    return Object.entries(summary.staffBreakdown)
+      .map(([role, data]) => ({ role, ...data }))
+      .sort((a, b) => b.total - a.total);
+  }, [summary]);
 
-    return { fleet: fleetStats, personnel: personnelStats };
-  };
-
-  // Get inventory list with available stock
-  const getInventoryList = () => {
-    const allItems = [
-      ...resources.inventory.medical,
-      ...resources.inventory.supplies,
-    ];
-    return allItems;
-  };
-
-  const stats = useMemo(() => getAvailabilityStats(), [resources]);
-  const inventoryList = useMemo(() => getInventoryList(), [resources]);
+  const supplyItems = useMemo(() => {
+    if (!summary?.supplies) return [];
+    return Object.entries(summary.supplies)
+      .filter(([, data]) => data.maximum > 0)
+      .map(([type, data]) => ({ type, ...data }));
+  }, [summary]);
 
   const getAvailabilityPercentage = (available, total) => {
+    if (!total) return 0;
     return Math.round((available / total) * 100);
   };
 
@@ -91,6 +111,33 @@ export default function ResourcesPage() {
     return "critical";
   };
 
+  if (isLoading) {
+    return (
+      <div className="resources-page">
+        <div className="resources-loading">
+          <Loader2 size={32} className="spin" />
+          <span>{t("common.loading")}</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (isError || !summary) {
+    return (
+      <div className="resources-page">
+        <div className="resources-error">
+          <WifiOff size={32} />
+          <h3>{t("resourcesPage.loadError")}</h3>
+          <p>{t("resourcesPage.loadErrorHint")}</p>
+          <button className="btn-refresh" onClick={() => refetch()}>
+            <RefreshCw size={18} />
+            {t("resourcesPage.refresh")}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="resources-page">
       <div className="resources-container">
@@ -98,21 +145,56 @@ export default function ResourcesPage() {
         <div className="resources-header">
           <div className="resources-header-content">
             <div>
-              <h1>Resource Management</h1>
-              <p>Monitor and manage all disaster response resources</p>
+              <h1>{t("resourcesPage.title")}</h1>
+              <p>{t("resourcesPage.subtitle")}</p>
             </div>
-            <button className="btn-refresh">
-              <RefreshCw size={18} />
-              Refresh
-            </button>
+            <div className="resources-header-actions">
+              <span className="station-count">
+                <Building2 size={16} />
+                {t("resourcesPage.stationCount", {
+                  count: summary.totalStations || 0,
+                })}
+              </span>
+              <button
+                className="btn-refresh"
+                onClick={() => refetch()}
+                disabled={isFetching}
+              >
+                <RefreshCw size={18} className={isFetching ? "spin" : ""} />
+                {isFetching ? t("common.loading") : t("resourcesPage.refresh")}
+              </button>
+            </div>
           </div>
         </div>
+
+        {/* Low Stock Alerts */}
+        {summary.lowStockAlerts?.length > 0 && (
+          <div className="low-stock-alerts">
+            <div className="alert-banner">
+              <AlertTriangle size={20} />
+              <span>
+                {t("resourcesPage.lowStockWarning", {
+                  count: summary.lowStockAlerts.length,
+                })}
+              </span>
+            </div>
+            <div className="alert-items">
+              {summary.lowStockAlerts.slice(0, 5).map((alert, idx) => (
+                <div key={idx} className="alert-chip">
+                  <strong>{alert.stationName}</strong>:{" "}
+                  {t(SUPPLY_CONFIG[alert.type]?.labelKey || alert.type)} (
+                  {alert.current}/{alert.minimum})
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Resource Availability Section */}
         <section>
           <h2 className="section-title">
             <Activity size={24} />
-            Resource Availability
+            {t("resourcesPage.availability")}
           </h2>
 
           <div className="resources-grid">
@@ -124,33 +206,56 @@ export default function ResourcesPage() {
                     <Truck size={24} />
                   </div>
                   <div>
-                    <h3 className="resource-card-title">Fleet Vehicles</h3>
-                    <p className="resource-card-subtitle">All vehicle types</p>
+                    <h3 className="resource-card-title">
+                      {t("resourcesPage.fleetVehicles")}
+                    </h3>
+                    <p className="resource-card-subtitle">
+                      {t("resourcesPage.allVehicleTypes")}
+                    </p>
                   </div>
                 </div>
                 <div className="resource-card-stats">
                   <div className="resource-card-count">
-                    {stats.fleet.available}
-                    <span>/{stats.fleet.total}</span>
+                    {summary.vehicles.available}
+                    <span>/{summary.vehicles.total}</span>
                   </div>
-                  <div className={`resource-card-percentage ${getStatusClass(
-                    getAvailabilityPercentage(stats.fleet.available, stats.fleet.total)
-                  )}`}>
-                    {getAvailabilityPercentage(stats.fleet.available, stats.fleet.total)}% Available
+                  <div
+                    className={`resource-card-percentage ${getStatusClass(
+                      getAvailabilityPercentage(
+                        summary.vehicles.available,
+                        summary.vehicles.total,
+                      ),
+                    )}`}
+                  >
+                    {getAvailabilityPercentage(
+                      summary.vehicles.available,
+                      summary.vehicles.total,
+                    )}
+                    {t("resourcesPage.percentAvailable")}
                   </div>
                 </div>
               </div>
 
               <div className="resource-items-list">
-                {resources.fleet.map((vehicle) => {
-                  const percentage = getAvailabilityPercentage(vehicle.available, vehicle.total);
+                {fleetItems.map((vehicle) => {
+                  const percentage = getAvailabilityPercentage(
+                    vehicle.available,
+                    vehicle.total,
+                  );
                   return (
-                    <div key={vehicle.id} className="resource-item">
-                      <span className="resource-item-name">{vehicle.type}</span>
+                    <div key={vehicle.type} className="resource-item">
+                      <span className="resource-item-name">
+                        {t(FLEET_TYPE_KEYS[vehicle.type] || vehicle.type)}
+                      </span>
                       <div className="resource-item-stats">
                         <div className="resource-item-count">
                           <strong>{vehicle.available}</strong>
                           <span>/{vehicle.total}</span>
+                          {vehicle.inUse > 0 && (
+                            <span className="deployed-badge">
+                              {vehicle.inUse} {t("resourcesPage.deployed")}
+                            </span>
+                          )}
                         </div>
                         <div className="progress-bar">
                           <div
@@ -162,6 +267,11 @@ export default function ResourcesPage() {
                     </div>
                   );
                 })}
+                {fleetItems.length === 0 && (
+                  <div className="empty-state-small">
+                    {t("resourcesPage.noFleetData")}
+                  </div>
+                )}
               </div>
             </div>
 
@@ -173,33 +283,56 @@ export default function ResourcesPage() {
                     <Users size={24} />
                   </div>
                   <div>
-                    <h3 className="resource-card-title">Personnel</h3>
-                    <p className="resource-card-subtitle">All roles</p>
+                    <h3 className="resource-card-title">
+                      {t("resourcesPage.personnel")}
+                    </h3>
+                    <p className="resource-card-subtitle">
+                      {t("resourcesPage.allRoles")}
+                    </p>
                   </div>
                 </div>
                 <div className="resource-card-stats">
                   <div className="resource-card-count">
-                    {stats.personnel.available}
-                    <span>/{stats.personnel.total}</span>
+                    {summary.personnel.available}
+                    <span>/{summary.personnel.total}</span>
                   </div>
-                  <div className={`resource-card-percentage ${getStatusClass(
-                    getAvailabilityPercentage(stats.personnel.available, stats.personnel.total)
-                  )}`}>
-                    {getAvailabilityPercentage(stats.personnel.available, stats.personnel.total)}% Available
+                  <div
+                    className={`resource-card-percentage ${getStatusClass(
+                      getAvailabilityPercentage(
+                        summary.personnel.available,
+                        summary.personnel.total,
+                      ),
+                    )}`}
+                  >
+                    {getAvailabilityPercentage(
+                      summary.personnel.available,
+                      summary.personnel.total,
+                    )}
+                    {t("resourcesPage.percentAvailable")}
                   </div>
                 </div>
               </div>
 
               <div className="resource-items-list">
-                {resources.personnel.map((person) => {
-                  const percentage = getAvailabilityPercentage(person.available, person.total);
+                {staffItems.map((person) => {
+                  const percentage = getAvailabilityPercentage(
+                    person.available,
+                    person.total,
+                  );
                   return (
-                    <div key={person.id} className="resource-item">
-                      <span className="resource-item-name">{person.role}</span>
+                    <div key={person.role} className="resource-item">
+                      <span className="resource-item-name">
+                        {t(STAFF_ROLE_KEYS[person.role] || person.role)}
+                      </span>
                       <div className="resource-item-stats">
                         <div className="resource-item-count">
                           <strong>{person.available}</strong>
                           <span>/{person.total}</span>
+                          {person.deployed > 0 && (
+                            <span className="deployed-badge">
+                              {person.deployed} {t("resourcesPage.deployed")}
+                            </span>
+                          )}
                         </div>
                         <div className="progress-bar">
                           <div
@@ -211,65 +344,93 @@ export default function ResourcesPage() {
                     </div>
                   );
                 })}
+                {staffItems.length === 0 && (
+                  <div className="empty-state-small">
+                    {t("resourcesPage.noPersonnelData")}
+                  </div>
+                )}
               </div>
             </div>
           </div>
         </section>
 
-        {/* Resource Inventory Section */}
+        {/* Supply Inventory Section */}
         <section className="inventory-section">
           <h2 className="section-title">
             <Package size={24} />
-            Resource Inventory
+            {t("resourcesPage.inventory")}
           </h2>
 
-          <div className="inventory-card">
-            <table className="inventory-table">
-              <thead>
-                <tr>
-                  <th>Item Name</th>
-                  <th>Available Stock</th>
-                  <th>Unit</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {inventoryList.map((item) => {
-                  const isLowStock = item.available < 10;
-                  return (
-                    <tr key={item.id}>
-                      <td>
-                        <div className="inventory-item-name">
-                          <Package size={16} />
-                          {item.name}
-                        </div>
-                      </td>
-                      <td>
-                        <span className={`inventory-stock ${isLowStock ? 'low' : 'normal'}`}>
-                          {item.available}
-                        </span>
-                      </td>
-                      <td>
-                        <span className="inventory-unit">{item.unit}</span>
-                      </td>
-                      <td>
-                        {isLowStock ? (
-                          <span className="status-badge low-stock">
-                            <AlertTriangle size={14} />
-                            Low Stock
-                          </span>
-                        ) : (
-                          <span className="status-badge in-stock">
-                            <TrendingUp size={14} />
-                            In Stock
-                          </span>
+          <div className="supply-cards-grid">
+            {supplyItems.map((supply) => {
+              const config = SUPPLY_CONFIG[supply.type];
+              const percentage = getAvailabilityPercentage(
+                supply.current,
+                supply.maximum,
+              );
+              const isLow = supply.current < supply.minimum;
+              return (
+                <div
+                  key={supply.type}
+                  className={`supply-card ${isLow ? "low-stock" : ""}`}
+                >
+                  <div className="supply-card-header">
+                    <span className="supply-icon">{config?.icon || "📦"}</span>
+                    <h4>{t(config?.labelKey || supply.type)}</h4>
+                    {isLow && (
+                      <AlertTriangle size={18} className="alert-icon" />
+                    )}
+                  </div>
+                  <div className="supply-card-body">
+                    <div className="supply-big-number">
+                      {supply.current}
+                      <span className="supply-unit">
+                        {t(config?.unitKey || "units")}
+                      </span>
+                    </div>
+                    <div className="supply-bar-wrapper">
+                      <div className="supply-bar-bg">
+                        <div
+                          className={`supply-bar-fill ${getStatusClass(percentage)}`}
+                          style={{ width: `${Math.min(percentage, 100)}%` }}
+                        />
+                        {supply.minimum > 0 && (
+                          <div
+                            className="supply-minimum-marker"
+                            style={{
+                              left: `${Math.min((supply.minimum / supply.maximum) * 100, 100)}%`,
+                            }}
+                            title={t("resourcesPage.minimumLevel")}
+                          />
                         )}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                      </div>
+                    </div>
+                    <div className="supply-stats-row">
+                      <span>
+                        {t("resourcesPage.min")}: {supply.minimum}
+                      </span>
+                      <span>
+                        {t("resourcesPage.max")}: {supply.maximum}
+                      </span>
+                    </div>
+                  </div>
+                  {isLow && (
+                    <div className="supply-warning">
+                      <AlertTriangle size={14} />
+                      {t("resourcesPage.belowMinimum", {
+                        deficit: supply.minimum - supply.current,
+                      })}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+            {supplyItems.length === 0 && (
+              <div className="empty-state">
+                <Package size={32} />
+                <p>{t("resourcesPage.noSupplyData")}</p>
+              </div>
+            )}
           </div>
         </section>
       </div>

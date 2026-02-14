@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Mic,
@@ -9,13 +9,16 @@ import {
   Globe,
   ChevronLeft,
   Settings,
+  MapIcon,
 } from "lucide-react";
 import {
   AudioReporter,
   PhotoReporter,
   MissingPersons,
   AccessibilitySettings,
+  Map as MapComponent,
 } from "../components";
+import { getPublicShelters } from "../services/apiService";
 import { languages } from "../i18n";
 import "./PublicDashboard.css";
 
@@ -43,10 +46,31 @@ function LanguageSwitcher() {
 
 export default function PublicDashboard({ onExit }) {
   const { t } = useTranslation();
-  const [activeTab, setActiveTab] = useState("voice"); // 'voice' | 'photo' | 'missing'
+  const [activeTab, setActiveTab] = useState("shelterMap"); // 'shelterMap' | 'voice' | 'photo' | 'missing'
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [publicShelters, setPublicShelters] = useState([]);
+
+  // Fetch shelters for public map
+  useEffect(() => {
+    const fetchShelters = async () => {
+      try {
+        const data = await getPublicShelters();
+        setPublicShelters(data);
+      } catch (err) {
+        console.error("Failed to fetch public shelters:", err);
+      }
+    };
+    fetchShelters();
+    const interval = setInterval(fetchShelters, 30000);
+    return () => clearInterval(interval);
+  }, []);
 
   const tabs = [
+    {
+      id: "shelterMap",
+      label: t("publicDashboard.shelterMap", "Shelter Map"),
+      icon: Shield,
+    },
     {
       id: "voice",
       label: t("publicDashboard.voiceReport", "Voice Report"),
@@ -66,6 +90,17 @@ export default function PublicDashboard({ onExit }) {
 
   const renderContent = () => {
     switch (activeTab) {
+      case "shelterMap":
+        return (
+          <div className="public-shelter-map">
+            <MapComponent
+              needs={[]}
+              selectedNeedIds={new Set()}
+              onPinClick={() => {}}
+              shelters={publicShelters}
+            />
+          </div>
+        );
       case "voice":
         return <AudioReporter />;
       case "photo":
@@ -83,7 +118,11 @@ export default function PublicDashboard({ onExit }) {
       <header className="public-header">
         <div className="public-header-inner">
           {/* Back Button */}
-          <button className="back-button" onClick={onExit} title={t("common.back", "Back")}>
+          <button
+            className="back-button"
+            onClick={onExit}
+            title={t("common.back", "Back")}
+          >
             <ChevronLeft size={20} />
           </button>
 
@@ -108,7 +147,11 @@ export default function PublicDashboard({ onExit }) {
             >
               <Settings size={18} />
             </button>
-            <button className="exit-btn" onClick={onExit} title={t("common.exit", "Exit")}>
+            <button
+              className="exit-btn"
+              onClick={onExit}
+              title={t("common.exit", "Exit")}
+            >
               <LogOut size={16} />
             </button>
           </div>

@@ -15,17 +15,17 @@ const STATUS_COLORS = {
   Error: "#ef4444",
 };
 
-const SEVERITY_LABELS = {
-  1: "Very Low",
-  2: "Low",
-  3: "Low",
-  4: "Medium-Low",
-  5: "Medium",
-  6: "Medium-High",
-  7: "High",
-  8: "High",
-  9: "Critical",
-  10: "Emergency",
+const SEVERITY_LABEL_KEYS = {
+  1: "reports.severity.veryLow",
+  2: "reports.severity.low",
+  3: "reports.severity.low",
+  4: "reports.severity.mediumLow",
+  5: "reports.severity.medium",
+  6: "reports.severity.mediumHigh",
+  7: "reports.severity.high",
+  8: "reports.severity.high",
+  9: "reports.severity.critical",
+  10: "reports.severity.emergency",
 };
 
 function ReportsList({ reports, onReportClick, selectedReportId }) {
@@ -115,10 +115,10 @@ function ReportsList({ reports, onReportClick, selectedReportId }) {
                       ? report.text.substring(0, 40) +
                         (report.text.length > 40 ? "..." : "")
                       : report.transcription
-                      ? "🎤 " +
-                        report.transcription.substring(0, 40) +
-                        (report.transcription.length > 40 ? "..." : "")
-                      : "Processing..."}
+                        ? "🎤 " +
+                          report.transcription.substring(0, 40) +
+                          (report.transcription.length > 40 ? "..." : "")
+                        : t("reports.processing")}
                   </span>
                 </div>
               )}
@@ -138,7 +138,9 @@ function ReportsList({ reports, onReportClick, selectedReportId }) {
                       {report.transcription}
                     </p>
                   ) : (
-                    <p className="report-text pending">Processing...</p>
+                    <p className="report-text pending">
+                      {t("reports.processing")}
+                    </p>
                   )}
                 </div>
 
@@ -151,11 +153,12 @@ function ReportsList({ reports, onReportClick, selectedReportId }) {
                     {report.severity && (
                       <span
                         className={`report-severity ${getSeverityClass(
-                          report.severity
+                          report.severity,
                         )}`}
                       >
-                        {SEVERITY_LABELS[report.severity] ||
-                          `Level ${report.severity}`}
+                        {SEVERITY_LABEL_KEYS[report.severity]
+                          ? t(SEVERITY_LABEL_KEYS[report.severity])
+                          : `Level ${report.severity}`}
                       </span>
                     )}
                     {report.needs && report.needs.length > 0 && (

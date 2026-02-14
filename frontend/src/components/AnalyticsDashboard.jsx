@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
+import i18next from "i18next";
 import { useQuery } from "@tanstack/react-query";
 import {
   BarChart3,
@@ -37,7 +38,13 @@ export default function AnalyticsDashboard() {
   const { t } = useTranslation();
   const [timeRange, setTimeRange] = useState("24h");
 
-  const { data: analytics = {}, isLoading, isError, error, refetch } = useQuery({
+  const {
+    data: analytics = {},
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useQuery({
     queryKey: ["analytics", timeRange],
     queryFn: () => getAnalytics({ timeRange }),
     refetchInterval: 60000, // Refresh every minute
@@ -60,7 +67,7 @@ export default function AnalyticsDashboard() {
       incidents: calcTrend(current.incidents, previous.incidents),
       responseTime: calcTrend(
         current.avgResponseTime,
-        previous.avgResponseTime
+        previous.avgResponseTime,
       ),
       resolved: calcTrend(current.resolved, previous.resolved),
     };
@@ -80,7 +87,13 @@ export default function AnalyticsDashboard() {
       <div className="analytics-error">
         <AlertTriangle size={32} />
         <h3>{t("analytics.errorTitle", "Failed to load analytics")}</h3>
-        <p>{error?.message || t("analytics.errorMessage", "Unable to fetch analytics data. Please try again.")}</p>
+        <p>
+          {error?.message ||
+            t(
+              "analytics.errorMessage",
+              "Unable to fetch analytics data. Please try again.",
+            )}
+        </p>
         <button className="retry-btn" onClick={() => refetch()}>
           <RefreshCw size={16} />
           {t("common.retry", "Retry")}
@@ -174,7 +187,12 @@ export default function AnalyticsDashboard() {
             ) : (
               <div className="empty-chart-state">
                 <AlertTriangle size={32} />
-                <p>{t("analytics.noIncidents", "No incidents reported in this period")}</p>
+                <p>
+                  {t(
+                    "analytics.noIncidents",
+                    "No incidents reported in this period",
+                  )}
+                </p>
               </div>
             )}
           </div>
@@ -188,7 +206,12 @@ export default function AnalyticsDashboard() {
               <div className="sparkline-chart">
                 {(analytics.responseTimeTrend || []).map((point, idx) => {
                   const value = point.value || 0;
-                  const maxValue = Math.max(...(analytics.responseTimeTrend || []).map(p => p.value || 0), 1);
+                  const maxValue = Math.max(
+                    ...(analytics.responseTimeTrend || []).map(
+                      (p) => p.value || 0,
+                    ),
+                    1,
+                  );
                   return (
                     <div
                       key={idx}
@@ -207,7 +230,7 @@ export default function AnalyticsDashboard() {
                     (_, i, arr) =>
                       i === 0 ||
                       i === arr.length - 1 ||
-                      i === Math.floor(arr.length / 2)
+                      i === Math.floor(arr.length / 2),
                   )
                   .map((point, idx) => (
                     <span key={idx}>{point.label}</span>
@@ -217,7 +240,12 @@ export default function AnalyticsDashboard() {
           ) : (
             <div className="empty-chart-state">
               <Clock size={32} />
-              <p>{t("analytics.noResponseData", "No response time data available")}</p>
+              <p>
+                {t(
+                  "analytics.noResponseData",
+                  "No response time data available",
+                )}
+              </p>
             </div>
           )}
         </div>
@@ -246,7 +274,9 @@ export default function AnalyticsDashboard() {
           ) : (
             <div className="empty-chart-state">
               <Activity size={32} />
-              <p>{t("analytics.noSeverityData", "No severity data available")}</p>
+              <p>
+                {t("analytics.noSeverityData", "No severity data available")}
+              </p>
             </div>
           )}
         </div>
@@ -282,8 +312,8 @@ export default function AnalyticsDashboard() {
                       spot.count > 10
                         ? "#dc2626"
                         : spot.count > 5
-                        ? "#f59e0b"
-                        : "#fbbf24"
+                          ? "#f59e0b"
+                          : "#fbbf24"
                     })`,
                     width: `${Math.min(100, spot.count * 10)}%`,
                   }}
@@ -293,7 +323,9 @@ export default function AnalyticsDashboard() {
           ) : (
             <div className="empty-chart-state">
               <MapPin size={32} />
-              <p>{t("analytics.noHotspots", "No incident hotspots identified")}</p>
+              <p>
+                {t("analytics.noHotspots", "No incident hotspots identified")}
+              </p>
             </div>
           )}
         </div>
@@ -307,21 +339,30 @@ export default function AnalyticsDashboard() {
         </h3>
         <div className="activity-timeline">
           {(analytics.recentActivity || []).length > 0 ? (
-            (analytics.recentActivity || []).slice(0, 8).map((activity, idx) => (
-              <div key={idx} className="activity-item">
-                <div className={`activity-dot ${activity.type}`} />
-                <div className="activity-content">
-                  <span className="activity-text">{activity.description}</span>
-                  <span className="activity-time">
-                    {formatTime(activity.timestamp)}
-                  </span>
+            (analytics.recentActivity || [])
+              .slice(0, 8)
+              .map((activity, idx) => (
+                <div key={idx} className="activity-item">
+                  <div className={`activity-dot ${activity.type}`} />
+                  <div className="activity-content">
+                    <span className="activity-text">
+                      {activity.description}
+                    </span>
+                    <span className="activity-time">
+                      {formatTime(activity.timestamp)}
+                    </span>
+                  </div>
                 </div>
-              </div>
-            ))
+              ))
           ) : (
             <div className="empty-chart-state">
               <Calendar size={32} />
-              <p>{t("analytics.noRecentActivity", "No recent activity to display")}</p>
+              <p>
+                {t(
+                  "analytics.noRecentActivity",
+                  "No recent activity to display",
+                )}
+              </p>
             </div>
           )}
         </div>
@@ -358,7 +399,9 @@ function MetricCard({ title, value, trend, trendInverted, icon: Icon, color }) {
 
 // Helper functions
 function formatDuration(minutes) {
-  if (minutes === null || minutes === undefined || isNaN(minutes)) return "N/A";
+  const t = i18next.t.bind(i18next);
+  if (minutes === null || minutes === undefined || isNaN(minutes))
+    return t("common.na");
   if (minutes <= 0) return "0m";
   if (minutes < 60) return `${Math.round(minutes)}m`;
   const hours = Math.floor(minutes / 60);
@@ -367,16 +410,18 @@ function formatDuration(minutes) {
 }
 
 function formatTime(timestamp) {
-  if (!timestamp) return "N/A";
+  const t = i18next.t.bind(i18next);
+  if (!timestamp) return t("common.na");
   const date = new Date(timestamp);
-  if (isNaN(date.getTime())) return "N/A";
+  if (isNaN(date.getTime())) return t("common.na");
   const now = new Date();
   const diffMs = now - date;
   const diffMins = Math.floor(diffMs / 60000);
 
-  if (diffMins < 1) return "Just now";
-  if (diffMins < 60) return `${diffMins}m ago`;
-  if (diffMins < 1440) return `${Math.floor(diffMins / 60)}h ago`;
+  if (diffMins < 1) return t("analytics.justNow");
+  if (diffMins < 60) return t("analytics.minsAgo", { count: diffMins });
+  if (diffMins < 1440)
+    return t("analytics.hoursAgo", { count: Math.floor(diffMins / 60) });
   return date.toLocaleDateString();
 }
 

@@ -16,6 +16,7 @@ import { fileURLToPath } from "url";
 
 import { getStationConfig } from "./config/stationConfig.js";
 import alertRoutes from "./routes/alertRoutes.js";
+import resourceRoutes from "./routes/resourceRoutes.js";
 import Alert from "./models/AlertModel.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -53,6 +54,7 @@ app.use((req, res, next) => {
 
 // API Routes
 app.use("/api", alertRoutes);
+app.use("/api", resourceRoutes);
 
 // Health check endpoint
 app.get("/api/health", (req, res) => {
@@ -102,7 +104,7 @@ io.on("connection", (socket) => {
           status: "acknowledged",
           acknowledgedAt: new Date(),
         },
-        { new: true }
+        { new: true },
       );
 
       if (alert) {
@@ -128,7 +130,7 @@ io.on("connection", (socket) => {
       if (alert) {
         io.emit("alertUpdated", alert);
         console.log(
-          `[${stationConfig.name}] Alert ${alertId} status: ${status}`
+          `[${stationConfig.name}] Alert ${alertId} status: ${status}`,
         );
       }
     } catch (error) {

@@ -20,19 +20,29 @@ import "./ResourceInventory.css";
 
 // Supply categories with icons
 const SUPPLY_CATEGORIES = {
-  water: { icon: Droplets, label: "Water (L)", color: "#3b82f6", unit: "L" },
+  water: {
+    icon: Droplets,
+    labelKey: "inventory.water",
+    color: "#3b82f6",
+    unitKey: "inventory.unitL",
+  },
   medical: {
     icon: Pill,
-    label: "Medical Kits",
+    labelKey: "inventory.medicalKits",
     color: "#ef4444",
-    unit: "kits",
+    unitKey: "inventory.unitKits",
   },
-  blankets: { icon: Shirt, label: "Blankets", color: "#8b5cf6", unit: "pcs" },
+  blankets: {
+    icon: Shirt,
+    labelKey: "inventory.blankets",
+    color: "#8b5cf6",
+    unitKey: "inventory.unitPcs",
+  },
   food: {
     icon: UtensilsCrossed,
-    label: "Food Packets",
+    labelKey: "inventory.foodPackets",
     color: "#f59e0b",
-    unit: "pkts",
+    unitKey: "inventory.unitPkts",
   },
 };
 
@@ -174,8 +184,8 @@ export default function ResourceInventory() {
                 <div key={idx} className="alert-item">
                   <category.icon size={16} style={{ color: category.color }} />
                   <span>
-                    <strong>{alert.stationName}</strong>: {category.label} (
-                    {alert.current}/{alert.minimum} {category.unit})
+                    <strong>{alert.stationName}</strong>: {t(category.labelKey)}{" "}
+                    ({alert.current}/{alert.minimum} {t(category.unitKey)})
                   </span>
                 </div>
               );
@@ -218,7 +228,7 @@ export default function ResourceInventory() {
                 const level = getStockLevel(
                   data.current,
                   data.minimum,
-                  data.maximum
+                  data.maximum,
                 );
                 const isEditing = editingStation === station.id;
                 const displayValue = isEditing
@@ -230,7 +240,9 @@ export default function ResourceInventory() {
                   <div key={type} className={`supply-row ${level}`}>
                     <div className="supply-info">
                       <Icon size={18} style={{ color: category.color }} />
-                      <span className="supply-name">{category.label}</span>
+                      <span className="supply-name">
+                        {t(category.labelKey)}
+                      </span>
                     </div>
 
                     {isEditing ? (

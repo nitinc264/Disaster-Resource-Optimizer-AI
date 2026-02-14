@@ -1,5 +1,6 @@
 import React from "react";
 import { AlertTriangle } from "lucide-react";
+import i18next from "i18next";
 
 class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -39,17 +40,18 @@ class ErrorBoundary extends React.Component {
               gap: "10px",
             }}
           >
-            <AlertTriangle size={32} /> Something went wrong
+            <AlertTriangle size={32} /> {i18next.t("error.somethingWentWrong")}
           </h1>
           <details style={{ whiteSpace: "pre-wrap", marginTop: "20px" }}>
             <summary style={{ cursor: "pointer", fontWeight: "bold" }}>
-              Click for error details
+              {i18next.t("error.clickForDetails")}
             </summary>
             <p style={{ marginTop: "10px" }}>
-              <strong>Error:</strong> {this.state.error?.toString()}
+              <strong>{i18next.t("error.errorLabel")}:</strong>{" "}
+              {this.state.error?.toString()}
             </p>
             <p>
-              <strong>Stack:</strong>
+              <strong>{i18next.t("error.stackLabel")}:</strong>
             </p>
             <pre style={{ fontSize: "12px", overflow: "auto" }}>
               {this.state.errorInfo?.componentStack}
@@ -67,7 +69,7 @@ class ErrorBoundary extends React.Component {
               cursor: "pointer",
             }}
           >
-            Reload Page
+            {i18next.t("error.reloadPage")}
           </button>
         </div>
       );

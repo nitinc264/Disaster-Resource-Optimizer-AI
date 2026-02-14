@@ -131,7 +131,6 @@ const RoadConditionCard = ({ condition, onResolve, onVerify, isVerifying }) => {
                 </div>
               </div>
             )}
-
           </div>
 
           <div className="condition-actions">
@@ -144,7 +143,11 @@ const RoadConditionCard = ({ condition, onResolve, onVerify, isVerifying }) => {
                 }}
                 disabled={isVerifying}
               >
-                {isVerifying ? <Loader2 size={14} className="spin" /> : <Shield size={14} />}
+                {isVerifying ? (
+                  <Loader2 size={14} className="spin" />
+                ) : (
+                  <Shield size={14} />
+                )}
                 {t("roads.verify")}
               </button>
             )}
@@ -168,7 +171,12 @@ const RoadConditionCard = ({ condition, onResolve, onVerify, isVerifying }) => {
 // Default fallback location (Pune, India)
 const DEFAULT_LOCATION = { lat: 18.5204, lng: 73.8567 };
 
-const ReportConditionForm = ({ onSubmit, onCancel, currentLocation: externalLocation, isSubmitting }) => {
+const ReportConditionForm = ({
+  onSubmit,
+  onCancel,
+  currentLocation: externalLocation,
+  isSubmitting,
+}) => {
   const { t } = useTranslation();
   const [formData, setFormData] = useState({
     conditionType: "blocked",
@@ -195,7 +203,7 @@ const ReportConditionForm = ({ onSubmit, onCancel, currentLocation: externalLoca
   const fetchLocation = () => {
     if (!navigator.geolocation) {
       setLocationStatus("error");
-      setLocationError("Geolocation not supported");
+      setLocationError(t("common.geolocationNotSupported"));
       setLocation(DEFAULT_LOCATION);
       return;
     }
@@ -206,7 +214,7 @@ const ReportConditionForm = ({ onSubmit, onCancel, currentLocation: externalLoca
     const timeoutId = setTimeout(() => {
       // If location takes too long, use default
       setLocationStatus("error");
-      setLocationError("Location timeout - using default");
+      setLocationError(t("common.locationTimeout"));
       setLocation(DEFAULT_LOCATION);
     }, 10000); // 10 second timeout
 
@@ -231,7 +239,7 @@ const ReportConditionForm = ({ onSubmit, onCancel, currentLocation: externalLoca
         enableHighAccuracy: false, // Faster response
         timeout: 8000,
         maximumAge: 60000, // Cache for 1 minute
-      }
+      },
     );
   };
 
@@ -316,15 +324,17 @@ const ReportConditionForm = ({ onSubmit, onCancel, currentLocation: externalLoca
           <MapPin size={14} />
         )}
         <span>
-          {locationStatus === "loading" && "Fetching location..."}
-          {locationStatus === "success" && location &&
+          {locationStatus === "loading" && t("common.fetchingLocation")}
+          {locationStatus === "success" &&
+            location &&
             `${t("tasks.location")}: ${location.lat.toFixed(5)}, ${location.lng.toFixed(5)}`}
           {locationStatus === "error" && (
             <>
-              {locationError || "Location unavailable"} - using default location
+              {locationError || t("common.locationUnavailable")} -{" "}
+              {t("common.usingDefaultLocation")}
             </>
           )}
-          {locationStatus === "idle" && "Waiting for location..."}
+          {locationStatus === "idle" && t("common.waitingForLocation")}
         </span>
         {locationStatus === "error" && (
           <button
@@ -347,7 +357,11 @@ const ReportConditionForm = ({ onSubmit, onCancel, currentLocation: externalLoca
         <button
           type="submit"
           className="btn-submit"
-          disabled={!formData.description.trim() || isSubmitting || locationStatus === "loading"}
+          disabled={
+            !formData.description.trim() ||
+            isSubmitting ||
+            locationStatus === "loading"
+          }
         >
           <AlertTriangle size={14} />
           {isSubmitting ? t("common.loading") : t("roads.reportBtn")}
@@ -378,7 +392,12 @@ export default function RoadConditions({ currentLocation, onConditionClick }) {
       roadConditionsAPI.getAll({
         // For "verified" filter, fetch all and filter client-side by verified field
         // For other filters, use status parameter
-        status: filter === "verified" ? undefined : (filter !== "all" ? filter : undefined),
+        status:
+          filter === "verified"
+            ? undefined
+            : filter !== "all"
+              ? filter
+              : undefined,
       }),
     select: (response) => {
       const data = response?.data?.data || [];
@@ -400,7 +419,10 @@ export default function RoadConditions({ currentLocation, onConditionClick }) {
     },
     onError: (error) => {
       console.error("Failed to report condition:", error);
-      const message = error?.response?.data?.message || error.message || "Failed to submit report";
+      const message =
+        error?.response?.data?.message ||
+        error.message ||
+        t("roads.failedToSubmit");
       alert(message);
     },
   });
@@ -431,7 +453,7 @@ export default function RoadConditions({ currentLocation, onConditionClick }) {
   const activeConditions =
     conditions?.filter((c) => c.status === "active") || [];
   const criticalCount = activeConditions.filter(
-    (c) => c.severity === "critical" || c.severity === "high"
+    (c) => c.severity === "critical" || c.severity === "high",
   ).length;
 
   return (

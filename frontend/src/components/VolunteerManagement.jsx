@@ -26,16 +26,16 @@ import Modal from "./Modal";
 import "./VolunteerManagement.css";
 
 const SKILL_OPTIONS = [
-  "First Aid",
-  "Search & Rescue",
-  "Medical",
-  "Driving",
-  "Communication",
-  "Logistics",
-  "Construction",
-  "Cooking",
-  "Translation",
-  "Counseling",
+  { key: "firstAid", value: "First Aid" },
+  { key: "searchRescue", value: "Search & Rescue" },
+  { key: "medical", value: "Medical" },
+  { key: "driving", value: "Driving" },
+  { key: "communication", value: "Communication" },
+  { key: "logistics", value: "Logistics" },
+  { key: "construction", value: "Construction" },
+  { key: "cooking", value: "Cooking" },
+  { key: "translation", value: "Translation" },
+  { key: "counseling", value: "Counseling" },
 ];
 
 export default function VolunteerManagement() {
@@ -76,7 +76,7 @@ export default function VolunteerManagement() {
         setVolunteers(result.data);
       }
     } catch (err) {
-      setError("Failed to load volunteers");
+      setError(t("volunteer.failedToLoad"));
     } finally {
       setLoading(false);
     }
@@ -106,7 +106,7 @@ export default function VolunteerManagement() {
       const result = await registerVolunteer(formData);
       if (result.success) {
         setNewPin(result.data.pin);
-        setSuccess(`Volunteer "${result.data.name}" registered successfully!`);
+        setSuccess(t("volunteer.registerSuccess", { name: result.data.name }));
         setFormData({ name: "", phone: "", email: "", skills: [] });
         fetchVolunteers();
       } else {
@@ -120,16 +120,16 @@ export default function VolunteerManagement() {
   };
 
   const handleDeactivate = async (id, name) => {
-    if (!confirm(`Are you sure you want to deactivate ${name}?`)) return;
+    if (!confirm(t("volunteer.confirmDeactivate", { name }))) return;
 
     try {
       const result = await deactivateVolunteer(id);
       if (result.success) {
-        setSuccess(`Volunteer "${name}" deactivated`);
+        setSuccess(t("volunteer.deactivated", { name }));
         fetchVolunteers();
       }
     } catch (err) {
-      setError("Failed to deactivate volunteer");
+      setError(t("volunteer.failedToDeactivate"));
     }
   };
 
@@ -158,17 +158,19 @@ export default function VolunteerManagement() {
     try {
       const result = await sendVolunteerMessage(
         messageModal.volunteer._id,
-        messageText
+        messageText,
       );
 
       if (result.success) {
-        setSuccess(`Message sent to ${messageModal.volunteer.name}`);
+        setSuccess(
+          t("volunteer.messageSent", { name: messageModal.volunteer.name }),
+        );
         handleCloseMessage();
       } else {
-        setError("Failed to send message");
+        setError(t("volunteer.failedToSendMessage"));
       }
     } catch (err) {
-      setError("Failed to send message");
+      setError(t("volunteer.failedToSendMessage"));
     } finally {
       setSendingMessage(false);
     }
@@ -264,7 +266,7 @@ export default function VolunteerManagement() {
                 name="phone"
                 value={formData.phone}
                 onChange={handleInputChange}
-                placeholder="+1 234 567 8900"
+                placeholder={t("volunteer.phonePlaceholder")}
               />
             </div>
 
@@ -278,7 +280,7 @@ export default function VolunteerManagement() {
                 name="email"
                 value={formData.email}
                 onChange={handleInputChange}
-                placeholder="volunteer@email.com"
+                placeholder={t("volunteer.emailPlaceholder")}
               />
             </div>
           </div>
@@ -288,21 +290,25 @@ export default function VolunteerManagement() {
             <div className="skills-grid">
               {SKILL_OPTIONS.map((skill) => (
                 <button
-                  key={skill}
+                  key={skill.value}
                   type="button"
                   className={`skill-chip ${
-                    formData.skills.includes(skill) ? "selected" : ""
+                    formData.skills.includes(skill.value) ? "selected" : ""
                   }`}
-                  onClick={() => handleSkillToggle(skill)}
+                  onClick={() => handleSkillToggle(skill.value)}
                 >
-                  {skill}
+                  {t(`volunteer.skill.${skill.key}`)}
                 </button>
               ))}
             </div>
           </div>
 
           <div className="form-actions">
-            <button type="button" className="btn-cancel" onClick={() => setShowForm(false)}>
+            <button
+              type="button"
+              className="btn-cancel"
+              onClick={() => setShowForm(false)}
+            >
               {t("common.cancel")}
             </button>
             <button type="submit" className="btn-submit" disabled={submitting}>
