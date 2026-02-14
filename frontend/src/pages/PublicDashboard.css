@@ -1,252 +1,297 @@
-/* Public Dashboard Styles */
-.public-dashboard {
+/* ============================================
+   Public Dashboard — Clean & simple
+   ============================================ */
+
+.pd-page {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background: var(--bg-primary, #0f172a);
+  background: var(--background);
 }
 
-/* Header */
-.public-header {
-  background: rgba(15, 23, 42, 0.95);
-  backdrop-filter: blur(10px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+/* ---- Header ---- */
+.pd-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 56px;
+  padding: 0 20px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border-color);
   position: sticky;
   top: 0;
   z-index: 100;
 }
 
-.public-header-inner {
+.pd-header-left {
   display: flex;
   align-items: center;
-  gap: var(--space-3);
-  padding: var(--space-3) var(--space-4);
-  max-width: 1400px;
-  margin: 0 auto;
+  gap: 10px;
 }
 
-.back-button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  background: rgba(100, 116, 139, 0.1);
-  border: 1px solid rgba(100, 116, 139, 0.2);
-  border-radius: 10px;
-  color: #94a3b8;
-  cursor: pointer;
-  transition: all 0.2s ease;
+.pd-brand-icon {
+  color: var(--primary);
 }
 
-.back-button:hover {
-  background: rgba(100, 116, 139, 0.2);
-  color: #f8fafc;
-}
-
-.public-brand {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-}
-
-.public-brand .brand-icon {
-  color: #f97316;
-}
-
-.public-brand .brand-name {
+.pd-brand {
   font-size: 1.1rem;
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  background: linear-gradient(135deg, #f97316 0%, #fb923c 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: var(--primary);
 }
 
-.public-badge {
-  margin-left: auto;
-  padding: var(--space-1) var(--space-3);
-  background: rgba(16, 185, 129, 0.15);
+.pd-badge {
+  padding: 3px 10px;
+  background: rgba(16, 185, 129, 0.12);
   color: #34d399;
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   font-weight: 600;
   border-radius: 20px;
-  border: 1px solid rgba(16, 185, 129, 0.3);
+  border: 1px solid rgba(16, 185, 129, 0.25);
 }
 
-.public-header-actions {
+.pd-header-right {
   display: flex;
   align-items: center;
-  gap: var(--space-2);
+  gap: 8px;
 }
 
-.public-header-actions .icon-btn {
+/* Language */
+.pd-lang {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--text-secondary);
+}
+
+.pd-lang-select {
+  all: unset;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 6px;
+  background: transparent;
+  transition: color 0.15s;
+}
+
+.pd-lang-select:hover {
+  color: var(--text-primary);
+}
+
+.pd-lang-select option {
+  background: var(--surface);
+  color: var(--text-primary);
+}
+
+/* Icon button */
+.pd-icon-btn {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
-  background: rgba(100, 116, 139, 0.1);
-  border: 1px solid rgba(100, 116, 139, 0.2);
-  border-radius: 10px;
-  color: #94a3b8;
+  width: 34px;
+  height: 34px;
+  background: transparent;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  color: var(--text-secondary);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition:
+    color 0.15s,
+    border-color 0.15s;
 }
 
-.public-header-actions .icon-btn:hover {
-  background: rgba(100, 116, 139, 0.2);
-  color: #f8fafc;
+.pd-icon-btn:hover {
+  color: var(--text-primary);
+  border-color: var(--neutral-500);
 }
 
-.exit-btn {
-  display: flex;
+/* Exit button */
+.pd-exit-btn {
+  display: inline-flex;
   align-items: center;
-  gap: var(--space-1);
-  padding: var(--space-2) var(--space-3);
-  background: rgba(239, 68, 68, 0.1);
-  border: 1px solid rgba(239, 68, 68, 0.2);
-  border-radius: 10px;
+  gap: 5px;
+  padding: 7px 14px;
+  background: transparent;
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  border-radius: 8px;
   color: #f87171;
-  font-size: 0.85rem;
+  font-size: 0.82rem;
+  font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition:
+    background 0.15s,
+    color 0.15s;
 }
 
-.exit-btn:hover {
-  background: rgba(239, 68, 68, 0.2);
+.pd-exit-btn:hover {
+  background: rgba(239, 68, 68, 0.1);
   color: #fca5a5;
 }
 
-/* Tab Navigation */
-.public-tabs {
+/* ---- Tabs ---- */
+.pd-tabs {
   display: flex;
-  gap: var(--space-2);
-  padding: var(--space-3) var(--space-4);
-  background: rgba(15, 23, 42, 0.8);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid var(--border-color);
+  padding: 0 20px;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
 }
 
-.public-tab {
-  display: flex;
+.pd-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.pd-tab {
+  position: relative;
+  display: inline-flex;
   align-items: center;
-  gap: var(--space-2);
-  padding: var(--space-3) var(--space-4);
-  background: rgba(100, 116, 139, 0.1);
-  border: 1px solid rgba(100, 116, 139, 0.2);
-  border-radius: 12px;
-  color: #94a3b8;
+  gap: 7px;
+  padding: 13px 18px;
+  background: none;
+  border: none;
+  color: var(--text-secondary);
   font-size: 0.9rem;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s ease;
   white-space: nowrap;
+  transition: color 0.15s;
+}
+
+.pd-tab:hover {
+  color: var(--text-primary);
+}
+
+.pd-tab--active {
+  color: var(--primary);
+}
+
+.pd-tab--active::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 12px;
+  right: 12px;
+  height: 2px;
+  background: var(--primary);
+  border-radius: 2px 2px 0 0;
+}
+
+/* ---- Main ---- */
+.pd-main {
   flex: 1;
-  justify-content: center;
-}
-
-.public-tab:hover {
-  background: rgba(100, 116, 139, 0.2);
-  color: #f8fafc;
-}
-
-.public-tab.active {
-  background: linear-gradient(
-    135deg,
-    rgba(249, 115, 22, 0.2) 0%,
-    rgba(234, 88, 12, 0.2) 100%
-  );
-  border-color: rgba(249, 115, 22, 0.4);
-  color: #fb923c;
-}
-
-/* Main Content */
-.public-main {
-  flex: 1;
-  padding: var(--space-4);
+  padding: 20px;
   overflow-y: auto;
 }
 
-.public-content {
-  max-width: 800px;
+.pd-content {
+  max-width: 820px;
   margin: 0 auto;
 }
 
-/* Language Dropdown in Header */
-.public-header .lang-dropdown {
-  display: flex;
-  align-items: center;
-  gap: var(--space-1);
-  color: #94a3b8;
+/* Map wrapper */
+.pd-map-wrap {
+  width: 100%;
+  height: calc(100vh - 130px);
+  min-height: 400px;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--border-color);
 }
 
-.public-header .lang-select {
-  background: rgba(100, 116, 139, 0.1);
-  border: 1px solid rgba(100, 116, 139, 0.2);
-  border-radius: 8px;
-  padding: var(--space-1) var(--space-2);
-  color: #94a3b8;
-  font-size: 0.8rem;
-  cursor: pointer;
-}
-
-.public-header .lang-select:hover {
-  background: rgba(100, 116, 139, 0.2);
-}
-
-/* Responsive */
+/* ============================================
+   Responsive
+   ============================================ */
 @media (max-width: 640px) {
-  .public-header-inner {
-    padding: var(--space-2) var(--space-3);
-    gap: var(--space-2);
+  .pd-header {
+    height: 50px;
+    padding: 0 14px;
   }
 
-  .public-brand .brand-name {
+  .pd-brand {
+    font-size: 1rem;
+  }
+
+  .pd-badge {
+    font-size: 0.68rem;
+    padding: 2px 8px;
+  }
+
+  .pd-exit-text {
     display: none;
   }
 
-  .public-badge {
-    font-size: 0.7rem;
-    padding: var(--space-1) var(--space-2);
+  .pd-exit-btn {
+    padding: 7px 10px;
   }
 
-  .public-tabs {
-    padding: var(--space-2) var(--space-3);
-    gap: var(--space-1);
+  .pd-tabs {
+    padding: 0 14px;
   }
 
-  .public-tab {
-    padding: var(--space-2) var(--space-3);
-    font-size: 0.8rem;
+  .pd-tab {
+    padding: 12px 14px;
+    font-size: 0.85rem;
+    gap: 6px;
   }
 
-  .public-tab span {
-    display: none;
+  .pd-tab--active::after {
+    left: 8px;
+    right: 8px;
   }
 
-  .public-main {
-    padding: var(--space-3);
+  .pd-main {
+    padding: 14px;
   }
 
-  .exit-btn span {
-    display: none;
+  .pd-map-wrap {
+    height: calc(100vh - 120px);
+    border-radius: 10px;
   }
 }
 
 @media (max-width: 480px) {
-  .public-header .lang-dropdown {
+  .pd-header {
+    padding: 0 10px;
+    gap: 6px;
+  }
+
+  .pd-brand {
     display: none;
+  }
+
+  .pd-lang {
+    display: none;
+  }
+
+  .pd-tab-text {
+    display: none;
+  }
+
+  .pd-tab {
+    flex: 1;
+    justify-content: center;
+    padding: 12px 10px;
+  }
+
+  .pd-tab-icon {
+    width: 20px;
+    height: 20px;
+  }
+
+  .pd-icon-btn {
+    width: 32px;
+    height: 32px;
   }
 }
 
-/* Public Shelter Map */
-.public-shelter-map {
-  width: 100%;
-  height: calc(100vh - 140px);
-  min-height: 400px;
-  border-radius: var(--radius-xl, 12px);
-  overflow: hidden;
+@media (max-width: 360px) {
+  .pd-header {
+    padding: 0 8px;
+  }
+
+  .pd-tabs {
+    padding: 0 8px;
+  }
 }

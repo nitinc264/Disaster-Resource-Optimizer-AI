@@ -1,156 +1,151 @@
-/* Volunteer Page - Clean, simple, field-ready */
-.volunteer-page {
+/* ==========================================
+   FIELD TASKS PAGE — Clean & Simple
+   ========================================== */
+.vol-page {
   display: flex;
   flex-direction: column;
-  gap: var(--space-4);
   width: 100%;
-  max-width: 100%;
-  padding-bottom: 100px; /* Space for SOS button */
+  padding-bottom: 100px;
 }
 
-/* Simple Header */
-.field-header {
-  text-align: center;
-  padding: var(--space-4);
-  background: var(--surface);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-xl);
-}
-
-.field-header h1 {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: var(--text-primary);
-  margin: 0 0 var(--space-2) 0;
-}
-
-.field-header p {
-  color: var(--text-secondary);
-  font-size: 1rem;
-  margin: 0;
-}
-
-/* Action Tabs - Large, Easy to Tap */
-.action-tabs {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: var(--space-4);
-}
-
-@media (max-width: 900px) {
-  .action-tabs {
-    grid-template-columns: repeat(2, 1fr);
-    gap: var(--space-3);
-  }
-}
-
-.action-tab {
+/* ---- Topbar: tabs + missing person btn ---- */
+.vol-topbar {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: var(--space-2);
-  padding: var(--space-5) var(--space-3);
-  background: var(--surface);
-  border: 2px solid var(--border-color);
-  border-radius: var(--radius-xl);
+  justify-content: space-between;
+  gap: 12px;
+  border-bottom: 1px solid var(--border-color);
+  margin-bottom: 20px;
+}
+
+.vol-tabs {
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+
+.vol-tab {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 12px 20px;
+  background: transparent;
+  border: none;
   color: var(--text-secondary);
-  font-size: 1rem;
-  font-weight: 600;
+  font-size: 0.92rem;
+  font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s ease;
-  min-height: 100px;
+  transition: color 0.15s;
+  white-space: nowrap;
 }
 
-.action-tab:hover {
-  border-color: var(--primary);
+.vol-tab:hover {
   color: var(--text-primary);
-  background: var(--surface-elevated);
 }
 
-.action-tab.active {
+.vol-tab--active {
+  color: var(--primary) !important;
+  font-weight: 600;
+}
+
+.vol-tab--active::after {
+  content: "";
+  position: absolute;
+  bottom: -1px;
+  left: 16px;
+  right: 16px;
+  height: 2px;
   background: var(--primary);
+  border-radius: 1px;
+}
+
+/* Missing person CTA */
+.vol-missing-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 16px;
+  margin-bottom: 8px;
+  background: transparent;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+
+.vol-missing-btn:hover {
   border-color: var(--primary);
-  color: white;
+  color: var(--primary);
+  background: rgba(249, 115, 22, 0.06);
 }
 
-.action-tab svg {
-  opacity: 0.9;
-}
-
-.action-tab.active svg {
-  opacity: 1;
-}
-
-/* Content Area */
-.field-content {
+/* ---- Content ---- */
+.vol-content {
+  width: 100%;
   background: var(--surface);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-xl);
-  padding: var(--space-6);
+  border-radius: 12px;
+  padding: 20px;
   min-height: 400px;
-  width: 100%;
 }
 
-/* Mobile Responsive */
-@media (max-width: 480px) {
-  .volunteer-page {
-    gap: var(--space-3);
-    padding: 0 var(--space-2);
-    padding-bottom: 100px;
+/* ---- Responsive ---- */
+@media (max-width: 640px) {
+  .vol-topbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+    border-bottom: none;
+    margin-bottom: 16px;
   }
 
-  .field-header {
-    padding: var(--space-3);
-    border-radius: var(--radius-lg);
+  .vol-tabs {
+    border-bottom: 1px solid var(--border-color);
   }
 
-  .field-header h1 {
-    font-size: 1.25rem;
+  .vol-tab {
+    flex: 1;
+    justify-content: center;
+    padding: 12px 10px;
+    font-size: 0.92rem;
   }
 
-  .field-header p {
+  .vol-tab--active::after {
+    left: 10px;
+    right: 10px;
+  }
+
+  .vol-missing-btn {
+    display: flex;
+    justify-content: center;
+    margin: 10px 0 0;
+    padding: 11px 16px;
     font-size: 0.9rem;
+    border-radius: 10px;
   }
 
-  .action-tabs {
-    gap: var(--space-2);
-  }
-
-  .action-tab {
-    padding: var(--space-4) var(--space-2);
-    min-height: 85px;
-    border-radius: var(--radius-lg);
-  }
-
-  .action-tab svg {
-    width: 22px;
-    height: 22px;
-  }
-
-  .action-tab span {
-    font-size: 0.9rem;
-  }
-
-  .field-content {
-    padding: var(--space-3);
-    border-radius: var(--radius-lg);
+  .vol-content {
+    padding: 16px;
+    border-radius: 10px;
+    min-height: 300px;
   }
 }
 
-@media (max-width: 380px) {
-  .action-tab {
-    padding: var(--space-3) var(--space-2);
-    min-height: 75px;
+@media (max-width: 420px) {
+  .vol-tab {
+    padding: 11px 8px;
+    font-size: 0.86rem;
+    gap: 5px;
   }
 
-  .action-tab svg {
-    width: 20px;
-    height: 20px;
-  }
-
-  .action-tab span {
-    font-size: 0.8rem;
+  .vol-tab svg {
+    width: 14px;
+    height: 14px;
   }
 }
 

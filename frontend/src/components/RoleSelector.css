@@ -1,297 +1,300 @@
-/* Role Selector - Modern Professional Design */
-.role-selector-container {
+/* ============================================
+   Role Selector — Clean minimal design
+   ============================================ */
+
+/* Page wrapper */
+.rs-page {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
-  padding: var(--space-4);
-  position: relative;
-  overflow: hidden;
+  background: var(--background);
+  padding: 24px;
 }
 
-.role-selector-container::before {
-  content: "";
-  position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  background: radial-gradient(
-      circle at 30% 20%,
-      rgba(249, 115, 22, 0.08) 0%,
-      transparent 50%
-    ),
-    radial-gradient(
-      circle at 70% 80%,
-      rgba(59, 130, 246, 0.06) 0%,
-      transparent 50%
-    );
-  pointer-events: none;
-}
-
-.role-selector-card {
-  background: rgba(30, 41, 59, 0.8);
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 24px;
-  padding: var(--space-8);
-  max-width: 460px;
+/* Card */
+.rs-card {
   width: 100%;
-  position: relative;
-  z-index: 1;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5),
-    0 0 0 1px rgba(255, 255, 255, 0.05);
+  max-width: 420px;
+  background: var(--surface);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  padding: 36px 32px 32px;
 }
 
-.role-selector-header {
-  text-align: center;
-  margin-bottom: var(--space-6);
-}
-
-.role-selector-logo {
+/* ---- Logo ---- */
+.rs-logo {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: var(--space-2);
-  margin-bottom: var(--space-4);
+  gap: 10px;
+  margin-bottom: 28px;
 }
 
-.role-selector-header h1 {
-  color: #f8fafc;
-  font-size: 1.5rem;
-  font-weight: 600;
-  margin: 0 0 var(--space-2);
-  letter-spacing: -0.02em;
-}
-
-.selector-subtitle {
-  color: #94a3b8;
-  font-size: 0.9rem;
-  margin: 0;
-}
-
-/* Role Options */
-.role-options {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-}
-
-.role-prompt {
-  color: #94a3b8;
-  font-size: 0.9rem;
-  text-align: center;
-  margin-bottom: var(--space-2);
-}
-
-.role-option {
-  display: flex;
-  align-items: center;
-  gap: var(--space-4);
-  padding: var(--space-4);
-  background: rgba(15, 23, 42, 0.6);
-  border: 2px solid rgba(100, 116, 139, 0.2);
-  border-radius: 16px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  text-align: left;
-  width: 100%;
-}
-
-.role-option:hover {
-  border-color: rgba(249, 115, 22, 0.4);
-  background: rgba(15, 23, 42, 0.8);
-  transform: translateY(-2px);
-}
-
-.role-option:active {
-  transform: translateY(0);
-}
-
-.role-icon {
-  width: 48px;
-  height: 48px;
+.rs-logo-icon {
+  width: 44px;
+  height: 44px;
+  background: var(--primary);
   border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
+  color: #fff;
+}
+
+.rs-logo-text {
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: var(--primary);
+}
+
+/* ---- Prompt ---- */
+.rs-prompt {
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 0.92rem;
+  margin: 0 0 20px;
+}
+
+/* ---- Role list ---- */
+.rs-roles {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Role button */
+.rs-role {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  padding: 14px 16px;
+  background: var(--background);
+  border: 1.5px solid var(--border-color);
+  border-radius: 12px;
+  cursor: pointer;
+  text-align: left;
+  transition:
+    border-color 0.15s,
+    transform 0.1s;
+}
+
+.rs-role:hover {
+  border-color: var(--primary);
+  transform: translateY(-1px);
+}
+
+.rs-role:active {
+  transform: translateY(0);
+}
+
+/* Role icon circle */
+.rs-role-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   flex-shrink: 0;
+  color: #fff;
 }
 
-.public-icon {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-  color: white;
-  box-shadow: 0 4px 12px -2px rgba(16, 185, 129, 0.4);
+.rs-role--green .rs-role-icon {
+  background: #10b981;
+}
+.rs-role--orange .rs-role-icon {
+  background: var(--primary);
+}
+.rs-role--blue .rs-role-icon {
+  background: #3b82f6;
 }
 
-.manager-icon {
-  background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
-  color: white;
-  box-shadow: 0 4px 12px -2px rgba(249, 115, 22, 0.4);
-}
-
-.volunteer-icon {
-  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-  color: white;
-  box-shadow: 0 4px 12px -2px rgba(59, 130, 246, 0.4);
-}
-
-.role-info {
+/* Role text */
+.rs-role-body {
   flex: 1;
   display: flex;
   flex-direction: column;
   gap: 2px;
+  min-width: 0;
 }
 
-.role-title {
-  color: #f8fafc;
-  font-size: 1rem;
+.rs-role-title {
+  color: var(--text-primary);
+  font-size: 0.95rem;
   font-weight: 600;
 }
 
-.role-description {
-  color: #94a3b8;
+.rs-role-desc {
+  color: var(--text-secondary);
   font-size: 0.8rem;
+  line-height: 1.35;
 }
 
-.role-arrow {
-  color: #64748b;
-  transition: transform 0.2s ease;
+/* Arrow */
+.rs-role-arrow {
+  color: var(--neutral-500);
+  flex-shrink: 0;
+  transition:
+    transform 0.15s,
+    color 0.15s;
 }
 
-.role-option:hover .role-arrow {
-  color: #f97316;
-  transform: translateX(4px);
+.rs-role:hover .rs-role-arrow {
+  color: var(--primary);
+  transform: translateX(3px);
 }
 
-/* Footer */
-.role-selector-footer {
-  margin-top: var(--space-6);
-  text-align: center;
-}
-
-.role-selector-footer p {
-  color: #64748b;
-  font-size: 0.8rem;
-  margin: 0;
-}
-
-/* Location States */
-.location-checking-section,
-.location-denied-section {
+/* ---- Center block (location states) ---- */
+.rs-center-block {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: var(--space-6) 0;
+  text-align: center;
+  padding: 20px 0 8px;
 }
 
-.location-checking-section .spin {
-  color: #f97316;
-  animation: spin 1s linear infinite;
+.rs-heading {
+  color: var(--text-primary);
+  font-size: 1.15rem;
+  font-weight: 600;
+  margin: 0 0 8px;
 }
 
-@keyframes spin {
-  from {
-    transform: rotate(0deg);
-  }
+.rs-muted {
+  color: var(--text-secondary);
+  font-size: 0.88rem;
+  line-height: 1.55;
+  max-width: 300px;
+  margin: 0 0 20px;
+}
+
+/* Location icon badges */
+.rs-loc-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+
+.rs-loc-icon--error {
+  background: var(--error-light);
+  color: var(--error);
+}
+
+/* ---- Buttons ---- */
+.rs-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 11px 24px;
+  border-radius: 10px;
+  font-size: 0.92rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition:
+    opacity 0.15s,
+    transform 0.1s;
+}
+
+.rs-btn:active {
+  transform: scale(0.97);
+}
+
+.rs-btn--primary {
+  background: var(--primary);
+  color: #fff;
+}
+
+.rs-btn--primary:hover {
+  opacity: 0.9;
+}
+
+.rs-btn--ghost {
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+  margin-top: 10px;
+}
+
+.rs-btn--ghost:hover {
+  color: var(--text-primary);
+  border-color: var(--neutral-500);
+}
+
+/* Spinner */
+.rs-spin {
+  color: var(--primary);
+  animation: rs-spin 1s linear infinite;
+}
+
+@keyframes rs-spin {
   to {
     transform: rotate(360deg);
   }
 }
 
-.location-error-icon {
-  width: 64px;
-  height: 64px;
-  background: rgba(239, 68, 68, 0.1);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #f87171;
-  margin-bottom: var(--space-4);
-}
-
-.location-message {
-  color: #f8fafc;
-  font-size: 1.1rem;
-  font-weight: 600;
-  margin: var(--space-4) 0 var(--space-2);
-}
-
-.location-hint {
-  color: #94a3b8;
-  font-size: 0.9rem;
+/* ---- Footer ---- */
+.rs-footer {
+  margin-top: 24px;
   text-align: center;
-  max-width: 300px;
-  margin-bottom: var(--space-4);
+  color: var(--neutral-600);
+  font-size: 0.7rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
-.enable-location-btn {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  padding: var(--space-3) var(--space-5);
-  background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
-  color: white;
-  border: none;
-  border-radius: 12px;
-  font-size: 0.95rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  box-shadow: 0 4px 12px -2px rgba(249, 115, 22, 0.4);
-}
-
-.enable-location-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px -2px rgba(249, 115, 22, 0.5);
-}
-
-.back-btn {
-  margin-top: var(--space-3);
-  padding: var(--space-2) var(--space-4);
-  background: transparent;
-  color: #94a3b8;
-  border: 1px solid rgba(100, 116, 139, 0.3);
-  border-radius: 8px;
-  font-size: 0.85rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.back-btn:hover {
-  color: #f8fafc;
-  border-color: rgba(100, 116, 139, 0.5);
-}
-
-/* Responsive */
+/* ============================================
+   Responsive
+   ============================================ */
 @media (max-width: 480px) {
-  .role-selector-card {
-    padding: var(--space-6);
-    border-radius: 20px;
+  .rs-page {
+    padding: 16px;
   }
 
-  .role-selector-header h1 {
-    font-size: 1.25rem;
+  .rs-card {
+    padding: 28px 20px 24px;
+    border-radius: 14px;
   }
 
-  .role-option {
-    padding: var(--space-3);
-    gap: var(--space-3);
-  }
-
-  .role-icon {
+  .rs-logo-icon {
     width: 40px;
     height: 40px;
   }
 
-  .role-title {
-    font-size: 0.9rem;
+  .rs-logo-text {
+    font-size: 1.35rem;
   }
 
-  .role-description {
-    font-size: 0.75rem;
+  .rs-role {
+    padding: 12px 14px;
+    gap: 12px;
+  }
+
+  .rs-role-icon {
+    width: 38px;
+    height: 38px;
+  }
+
+  .rs-role-title {
+    font-size: 0.92rem;
+  }
+
+  .rs-role-desc {
+    font-size: 0.78rem;
+  }
+}
+
+@media (max-width: 360px) {
+  .rs-card {
+    padding: 24px 16px 20px;
   }
 }

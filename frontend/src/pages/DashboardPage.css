@@ -113,7 +113,9 @@
   font-weight: 600;
   font-size: 0.8rem;
   cursor: pointer;
-  transition: opacity 0.15s, transform 0.15s;
+  transition:
+    opacity 0.15s,
+    transform 0.15s;
   flex-shrink: 0;
   white-space: nowrap;
 }
@@ -142,7 +144,9 @@
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* ================================================
@@ -197,8 +201,7 @@
 }
 
 .dash-tab__icon {
-  font-size: 1rem;
-  line-height: 1;
+  flex-shrink: 0;
 }
 
 .dash-tab__label {
@@ -494,7 +497,8 @@
   }
 
   .dash-tab__icon {
-    font-size: 1.2rem;
+    width: 20px;
+    height: 20px;
   }
 
   .dash-tab--active {
@@ -535,7 +539,9 @@
     border-radius: 14px 14px 0 0;
     border: none;
     box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.4);
-    transition: height 0.3s ease, max-height 0.3s ease;
+    transition:
+      height 0.3s ease,
+      max-height 0.3s ease;
     overflow: hidden;
   }
 
@@ -615,7 +621,8 @@
   }
 
   .dash-tab__icon {
-    font-size: 1.1rem;
+    width: 18px;
+    height: 18px;
   }
 
   .dash-panel {

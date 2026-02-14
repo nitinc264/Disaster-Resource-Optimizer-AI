@@ -1,4 +1,6 @@
-/* Volunteer Task List - Clean, minimal design */
+/* ==========================================
+   TASK LIST — Clean & Minimal
+   ========================================== */
 .task-list-container {
   width: 100%;
 }
@@ -6,8 +8,10 @@
 .task-list-header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  margin-bottom: var(--space-4);
+  gap: 10px;
+  margin-bottom: 20px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--border-color);
 }
 
 .task-list-header h2 {
@@ -19,21 +23,22 @@
 
 .task-count {
   background: var(--primary);
-  color: white;
-  font-size: 0.75rem;
+  color: #fff;
+  font-size: 0.72rem;
   font-weight: 700;
   padding: 2px 10px;
-  border-radius: 12px;
+  border-radius: 999px;
+  line-height: 1.6;
 }
 
-/* Loading & Error States */
+/* ---- States ---- */
 .task-loading,
 .task-error {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: var(--space-3);
-  padding: var(--space-8);
+  gap: 10px;
+  padding: 48px 16px;
   color: var(--text-secondary);
   font-size: 0.9rem;
 }
@@ -42,48 +47,45 @@
   color: var(--error);
 }
 
-/* Offline Banner */
-.offline-banner {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  padding: var(--space-3);
-  background: rgba(245, 158, 11, 0.1);
-  border: 1px solid rgba(245, 158, 11, 0.3);
-  border-radius: var(--radius-lg);
-  margin-bottom: var(--space-4);
-  font-size: 0.8rem;
-  color: #f59e0b;
-}
-
-/* Pending Sync Banner */
+/* ---- Banners ---- */
+.offline-banner,
 .pending-sync-banner {
   display: flex;
   align-items: center;
-  gap: var(--space-2);
-  padding: var(--space-3);
-  background: rgba(59, 130, 246, 0.1);
-  border: 1px solid rgba(59, 130, 246, 0.3);
-  border-radius: var(--radius-lg);
-  margin-bottom: var(--space-4);
-  font-size: 0.8rem;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  margin-bottom: 14px;
+  font-size: 0.82rem;
+  font-weight: 500;
+}
+
+.offline-banner {
+  background: rgba(245, 158, 11, 0.08);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  color: #f59e0b;
+}
+
+.pending-sync-banner {
+  background: rgba(59, 130, 246, 0.08);
+  border: 1px solid rgba(59, 130, 246, 0.25);
   color: #3b82f6;
 }
 
 .pending-sync-banner .sync-btn {
   margin-left: auto;
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: var(--space-1);
-  padding: var(--space-1) var(--space-2);
+  gap: 5px;
+  padding: 5px 12px;
   background: #3b82f6;
-  color: white;
+  color: #fff;
   border: none;
-  border-radius: var(--radius-md);
+  border-radius: 6px;
   font-size: 0.75rem;
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
-  transition: background 0.15s ease;
+  transition: background 0.15s;
 }
 
 .pending-sync-banner .sync-btn:hover:not(:disabled) {
@@ -91,39 +93,37 @@
 }
 
 .pending-sync-banner .sync-btn:disabled {
-  opacity: 0.7;
+  opacity: 0.6;
   cursor: not-allowed;
 }
 
-/* Pending Badge in Task */
+/* Pending badge */
 .pending-badge {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 3px;
-  padding: 2px 6px;
+  padding: 2px 7px;
   background: rgba(59, 130, 246, 0.1);
   color: #3b82f6;
   font-size: 0.65rem;
-  font-weight: 500;
-  border-radius: var(--radius-sm);
+  font-weight: 600;
+  border-radius: 4px;
 }
 
-/* Task Card Pending Sync State */
 .task-card.pending-sync {
-  border-color: rgba(59, 130, 246, 0.4);
-  background: rgba(59, 130, 246, 0.03);
+  border-color: rgba(59, 130, 246, 0.35);
 }
 
-/* Active Route Banner */
+/* ---- Active Route Banner ---- */
 .active-route-banner {
   display: flex;
   align-items: center;
-  gap: var(--space-3);
-  padding: var(--space-3) var(--space-4);
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-  border-radius: var(--radius-lg);
-  margin-bottom: var(--space-4);
-  color: white;
+  gap: 12px;
+  padding: 12px 16px;
+  background: linear-gradient(135deg, #10b981, #059669);
+  border-radius: 10px;
+  margin-bottom: 14px;
+  color: #fff;
 }
 
 .active-route-banner .route-icon {
@@ -137,7 +137,7 @@
     opacity: 1;
   }
   50% {
-    opacity: 0.5;
+    opacity: 0.4;
   }
 }
 
@@ -149,99 +149,107 @@
 }
 
 .active-route-banner .route-status {
-  font-size: 0.85rem;
+  font-size: 0.88rem;
   font-weight: 600;
 }
 
 .active-route-banner .route-eta {
-  font-size: 0.75rem;
-  opacity: 0.9;
+  font-size: 0.76rem;
+  opacity: 0.85;
 }
 
 .active-route-banner .cancel-route {
   flex-shrink: 0;
   background: rgba(255, 255, 255, 0.2);
   border: none;
-  border-radius: 50%;
+  border-radius: 999px;
   width: 32px;
   height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  color: white;
-  transition: background 0.15s ease;
+  color: #fff;
+  transition: background 0.15s;
 }
 
 .active-route-banner .cancel-route:hover {
-  background: rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.35);
 }
 
-/* Empty State */
+/* ---- Empty state ---- */
 .empty-state {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: var(--space-10);
-  color: var(--text-muted);
+  padding: 60px 20px;
   text-align: center;
+  background: var(--background);
+  border: 1px dashed var(--border-color);
+  border-radius: 12px;
 }
 
 .empty-state svg {
-  margin-bottom: var(--space-3);
-  opacity: 0.5;
+  margin-bottom: 14px;
+  color: var(--text-muted);
+  opacity: 0.35;
 }
 
 .empty-state p {
   margin: 0;
-  font-size: 1rem;
+  font-size: 0.95rem;
   font-weight: 500;
   color: var(--text-secondary);
 }
 
 .empty-state span {
-  font-size: 0.85rem;
-  margin-top: var(--space-1);
+  font-size: 0.84rem;
+  color: var(--text-muted);
+  margin-top: 6px;
 }
 
-/* Task Cards */
+/* ==========================================
+   TASK CARDS
+   ========================================== */
 .task-cards {
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
+  gap: 10px;
 }
 
 .task-card {
   background: var(--background);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-lg);
+  border-radius: 10px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
   overflow: hidden;
 }
 
 .task-card:hover {
-  border-color: var(--primary);
+  border-color: rgba(249, 115, 22, 0.4);
 }
 
 .task-card.active {
   border-color: #10b981;
-  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.15);
+  box-shadow: 0 0 0 1px rgba(16, 185, 129, 0.2);
 }
 
 .task-card.verifying {
-  opacity: 0.6;
+  opacity: 0.5;
   pointer-events: none;
 }
 
-/* Task Card Main */
+/* Main row */
 .task-card-main {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: var(--space-4);
-  gap: var(--space-3);
+  padding: 14px 16px;
+  gap: 12px;
 }
 
 .task-info {
@@ -250,11 +258,11 @@
 }
 
 .task-description {
-  margin: 0 0 var(--space-2);
-  font-size: 0.9rem;
+  margin: 0 0 6px;
+  font-size: 0.92rem;
   font-weight: 500;
   color: var(--text-primary);
-  line-height: 1.4;
+  line-height: 1.45;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
@@ -264,20 +272,20 @@
 .task-meta {
   display: flex;
   align-items: center;
-  gap: var(--space-3);
+  gap: 10px;
 }
 
 .task-location {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 4px;
-  font-size: 0.75rem;
+  font-size: 0.76rem;
   color: var(--text-muted);
 }
 
 .expand-icon {
   color: var(--text-muted);
-  transition: transform 0.2s ease;
+  transition: transform 0.2s;
   flex-shrink: 0;
 }
 
@@ -285,19 +293,18 @@
   transform: rotate(90deg);
 }
 
-/* Task Card Expanded */
+/* Expanded section */
 .task-card-expanded {
-  padding: 0 var(--space-4) var(--space-4);
+  padding: 0 16px 14px;
   border-top: 1px solid var(--border-color);
-  margin-top: 0;
-  padding-top: var(--space-3);
-  animation: slideDown 0.2s ease;
+  padding-top: 12px;
+  animation: slideDown 0.15s ease;
 }
 
 @keyframes slideDown {
   from {
     opacity: 0;
-    transform: translateY(-8px);
+    transform: translateY(-6px);
   }
   to {
     opacity: 1;
@@ -308,46 +315,46 @@
 .task-notes {
   display: flex;
   align-items: flex-start;
-  gap: var(--space-2);
-  font-size: 0.8rem;
+  gap: 8px;
+  font-size: 0.82rem;
   color: var(--text-secondary);
-  margin-bottom: var(--space-3);
-  line-height: 1.4;
+  margin-bottom: 12px;
+  line-height: 1.5;
 }
 
 .task-notes svg {
   flex-shrink: 0;
-  margin-top: 2px;
-  opacity: 0.6;
+  margin-top: 3px;
+  opacity: 0.5;
 }
 
 .task-id {
   font-size: 0.7rem;
   color: var(--text-muted);
   font-family: var(--font-mono);
-  margin-bottom: var(--space-3);
+  margin-bottom: 12px;
 }
 
-/* Task Actions */
+/* Action buttons */
 .task-actions {
   display: flex;
-  gap: var(--space-2);
+  gap: 8px;
 }
 
 .btn-route,
 .btn-verify {
   flex: 1;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: var(--space-2);
-  padding: var(--space-3);
-  border-radius: var(--radius-md);
-  font-size: 0.8rem;
+  gap: 7px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 0.84rem;
   font-weight: 600;
   cursor: pointer;
   border: none;
-  transition: all 0.15s ease;
+  transition: all 0.15s;
 }
 
 .btn-route {
@@ -357,7 +364,6 @@
 }
 
 .btn-route:hover:not(:disabled) {
-  background: var(--surface-elevated);
   border-color: #10b981;
   color: #10b981;
 }
@@ -365,17 +371,17 @@
 .btn-route.active {
   background: #10b981;
   border-color: #10b981;
-  color: white;
+  color: #fff;
 }
 
 .btn-route:disabled {
-  opacity: 0.5;
+  opacity: 0.45;
   cursor: not-allowed;
 }
 
 .btn-verify {
   background: #10b981;
-  color: white;
+  color: #fff;
 }
 
 .btn-verify:hover:not(:disabled) {
@@ -383,10 +389,11 @@
 }
 
 .btn-verify:disabled {
-  opacity: 0.7;
+  opacity: 0.6;
   cursor: not-allowed;
 }
 
+/* Spin */
 .spin {
   animation: spin 1s linear infinite;
 }
@@ -400,23 +407,24 @@
   }
 }
 
-/* Mobile Responsive */
+/* ---- Responsive ---- */
 @media (max-width: 480px) {
   .task-card-main {
-    padding: var(--space-3);
+    padding: 12px 14px;
   }
 
   .task-description {
-    font-size: 0.85rem;
+    font-size: 0.88rem;
   }
 
   .task-card-expanded {
-    padding: 0 var(--space-3) var(--space-3);
+    padding: 0 14px 12px;
+    padding-top: 10px;
   }
 
   .btn-route,
   .btn-verify {
-    padding: var(--space-2) var(--space-3);
-    font-size: 0.75rem;
+    padding: 9px 10px;
+    font-size: 0.8rem;
   }
 }

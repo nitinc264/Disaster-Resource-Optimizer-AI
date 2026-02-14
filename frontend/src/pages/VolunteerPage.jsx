@@ -49,7 +49,7 @@ function MissingPersonReport() {
             lat: pos.coords.latitude,
             lng: pos.coords.longitude,
           }),
-        () => setCurrentLocation(null)
+        () => setCurrentLocation(null),
       );
     }
   }, []);
@@ -135,9 +135,7 @@ function MissingPersonReport() {
       <div className="missing-success">
         <CheckCircle size={48} />
         <h3>{t("missingPerson.success.title")}</h3>
-        <p>
-          {t("missingPerson.success.message")}
-        </p>
+        <p>{t("missingPerson.success.message")}</p>
         <button onClick={() => setSuccess(false)} className="btn-primary">
           {t("missingPerson.success.button")}
         </button>
@@ -351,49 +349,44 @@ function VolunteerPage() {
     { id: "tasks", icon: ClipboardList, label: t("volunteer.myTasks") },
     { id: "voice", icon: Mic, label: t("volunteer.voiceReport") },
     { id: "photo", icon: Camera, label: t("volunteer.photoReport") },
-    { id: "missing", icon: Search, label: t("volunteer.missingPerson") },
   ];
-
-  const handleTabClick = (tabId) => {
-    if (tabId === "missing") {
-      setIsReportModalOpen(true);
-    } else {
-      setViewMode(tabId);
-    }
-  };
 
   const closeReportModal = () => {
     setIsReportModalOpen(false);
   };
 
   return (
-    <div className="volunteer-page">
-      {/* Simple Header */}
-      <header className="field-header">
-        <h1>🚨 {t("volunteer.title")}</h1>
-        <p>{t("volunteer.subtitle")}</p>
-      </header>
+    <div className="vol-page">
+      {/* Topbar: tabs left, missing-person action right */}
+      <div className="vol-topbar">
+        <nav className="vol-tabs">
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setViewMode(tab.id)}
+              className={`vol-tab ${viewMode === tab.id ? "vol-tab--active" : ""}`}
+            >
+              <tab.icon size={16} />
+              {tab.label}
+            </button>
+          ))}
+        </nav>
 
-      {/* Large, Easy-to-Tap Action Cards */}
-      <nav className="action-tabs">
-        {tabs.map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => handleTabClick(tab.id)}
-            className={`action-tab ${viewMode === tab.id ? "active" : ""}`}
-          >
-            <tab.icon size={24} />
-            <span>{tab.label}</span>
-          </button>
-        ))}
-      </nav>
+        <button
+          className="vol-missing-btn"
+          onClick={() => setIsReportModalOpen(true)}
+        >
+          <Search size={15} />
+          {t("volunteer.missingPerson")}
+        </button>
+      </div>
 
-      {/* Content Area */}
-      <main className="field-content">
+      {/* Content */}
+      <div className="vol-content">
         {viewMode === "tasks" && <VolunteerTaskList />}
         {viewMode === "voice" && <AudioReporter />}
         {viewMode === "photo" && <PhotoReporter />}
-      </main>
+      </div>
 
       {/* Missing Person Report Modal */}
       <Modal
@@ -404,7 +397,7 @@ function VolunteerPage() {
         <MissingPersonReport />
       </Modal>
 
-      {/* Floating SOS Button - always visible */}
+      {/* Floating SOS Button */}
       <FloatingSOSButton volunteerId="current-volunteer" />
     </div>
   );

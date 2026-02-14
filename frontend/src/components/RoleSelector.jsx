@@ -4,7 +4,7 @@ import {
   ShieldCheck,
   Users,
   User,
-  ChevronRight,
+  ArrowRight,
   MapPin,
   MapPinOff,
   Loader2,
@@ -13,12 +13,11 @@ import "./RoleSelector.css";
 
 export default function RoleSelector({ onSelectRole, onPublicAccess }) {
   const { t } = useTranslation();
-  const [locationStatus, setLocationStatus] = useState("idle"); // 'idle', 'checking', 'granted', 'denied'
+  const [locationStatus, setLocationStatus] = useState("idle");
   const [pendingRole, setPendingRole] = useState(null);
 
   const checkLocationAndProceed = async (role, callback) => {
     if (!navigator.geolocation) {
-      // If geolocation not supported, still allow access
       callback(role);
       return;
     }
@@ -47,11 +46,7 @@ export default function RoleSelector({ onSelectRole, onPublicAccess }) {
           callback(role);
         }
       },
-      {
-        enableHighAccuracy: false,
-        timeout: 5000,
-        maximumAge: Infinity,
-      }
+      { enableHighAccuracy: false, timeout: 5000, maximumAge: Infinity },
     );
   };
 
@@ -64,48 +59,34 @@ export default function RoleSelector({ onSelectRole, onPublicAccess }) {
   };
 
   const retryLocation = () => {
-    if (pendingRole) {
-      handleRoleSelect(pendingRole);
-    }
+    if (pendingRole) handleRoleSelect(pendingRole);
   };
 
-  // Location denied screen
+  /* ---- Location denied ---- */
   if (locationStatus === "denied") {
     return (
-      <div className="role-selector-container">
-        <div className="role-selector-card">
-          <div className="role-selector-header">
-            <div className="role-selector-logo">
-              <div className="logo-icon">
-                <ShieldCheck size={32} strokeWidth={2.5} />
-              </div>
-              <span className="logo-text">AEGIS</span>
+      <div className="rs-page">
+        <div className="rs-card">
+          <Logo />
+          <div className="rs-center-block">
+            <div className="rs-loc-icon rs-loc-icon--error">
+              <MapPinOff size={28} />
             </div>
-            <h1>{t("roleSelector.title", "Emergency Response Portal")}</h1>
-            <p className="selector-subtitle">
-              {t("roleSelector.subtitle", "Disaster Response Resource Optimization")}
-            </p>
-          </div>
-
-          <div className="location-denied-section">
-            <div className="location-error-icon">
-              <MapPinOff size={32} />
-            </div>
-            <p className="location-message">
+            <h2 className="rs-heading">
               {t("roleSelector.locationRequired", "Location Access Required")}
-            </p>
-            <p className="location-hint">
+            </h2>
+            <p className="rs-muted">
               {t(
                 "roleSelector.locationHint",
-                "Enable location access to use the emergency response system. Your location is needed to coordinate rescue operations."
+                "Enable location access to use the emergency response system. Your location is needed to coordinate rescue operations.",
               )}
             </p>
-            <button className="enable-location-btn" onClick={retryLocation}>
+            <button className="rs-btn rs-btn--primary" onClick={retryLocation}>
               <MapPin size={16} />
-              <span>{t("roleSelector.enableLocation", "Enable Location")}</span>
+              {t("roleSelector.enableLocation", "Enable Location")}
             </button>
             <button
-              className="back-btn"
+              className="rs-btn rs-btn--ghost"
               onClick={() => {
                 setLocationStatus("idle");
                 setPendingRole(null);
@@ -115,134 +96,110 @@ export default function RoleSelector({ onSelectRole, onPublicAccess }) {
             </button>
           </div>
         </div>
-
-        <div className="login-branding">
-          <span>{t("roleSelector.branding", "Disaster Response Resource Optimization Platform")}</span>
-        </div>
+        <Footer t={t} />
       </div>
     );
   }
 
-  // Location checking screen
+  /* ---- Location checking ---- */
   if (locationStatus === "checking") {
     return (
-      <div className="role-selector-container">
-        <div className="role-selector-card">
-          <div className="role-selector-header">
-            <div className="role-selector-logo">
-              <div className="logo-icon">
-                <ShieldCheck size={32} strokeWidth={2.5} />
-              </div>
-              <span className="logo-text">AEGIS</span>
-            </div>
-            <h1>{t("roleSelector.title", "Emergency Response Portal")}</h1>
-          </div>
-
-          <div className="location-checking-section">
-            <Loader2 size={40} className="spin" />
-            <p className="location-message">
-              {t("roleSelector.checkingLocation", "Checking location access...")}
+      <div className="rs-page">
+        <div className="rs-card">
+          <Logo />
+          <div className="rs-center-block">
+            <Loader2 size={32} className="rs-spin" />
+            <p className="rs-muted" style={{ marginTop: 12 }}>
+              {t(
+                "roleSelector.checkingLocation",
+                "Checking location access...",
+              )}
             </p>
           </div>
         </div>
-
-        <div className="login-branding">
-          <span>{t("roleSelector.branding", "Disaster Response Resource Optimization Platform")}</span>
-        </div>
+        <Footer t={t} />
       </div>
     );
   }
 
+  /* ---- Main role selection ---- */
   return (
-    <div className="role-selector-container">
-      <div className="role-selector-card">
-        <div className="role-selector-header">
-          <div className="role-selector-logo">
-            <div className="logo-icon">
-              <ShieldCheck size={32} strokeWidth={2.5} />
-            </div>
-            <span className="logo-text">AEGIS</span>
-          </div>
-          <h1>{t("roleSelector.title", "Emergency Response Portal")}</h1>
-          <p className="selector-subtitle">
-            {t("roleSelector.subtitle", "Disaster Response Resource Optimization")}
-          </p>
-        </div>
+    <div className="rs-page">
+      <div className="rs-card">
+        <Logo />
 
-        <div className="role-options">
-          <p className="role-prompt">
-            {t("roleSelector.prompt", "How would you like to continue?")}
-          </p>
+        <p className="rs-prompt">
+          {t("roleSelector.prompt", "How would you like to continue?")}
+        </p>
 
-          {/* Public User Option */}
-          <button
-            className="role-option public"
+        <div className="rs-roles">
+          <RoleButton
+            icon={<User size={22} />}
+            color="green"
+            title={t("roleSelector.publicUser", "Public User")}
+            desc={t(
+              "roleSelector.publicDesc",
+              "Report emergencies, missing persons, and share photos",
+            )}
             onClick={() => handleRoleSelect("public")}
-          >
-            <div className="role-icon public-icon">
-              <User size={24} />
-            </div>
-            <div className="role-info">
-              <span className="role-title">
-                {t("roleSelector.publicUser", "Continue as Public User")}
-              </span>
-              <span className="role-description">
-                {t(
-                  "roleSelector.publicDesc",
-                  "Report emergencies, missing persons, and share photos"
-                )}
-              </span>
-            </div>
-            <ChevronRight size={20} className="role-arrow" />
-          </button>
-
-          {/* Manager Option */}
-          <button
-            className="role-option manager"
+          />
+          <RoleButton
+            icon={<ShieldCheck size={22} />}
+            color="orange"
+            title={t("roleSelector.manager", "Manager")}
+            desc={t(
+              "roleSelector.managerDesc",
+              "Full access to dashboard and coordination",
+            )}
             onClick={() => handleRoleSelect("manager")}
-          >
-            <div className="role-icon manager-icon">
-              <ShieldCheck size={24} />
-            </div>
-            <div className="role-info">
-              <span className="role-title">
-                {t("roleSelector.manager", "Login as Manager")}
-              </span>
-              <span className="role-description">
-                {t("roleSelector.managerDesc", "Full access to dashboard and coordination")}
-              </span>
-            </div>
-            <ChevronRight size={20} className="role-arrow" />
-          </button>
-
-          {/* Volunteer Option */}
-          <button
-            className="role-option volunteer"
+          />
+          <RoleButton
+            icon={<Users size={22} />}
+            color="blue"
+            title={t("roleSelector.volunteer", "Volunteer")}
+            desc={t("roleSelector.volunteerDesc", "Access tasks and missions")}
             onClick={() => handleRoleSelect("volunteer")}
-          >
-            <div className="role-icon volunteer-icon">
-              <Users size={24} />
-            </div>
-            <div className="role-info">
-              <span className="role-title">
-                {t("roleSelector.volunteer", "Login as Volunteer")}
-              </span>
-              <span className="role-description">
-                {t("roleSelector.volunteerDesc", "Access tasks and missions")}
-              </span>
-            </div>
-            <ChevronRight size={20} className="role-arrow" />
-          </button>
-        </div>
-
-        <div className="role-selector-footer">
-          <p>{t("roleSelector.footer", "Select your role to continue")}</p>
+          />
         </div>
       </div>
-
-      <div className="login-branding">
-        <span>{t("roleSelector.branding", "Disaster Response Resource Optimization Platform")}</span>
-      </div>
+      <Footer t={t} />
     </div>
+  );
+}
+
+/* ---- Sub-components ---- */
+
+function Logo() {
+  return (
+    <div className="rs-logo">
+      <div className="rs-logo-icon">
+        <ShieldCheck size={26} strokeWidth={2.5} />
+      </div>
+      <span className="rs-logo-text">AEGIS</span>
+    </div>
+  );
+}
+
+function Footer({ t }) {
+  return (
+    <p className="rs-footer">
+      {t(
+        "roleSelector.branding",
+        "Disaster Response Resource Optimization Platform",
+      )}
+    </p>
+  );
+}
+
+function RoleButton({ icon, color, title, desc, onClick }) {
+  return (
+    <button className={`rs-role rs-role--${color}`} onClick={onClick}>
+      <span className="rs-role-icon">{icon}</span>
+      <span className="rs-role-body">
+        <span className="rs-role-title">{title}</span>
+        <span className="rs-role-desc">{desc}</span>
+      </span>
+      <ArrowRight size={18} className="rs-role-arrow" />
+    </button>
   );
 }

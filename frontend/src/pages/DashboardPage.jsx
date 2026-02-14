@@ -28,6 +28,15 @@ import {
   getShelters,
 } from "../services";
 import { SYNC_COMPLETE_EVENT } from "../services/syncService";
+import {
+  MapIcon,
+  Construction,
+  Search,
+  Home,
+  Package,
+  BarChart3,
+  Users,
+} from "lucide-react";
 import "./DashboardPage.css";
 
 const severityScoreMap = {
@@ -432,15 +441,15 @@ function DashboardPage() {
 
   // Build tabs list based on role
   const tabs = [
-    { id: "map", icon: "🗺️", label: t("nav.map") },
-    { id: "roads", icon: "🚧", label: t("nav.roads") },
-    { id: "missing", icon: "🔍", label: t("nav.missing") },
+    { id: "map", icon: MapIcon, label: t("nav.map") },
+    { id: "roads", icon: Construction, label: t("nav.roads") },
+    { id: "missing", icon: Search, label: t("nav.missing") },
     ...(isManager
       ? [
-          { id: "shelters", icon: "🏠", label: t("nav.shelters") },
-          { id: "resources", icon: "📦", label: t("nav.resources") },
-          { id: "analytics", icon: "📊", label: t("nav.analytics") },
-          { id: "volunteers", icon: "👥", label: t("nav.team") },
+          { id: "shelters", icon: Home, label: t("nav.shelters") },
+          { id: "resources", icon: Package, label: t("nav.resources") },
+          { id: "analytics", icon: BarChart3, label: t("nav.analytics") },
+          { id: "volunteers", icon: Users, label: t("nav.team") },
         ]
       : []),
   ];
@@ -520,7 +529,7 @@ function DashboardPage() {
             aria-selected={activeTab === tab.id}
             title={tab.label}
           >
-            <span className="dash-tab__icon">{tab.icon}</span>
+            <tab.icon size={17} className="dash-tab__icon" />
             <span className="dash-tab__label">{tab.label}</span>
           </button>
         ))}

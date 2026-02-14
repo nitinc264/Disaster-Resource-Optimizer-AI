@@ -19,13 +19,11 @@ export default function PinLogin({ onBack, selectedRole }) {
   const [loading, setLoading] = useState(false);
   const inputRefs = [useRef(), useRef(), useRef(), useRef()];
 
-  // Focus first input on mount (location already checked in RoleSelector)
   useEffect(() => {
     inputRefs[0].current?.focus();
   }, []);
 
   const handleChange = (index, value) => {
-    // Only allow digits
     if (value && !/^\d$/.test(value)) return;
 
     const newPin = [...pin];
@@ -33,26 +31,20 @@ export default function PinLogin({ onBack, selectedRole }) {
     setPin(newPin);
     setError("");
 
-    // Auto-focus next input
     if (value && index < 3) {
       inputRefs[index + 1].current?.focus();
     }
 
-    // Auto-submit when all 4 digits entered
     if (value && index === 3) {
       const fullPin = newPin.join("");
-      if (fullPin.length === 4) {
-        handleSubmit(fullPin);
-      }
+      if (fullPin.length === 4) handleSubmit(fullPin);
     }
   };
 
   const handleKeyDown = (index, e) => {
-    // Handle backspace
     if (e.key === "Backspace" && !pin[index] && index > 0) {
       inputRefs[index - 1].current?.focus();
     }
-    // Handle arrow keys
     if (e.key === "ArrowLeft" && index > 0) {
       inputRefs[index - 1].current?.focus();
     }
@@ -70,20 +62,14 @@ export default function PinLogin({ onBack, selectedRole }) {
         if (i < 4) newPin[i] = digit;
       });
       setPin(newPin);
-
-      // Focus appropriate input and maybe submit
       const lastIndex = Math.min(pastedData.length - 1, 3);
       inputRefs[lastIndex].current?.focus();
-
-      if (pastedData.length === 4) {
-        handleSubmit(pastedData);
-      }
+      if (pastedData.length === 4) handleSubmit(pastedData);
     }
   };
 
   const handleSubmit = async (pinValue) => {
     const fullPin = pinValue || pin.join("");
-
     if (fullPin.length !== 4) {
       setError(t("auth.enterAllDigits"));
       return;
@@ -99,7 +85,7 @@ export default function PinLogin({ onBack, selectedRole }) {
         setPin(["", "", "", ""]);
         inputRefs[0].current?.focus();
       }
-    } catch (err) {
+    } catch {
       setError(t("auth.loginFailed"));
       setPin(["", "", "", ""]);
       inputRefs[0].current?.focus();
@@ -108,54 +94,54 @@ export default function PinLogin({ onBack, selectedRole }) {
     }
   };
 
-  // Get role display text
   const roleText =
     selectedRole === "manager"
       ? t("roleSelector.manager")
       : t("roleSelector.volunteer");
 
   return (
-    <div className="pin-login-container">
-      <div className="pin-login-card">
-        {/* Back Button */}
+    <div className="pl-page">
+      <div className="pl-card">
+        {/* Back */}
         {onBack && (
-          <button className="pin-back-btn" onClick={onBack}>
-            <ChevronLeft size={20} />
-            <span>{t("common.back")}</span>
+          <button className="pl-back" onClick={onBack}>
+            <ChevronLeft size={18} />
+            {t("common.back")}
           </button>
         )}
 
-        <div className="pin-login-header">
-          <div className="pin-login-logo">
-            <div className="logo-icon">
-              <ShieldCheck size={32} strokeWidth={2.5} />
-            </div>
-            <span className="logo-text">AEGIS</span>
+        {/* Logo */}
+        <div className="pl-logo">
+          <div className="pl-logo-icon">
+            <ShieldCheck size={26} strokeWidth={2.5} />
           </div>
-          <h1>{t("auth.portalTitle")}</h1>
-          <p className="login-subtitle">
-            {selectedRole
-              ? t("auth.roleLogin", { role: roleText })
-              : t("auth.secureAccess")}
-          </p>
+          <span className="pl-logo-text">AEGIS</span>
         </div>
 
-        <div className="location-granted-badge">
+        {/* Title */}
+        <h1 className="pl-title">{t("auth.portalTitle")}</h1>
+        <p className="pl-subtitle">
+          {selectedRole
+            ? t("auth.roleLogin", { role: roleText })
+            : t("auth.secureAccess")}
+        </p>
+
+        {/* Location badge */}
+        <div className="pl-location-badge">
           <MapPin size={12} />
           <span>{t("auth.locationActive")}</span>
         </div>
 
-        <div className="pin-section">
-          <div className="pin-label">
-            <Lock size={14} />
-            <span>
-              {t("auth.enterPin", {
-                role: selectedRole ? roleText : t("common.user"),
-              })}
-            </span>
-          </div>
+        {/* PIN input */}
+        <div className="pl-pin-section">
+          <label className="pl-pin-label">
+            <Lock size={13} />
+            {t("auth.enterPin", {
+              role: selectedRole ? roleText : t("common.user"),
+            })}
+          </label>
 
-          <div className="pin-input-group">
+          <div className="pl-pin-group">
             {pin.map((digit, index) => (
               <input
                 key={index}
@@ -167,9 +153,7 @@ export default function PinLogin({ onBack, selectedRole }) {
                 onChange={(e) => handleChange(index, e.target.value)}
                 onKeyDown={(e) => handleKeyDown(index, e)}
                 onPaste={index === 0 ? handlePaste : undefined}
-                className={`pin-input ${digit ? "filled" : ""} ${
-                  error ? "error" : ""
-                }`}
+                className={`pl-pin-input ${digit ? "pl-pin-input--filled" : ""} ${error ? "pl-pin-input--error" : ""}`}
                 disabled={loading}
                 aria-label={t("auth.pinDigit", { index: index + 1 })}
               />
@@ -177,28 +161,24 @@ export default function PinLogin({ onBack, selectedRole }) {
           </div>
 
           {error && (
-            <div className="pin-error">
+            <div className="pl-error">
               <AlertCircle size={14} />
               <span>{error}</span>
             </div>
           )}
 
           {loading && (
-            <div className="pin-loading">
-              <Loader2 size={18} className="spin" />
+            <div className="pl-loading">
+              <Loader2 size={18} className="pl-spin" />
               <span>{t("auth.authenticating")}</span>
             </div>
           )}
         </div>
 
-        <div className="pin-login-footer">
-          <p>{t("auth.authorizedOnly")}</p>
-        </div>
+        <p className="pl-footer">{t("auth.authorizedOnly")}</p>
       </div>
 
-      <div className="login-branding">
-        <span>{t("auth.platformName")}</span>
-      </div>
+      <p className="pl-branding">{t("auth.platformName")}</p>
     </div>
   );
 }

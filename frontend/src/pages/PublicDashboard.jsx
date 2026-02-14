@@ -4,12 +4,11 @@ import {
   Mic,
   Camera,
   Users,
-  Shield,
+  MapPin,
   LogOut,
   Globe,
-  ChevronLeft,
+  ShieldCheck,
   Settings,
-  MapIcon,
 } from "lucide-react";
 import {
   AudioReporter,
@@ -22,35 +21,12 @@ import { getPublicShelters } from "../services/apiService";
 import { languages } from "../i18n";
 import "./PublicDashboard.css";
 
-function LanguageSwitcher() {
-  const { i18n } = useTranslation();
-
-  return (
-    <div className="lang-dropdown">
-      <Globe size={16} />
-      <select
-        className="lang-select"
-        value={i18n.language}
-        onChange={(e) => i18n.changeLanguage(e.target.value)}
-        aria-label="Select language"
-      >
-        {languages.map((lang) => (
-          <option key={lang.code} value={lang.code}>
-            {lang.nativeName}
-          </option>
-        ))}
-      </select>
-    </div>
-  );
-}
-
 export default function PublicDashboard({ onExit }) {
-  const { t } = useTranslation();
-  const [activeTab, setActiveTab] = useState("shelterMap"); // 'shelterMap' | 'voice' | 'photo' | 'missing'
+  const { t, i18n } = useTranslation();
+  const [activeTab, setActiveTab] = useState("shelterMap");
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [publicShelters, setPublicShelters] = useState([]);
 
-  // Fetch shelters for public map
   useEffect(() => {
     const fetchShelters = async () => {
       try {
@@ -69,7 +45,7 @@ export default function PublicDashboard({ onExit }) {
     {
       id: "shelterMap",
       label: t("publicDashboard.shelterMap", "Shelter Map"),
-      icon: Shield,
+      icon: MapPin,
     },
     {
       id: "voice",
@@ -92,7 +68,7 @@ export default function PublicDashboard({ onExit }) {
     switch (activeTab) {
       case "shelterMap":
         return (
-          <div className="public-shelter-map">
+          <div className="pd-map-wrap">
             <MapComponent
               needs={[]}
               selectedNeedIds={new Set()}
@@ -113,74 +89,76 @@ export default function PublicDashboard({ onExit }) {
   };
 
   return (
-    <div className="public-dashboard">
+    <div className="pd-page">
       {/* Header */}
-      <header className="public-header">
-        <div className="public-header-inner">
-          {/* Back Button */}
+      <header className="pd-header">
+        <div className="pd-header-left">
+          <ShieldCheck size={20} className="pd-brand-icon" />
+          <span className="pd-brand">AEGIS</span>
+          <span className="pd-badge">
+            {t("publicDashboard.publicUser", "Public")}
+          </span>
+        </div>
+
+        <div className="pd-header-right">
+          <div className="pd-lang">
+            <Globe size={14} />
+            <select
+              className="pd-lang-select"
+              value={i18n.language}
+              onChange={(e) => i18n.changeLanguage(e.target.value)}
+              aria-label="Select language"
+            >
+              {languages.map((lang) => (
+                <option key={lang.code} value={lang.code}>
+                  {lang.nativeName}
+                </option>
+              ))}
+            </select>
+          </div>
+
           <button
-            className="back-button"
-            onClick={onExit}
-            title={t("common.back", "Back")}
+            className="pd-icon-btn"
+            onClick={() => setSettingsOpen(true)}
+            title={t("settings.title", "Settings")}
           >
-            <ChevronLeft size={20} />
+            <Settings size={17} />
           </button>
 
-          {/* Brand */}
-          <div className="public-brand">
-            <Shield size={20} className="brand-icon" />
-            <span className="brand-name">AEGIS</span>
-          </div>
-
-          {/* Public Badge */}
-          <div className="public-badge">
-            {t("publicDashboard.publicUser", "Public User")}
-          </div>
-
-          {/* Right Controls */}
-          <div className="public-header-actions">
-            <LanguageSwitcher />
-            <button
-              className="icon-btn"
-              onClick={() => setSettingsOpen(true)}
-              title={t("settings.title", "Settings")}
-            >
-              <Settings size={18} />
-            </button>
-            <button
-              className="exit-btn"
-              onClick={onExit}
-              title={t("common.exit", "Exit")}
-            >
-              <LogOut size={16} />
-            </button>
-          </div>
+          <button
+            className="pd-exit-btn"
+            onClick={onExit}
+            title={t("common.exit", "Exit")}
+          >
+            <LogOut size={16} />
+            <span className="pd-exit-text">{t("common.exit", "Exit")}</span>
+          </button>
         </div>
       </header>
 
-      {/* Tab Navigation */}
-      <nav className="public-tabs">
+      {/* Tabs */}
+      <nav className="pd-tabs">
         {tabs.map((tab) => {
           const Icon = tab.icon;
           return (
             <button
               key={tab.id}
-              className={`public-tab ${activeTab === tab.id ? "active" : ""}`}
+              className={`pd-tab ${activeTab === tab.id ? "pd-tab--active" : ""}`}
               onClick={() => setActiveTab(tab.id)}
             >
-              <Icon size={18} />
-              <span>{tab.label}</span>
+              <Icon size={17} className="pd-tab-icon" />
+              <span className="pd-tab-text">{tab.label}</span>
             </button>
           );
         })}
       </nav>
 
-      {/* Main Content */}
-      <main className="public-main">
-        <div className="public-content">{renderContent()}</div>
+      {/* Content */}
+      <main className="pd-main">
+        <div className="pd-content">{renderContent()}</div>
       </main>
 
-      {/* Accessibility Settings Modal */}
+      {/* Accessibility Modal */}
       <AccessibilitySettings
         isOpen={settingsOpen}
         onClose={() => setSettingsOpen(false)}

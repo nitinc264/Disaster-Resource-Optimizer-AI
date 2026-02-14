@@ -4,7 +4,16 @@ import { useTranslation } from "react-i18next";
 import { languages } from "../i18n";
 import { useAuth } from "../contexts";
 import { getUnreadCount } from "../services/messagingService";
-import { LogOut, Globe, Settings, Shield, MessageSquare } from "lucide-react";
+import {
+  LogOut,
+  Globe,
+  Settings,
+  Shield,
+  MessageSquare,
+  LayoutDashboard,
+  ClipboardList,
+  Radio,
+} from "lucide-react";
 import "./Navbar.css";
 
 function Navbar({ onOpenSettings, onOpenMessaging }) {
@@ -55,7 +64,8 @@ function Navbar({ onOpenSettings, onOpenMessaging }) {
               `Navbar-link ${isActive ? "Navbar-link--active" : ""}`
             }
           >
-            {t("nav.dashboard")}
+            <LayoutDashboard size={16} className="Navbar-linkIcon" />
+            <span className="Navbar-linkText">{t("nav.dashboard")}</span>
           </NavLink>
           <NavLink
             to="/tasks"
@@ -63,7 +73,8 @@ function Navbar({ onOpenSettings, onOpenMessaging }) {
               `Navbar-link ${isActive ? "Navbar-link--active" : ""}`
             }
           >
-            {t("nav.tasks")}
+            <ClipboardList size={16} className="Navbar-linkIcon" />
+            <span className="Navbar-linkText">{t("nav.tasks")}</span>
           </NavLink>
           {isManager && (
             <NavLink
@@ -72,7 +83,8 @@ function Navbar({ onOpenSettings, onOpenMessaging }) {
                 `Navbar-link ${isActive ? "Navbar-link--active" : ""}`
               }
             >
-              {t("nav.stations")}
+              <Radio size={16} className="Navbar-linkIcon" />
+              <span className="Navbar-linkText">{t("nav.stations")}</span>
             </NavLink>
           )}
         </nav>

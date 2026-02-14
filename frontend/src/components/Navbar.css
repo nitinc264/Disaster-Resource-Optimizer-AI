@@ -244,13 +244,13 @@
    ========================================== */
 @media (max-width: 480px) {
   .Navbar {
-    height: 52px;
-    padding: 0 12px;
-    gap: 8px;
+    height: 50px;
+    padding: 0 10px;
+    gap: 6px;
   }
 
   .Navbar-left {
-    gap: 12px;
+    gap: 8px;
     overflow: hidden;
   }
 
@@ -266,22 +266,31 @@
     display: none;
   }
 
+  /* Show icons, hide text on mobile */
+  .Navbar-linkIcon {
+    display: block;
+  }
+
+  .Navbar-linkText {
+    display: none;
+  }
+
   .Navbar-links {
     gap: 2px;
   }
 
   .Navbar-link {
-    padding: 6px 10px;
+    padding: 8px 10px;
     font-size: 0.85rem;
   }
 
   .Navbar-link--active::after {
-    left: 8px;
-    right: 8px;
+    left: 6px;
+    right: 6px;
   }
 
   .Navbar-actions {
-    gap: 6px;
+    gap: 5px;
   }
 
   .Navbar-lang {
@@ -289,8 +298,8 @@
   }
 
   .Navbar-iconBtn {
-    width: 32px;
-    height: 32px;
+    width: 34px;
+    height: 34px;
   }
 }
 
@@ -301,12 +310,11 @@
   }
 
   .Navbar-link {
-    padding: 6px 8px;
-    font-size: 0.78rem;
+    padding: 8px 8px;
   }
 
   .Navbar-iconBtn {
-    width: 30px;
-    height: 30px;
+    width: 32px;
+    height: 32px;
   }
 }

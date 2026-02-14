@@ -75,8 +75,8 @@
   --shadow-xl: 0 12px 40px rgba(0, 0, 0, 0.3);
 
   /* Typography - single, clean font */
-  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
-    sans-serif;
+  --font-sans:
+    "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --font-display: var(--font-sans);
   --font-mono: ui-monospace, "SF Mono", Menlo, monospace;
 
@@ -399,30 +399,28 @@ textarea::placeholder {
   }
 
   html {
-    font-size: 16px;
+    font-size: 17px;
   }
 
   h1 {
-    font-size: 1.5rem;
+    font-size: 1.55rem;
   }
 
   h2 {
-    font-size: 1.2rem;
+    font-size: 1.25rem;
   }
 
   h3 {
-    font-size: 1.05rem;
+    font-size: 1.1rem;
   }
 
-  p,
-  span,
-  div {
-    font-size: 1rem;
+  body {
+    font-size: 1.05rem;
   }
 
   .btn {
     padding: var(--space-3) var(--space-4);
-    font-size: 0.95rem;
+    font-size: 1rem;
   }
 
   input,
@@ -453,42 +451,43 @@ textarea::placeholder {
   }
 
   html {
-    font-size: 15px;
+    font-size: 16px;
   }
 
   h1 {
-    font-size: 1.4rem;
+    font-size: 1.45rem;
   }
 
   h2 {
-    font-size: 1.15rem;
+    font-size: 1.2rem;
   }
 
   .btn {
     width: 100%;
     justify-content: center;
+    font-size: 0.95rem;
   }
 
   .badge {
-    font-size: 0.8rem;
+    font-size: 0.85rem;
     padding: 3px var(--space-2);
   }
 
   .pill {
     padding: var(--space-1) var(--space-3);
-    font-size: 0.9rem;
+    font-size: 0.95rem;
   }
 }
 
 /* Extra small screens */
 @media (max-width: 380px) {
   html {
-    font-size: 13px;
+    font-size: 15px;
   }
 
   .btn {
     padding: var(--space-2) var(--space-3);
-    font-size: 0.8rem;
+    font-size: 0.9rem;
   }
 }
 
