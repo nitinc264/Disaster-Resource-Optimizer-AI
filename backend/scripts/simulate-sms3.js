@@ -4,7 +4,7 @@ const API_URL = "http://localhost:3000/api/sms";
 
 const SAMPLE_MESSAGE = {
   from: "+919800000098",
-  body: "Fire broke out at panmla Road. Smoke everywhere.",
+  body: "Need ambulance urgently at panmla Road. Medical emergency.",
 };
 
 async function simulateSMS() {
