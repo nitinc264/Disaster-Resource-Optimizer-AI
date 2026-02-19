@@ -10,6 +10,7 @@
     "sms:simulate": "node scripts/simulate-sms.js",
     "sms:simulate2": "node scripts/simulate-sms2.js",
     "sms:simulate3": "node scripts/simulate-sms3.js",
+    "sms:simulate4": "node scripts/simulate-sms4.js",
     "db:clear": "node scripts/clear-db.js --confirm",
     "monitor": "node scripts/monitor-data-changes.js",
     "agent:oracle": "node agents/oracle_agent.js",

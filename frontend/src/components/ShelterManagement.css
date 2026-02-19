@@ -2,10 +2,9 @@
 .shelter-management-panel {
   display: flex;
   flex-direction: column;
-  height: 100%;
+  min-height: 100%;
   background: var(--background);
   border-radius: var(--radius-lg);
-  overflow: hidden;
 }
 
 .shelter-management-panel .panel-header {
@@ -157,8 +156,6 @@
 
 /* Shelters List */
 .shelters-list {
-  flex: 1;
-  overflow-y: auto;
   padding: var(--space-5);
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));

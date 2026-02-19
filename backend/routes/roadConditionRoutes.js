@@ -10,6 +10,7 @@ import { sendSuccess, sendError } from "../utils/apiResponse.js";
 import { HTTP_STATUS } from "../constants/index.js";
 import { requireAuth, requireManager } from "../middleware/authMiddleware.js";
 import { body, validationResult } from "express-validator";
+import { checkAndRerouteAffectedMissions } from "../services/rerouteService.js";
 
 const router = express.Router();
 
@@ -117,7 +118,23 @@ router.post(
       });
 
       await condition.save();
-      sendSuccess(res, condition, "Road condition reported successfully");
+
+      // Auto-reroute: check if any active mission routes fall within 100m of this road condition
+      let rerouteSummary = null;
+      try {
+        rerouteSummary = await checkAndRerouteAffectedMissions(
+          startPoint,
+          condition.conditionId
+        );
+      } catch (rerouteErr) {
+        console.error("Auto-reroute check failed (non-blocking):", rerouteErr.message);
+      }
+
+      const message = rerouteSummary && rerouteSummary.affected > 0
+        ? `Road condition reported successfully. ${rerouteSummary.rerouted} active route(s) automatically rerouted.`
+        : "Road condition reported successfully";
+
+      sendSuccess(res, { condition, rerouteSummary }, message);
     } catch (error) {
       console.error("Error reporting road condition:", error.message, error);
       sendError(
