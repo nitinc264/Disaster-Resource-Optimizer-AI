@@ -117,6 +117,24 @@ export async function rerouteMission(missionId, station) {
   }
 }
 
+/**
+ * Re-route a rejected report/need to a different station
+ * @param {string} reportId - The report or need ID
+ * @param {Object} station - The target station { type, name, lat, lon }
+ * @returns {Promise<Object>} Response from the backend
+ */
+export async function rerouteRejectedReport(reportId, station) {
+  try {
+    const response = await apiClient.patch(`/reports/${reportId}/reroute`, {
+      station,
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error rerouting rejected report:", error);
+    throw error;
+  }
+}
+
 // ============================================
 // Resource Tracking API
 // ============================================
@@ -455,17 +473,16 @@ export const sheltersAPI = {
   }),
   create: (payload) => createShelter(payload),
   update: (id, data) => {
-    if (data?.capacity) {
-      return updateShelterCapacity(id, data.capacity);
-    }
-    if (data?.supplies) {
-      return updateShelterSupplies(id, data.supplies);
-    }
-    // Fallback to generic patch if extra fields are provided
+    // Always use the generic PATCH endpoint which accepts MongoDB _id
+    // and handles all field updates including capacity, supplies, etc.
     return apiClient
       .patch(`/shelters/${id}`, data)
       .then((res) => res.data.data);
   },
+  updateCapacity: (shelterId, capacity) =>
+    updateShelterCapacity(shelterId, capacity),
+  updateSupplies: (shelterId, supplies) =>
+    updateShelterSupplies(shelterId, supplies),
 };
 
 // ============================================

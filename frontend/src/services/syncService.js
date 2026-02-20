@@ -1,5 +1,6 @@
 import { db } from "./db.js";
 import { postVerification } from "./apiService.js";
+import { syncOfflineQueue, getPendingCount, getFailedCount } from "./offlineQueueService.js";
 
 // Event name for sync completion notification
 export const SYNC_COMPLETE_EVENT = "verification-sync-complete";
@@ -95,7 +96,8 @@ export async function getPendingVerificationCount() {
 }
 
 /**
- * Initialize sync listeners for automatic syncing when coming online
+ * Initialize sync listeners for automatic syncing when coming online.
+ * Handles both legacy pendingVerifications AND the generic offlineQueue.
  */
 export function initSyncListeners() {
   let syncInProgress = false;
@@ -106,7 +108,11 @@ export function initSyncListeners() {
     syncInProgress = true;
 
     try {
-      const result = await syncPendingVerifications();
+      // 1. Sync legacy pending verifications
+      await syncPendingVerifications();
+
+      // 2. Sync generic offline queue (all queued requests)
+      await syncOfflineQueue();
     } catch (error) {
       console.error("Auto-sync failed:", error);
     } finally {
@@ -117,8 +123,24 @@ export function initSyncListeners() {
   // Listen for online event
   window.addEventListener("online", handleOnline);
 
+  // If already online on mount, try to flush anything left over
+  if (navigator.onLine) {
+    handleOnline();
+  }
+
   // Return cleanup function
   return () => {
     window.removeEventListener("online", handleOnline);
   };
+}
+
+/**
+ * Manually trigger a full sync (verifications + generic queue).
+ * Intended for the "Sync Now" button in the UI.
+ * @returns {Promise<{verifications: Object, queue: Object}>}
+ */
+export async function manualSyncAll() {
+  const verifications = await syncPendingVerifications();
+  const queue = await syncOfflineQueue();
+  return { verifications, queue };
 }

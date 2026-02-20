@@ -1105,5 +1105,13 @@
     "errorLabel": "Error",
     "stackLabel": "Stack",
     "reloadPage": "Reload Page"
+  },
+  "sync": {
+    "offline": "You are offline. Changes will be saved locally and synced when you reconnect.",
+    "syncing": "Synchronizing changes with server…",
+    "pending": "{{count}} change(s) waiting to sync.",
+    "failed": "{{count}} change(s) failed to sync. You can retry manually.",
+    "success": "{{count}} change(s) synced successfully!",
+    "syncNow": "Sync Now"
   }
 }

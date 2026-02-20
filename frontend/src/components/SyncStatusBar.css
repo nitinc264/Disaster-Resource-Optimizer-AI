@@ -1,0 +1,142 @@
+/* ==========================================
+   SYNC STATUS BAR
+   Floating bar at the bottom of the viewport.
+   ========================================== */
+
+/* ---------- container ---------- */
+.SyncStatusBar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 1100;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 20px;
+  font-size: 0.85rem;
+  color: #fff;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+/* Hidden when nothing to show */
+.SyncStatusBar--hidden {
+  transform: translateY(100%);
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* ---------- background variants ---------- */
+.SyncStatusBar--offline {
+  background: var(--danger, #e74c3c);
+}
+
+.SyncStatusBar--pending {
+  background: var(--warning, #f39c12);
+  color: #1a1a1a;
+}
+
+.SyncStatusBar--failed {
+  background: var(--danger, #e74c3c);
+}
+
+.SyncStatusBar--syncing {
+  background: var(--primary, #3b82f6);
+}
+
+.SyncStatusBar--success {
+  background: var(--success, #27ae60);
+}
+
+/* ---------- left info ---------- */
+.SyncStatusBar-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
+
+.SyncStatusBar-icon {
+  flex-shrink: 0;
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+.SyncStatusBar-text {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ---------- actions ---------- */
+.SyncStatusBar-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.SyncStatusBar-btn {
+  padding: 5px 14px;
+  border: 1.5px solid currentColor;
+  border-radius: 6px;
+  background: transparent;
+  color: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s;
+}
+
+.SyncStatusBar-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.SyncStatusBar-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.SyncStatusBar-dismiss {
+  background: none;
+  border: none;
+  color: inherit;
+  font-size: 1.1rem;
+  cursor: pointer;
+  padding: 2px 6px;
+  line-height: 1;
+  opacity: 0.8;
+}
+
+.SyncStatusBar-dismiss:hover {
+  opacity: 1;
+}
+
+/* ---------- spinner ---------- */
+.SyncStatusBar-spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: syncSpin 0.7s linear infinite;
+}
+
+@keyframes syncSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ---------- responsive ---------- */
+@media (max-width: 480px) {
+  .SyncStatusBar {
+    flex-wrap: wrap;
+    padding: 8px 12px;
+    font-size: 0.8rem;
+  }
+}

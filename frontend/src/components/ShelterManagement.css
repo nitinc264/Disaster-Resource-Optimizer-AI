@@ -808,8 +808,9 @@
   border-radius: var(--radius-lg);
   border: 1px solid var(--border-color);
   width: 90%;
-  max-width: 400px;
-  overflow: hidden;
+  max-width: 450px;
+  max-height: 90vh;
+  overflow-y: auto;
 }
 
 .capacity-modal .capacity-modal-header {
@@ -890,6 +891,85 @@
   justify-content: flex-end;
   padding: var(--space-4);
   border-top: 1px solid var(--border-color);
+}
+
+/* Supply section inside capacity modal */
+.supply-section {
+  padding: var(--space-3) var(--space-4);
+  border-top: 1px solid var(--border-color);
+}
+
+.supply-section h5 {
+  margin: 0 0 var(--space-3) 0;
+  font-size: 0.8125rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+}
+
+.supply-inputs {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.supply-input-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.supply-input-label {
+  min-width: 70px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.supply-input-fields {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex: 1;
+}
+
+.supply-field {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+}
+
+.supply-field label {
+  font-size: 0.6875rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.supply-field input {
+  width: 100%;
+  padding: var(--space-1) var(--space-2);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  font-size: 0.8125rem;
+  text-align: center;
+  background: var(--background);
+  color: var(--text-primary);
+}
+
+.supply-separator {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  margin-top: 14px;
+}
+
+.supply-unit {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  min-width: 40px;
+  margin-top: 14px;
+  text-transform: uppercase;
 }
 
 .capacity-modal-actions .btn-cancel {

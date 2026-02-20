@@ -31,6 +31,7 @@ import { fileURLToPath } from "url";
 import { dirname, join } from "path";
 import Report from "../models/ReportModel.js";
 import { analyzeReport } from "../services/geminiService.js";
+import { dispatchEmergencyAlert } from "../services/emergencyAlertService.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -106,7 +107,7 @@ async function processReport(report) {
     const analysisResult = await analyzeReport(report);
 
     // Update the document with Oracle results
-    await Report.findByIdAndUpdate(report._id, {
+    const updatedReport = await Report.findByIdAndUpdate(report._id, {
       $set: {
         oracleData: {
           severity: analysisResult.severity,
@@ -115,7 +116,7 @@ async function processReport(report) {
         },
         status: "Analyzed_Full",
       },
-    });
+    }, { new: true });
 
     console.log(
       `[Oracle] Rated Severity: ${analysisResult.severity} for Report ID: ${report._id}`
@@ -123,6 +124,49 @@ async function processReport(report) {
     console.log(`[Oracle] Needs: ${analysisResult.needs.join(", ")}`);
     console.log(`[Oracle] Summary: ${analysisResult.summary}`);
     console.log(`[Oracle] Report ${report._id} processed successfully!`);
+
+    // Dispatch emergency alert to nearest station
+    if (updatedReport && updatedReport.location?.lat && updatedReport.location?.lng) {
+      const confidence = updatedReport.sentinelData?.confidence || 0;
+      const severity = updatedReport.oracleData?.severity || 0;
+      const tag = (updatedReport.sentinelData?.tag || "").toLowerCase();
+      const text = (updatedReport.text || "").toLowerCase();
+
+      const disasterTags = [
+        "fire", "flood", "earthquake", "accident", "collapse", "rescue", "disaster",
+      ];
+      const textKeywords = [
+        "fire", "flood", "earthquake", "accident", "collapse", "rescue",
+        "burning", "trapped", "help", "emergency", "disaster", "injured",
+        "drowning", "stampede", "explosion", "landslide", "storm",
+      ];
+      const isDisaster =
+        confidence >= 0.5 ||
+        severity >= 3 ||
+        disasterTags.some((dt) => tag.includes(dt)) ||
+        textKeywords.some((kw) => text.includes(kw));
+
+      if (isDisaster) {
+        console.log(`[Oracle] 🚨 Dispatching emergency alert for report ${report._id}`);
+        try {
+          const alertResult = await dispatchEmergencyAlert(updatedReport, "Report");
+          if (alertResult.success) {
+            console.log(
+              `[Oracle] ✅ Alert dispatched: ${alertResult.alertId} to ${alertResult.stationsNotified} station(s)`
+            );
+          } else {
+            console.warn(`[Oracle] ⚠️ Alert dispatch failed: ${alertResult.error}`);
+          }
+        } catch (alertError) {
+          console.error(`[Oracle] ❌ Error dispatching emergency alert:`, alertError.message);
+        }
+      } else {
+        console.log(
+          `[Oracle] ℹ️ Report ${report._id} not classified as emergency (confidence: ${confidence}, severity: ${severity})`
+        );
+      }
+    }
+
     console.log("-".repeat(50));
   } catch (error) {
     console.error(

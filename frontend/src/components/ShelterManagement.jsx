@@ -819,9 +819,38 @@ const UpdateCapacityModal = ({ shelter, onUpdate, onClose, t }) => {
     elderly: shelter.capacity?.elderly || 0,
   });
 
+  const [supplies, setSupplies] = useState({
+    food: {
+      available: shelter.supplies?.food?.available || 0,
+      needed: shelter.supplies?.food?.needed || 0,
+    },
+    water: {
+      available: shelter.supplies?.water?.available || 0,
+      needed: shelter.supplies?.water?.needed || 0,
+    },
+    medicalKits: {
+      available: shelter.supplies?.medicalKits?.available || 0,
+      needed: shelter.supplies?.medicalKits?.needed || 0,
+    },
+    blankets: {
+      available: shelter.supplies?.blankets?.available || 0,
+      needed: shelter.supplies?.blankets?.needed || 0,
+    },
+  });
+
+  const handleSupplyChange = (key, field, value) => {
+    setSupplies((prev) => ({
+      ...prev,
+      [key]: { ...prev[key], [field]: parseInt(value) || 0 },
+    }));
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
-    onUpdate(shelter._id, { capacity: { ...shelter.capacity, ...capacity } });
+    onUpdate(shelter._id, {
+      capacity: { ...shelter.capacity, ...capacity },
+      supplies: { ...shelter.supplies, ...supplies },
+    });
     onClose();
   };
 
@@ -913,6 +942,48 @@ const UpdateCapacityModal = ({ shelter, onUpdate, onClose, t }) => {
                 }
                 min="0"
               />
+            </div>
+          </div>
+
+          <div className="supply-section">
+            <h5>{t("shelter.supplyStatus")}</h5>
+            <div className="supply-inputs">
+              {[
+                { key: "food", label: t("shelter.food"), unit: t("shelter.meals", "meals") },
+                { key: "water", label: t("shelter.water"), unit: t("shelter.liters", "liters") },
+                { key: "medicalKits", label: t("shelter.medical"), unit: t("shelter.kits", "kits") },
+                { key: "blankets", label: t("shelter.blankets"), unit: t("shelter.pieces", "pieces") },
+              ].map(({ key, label, unit }) => (
+                <div className="supply-input-row" key={key}>
+                  <span className="supply-input-label">{label}</span>
+                  <div className="supply-input-fields">
+                    <div className="supply-field">
+                      <label>{t("shelter.available", "Available")}</label>
+                      <input
+                        type="number"
+                        value={supplies[key].available}
+                        onChange={(e) =>
+                          handleSupplyChange(key, "available", e.target.value)
+                        }
+                        min="0"
+                      />
+                    </div>
+                    <span className="supply-separator">/</span>
+                    <div className="supply-field">
+                      <label>{t("shelter.needed", "Needed")}</label>
+                      <input
+                        type="number"
+                        value={supplies[key].needed}
+                        onChange={(e) =>
+                          handleSupplyChange(key, "needed", e.target.value)
+                        }
+                        min="0"
+                      />
+                    </div>
+                    <span className="supply-unit">{unit}</span>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
 

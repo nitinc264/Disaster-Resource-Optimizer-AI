@@ -40,3 +40,6 @@ export { default as RoleSelector } from "./RoleSelector.jsx";
 
 // Navbar
 export { default as Navbar } from "./Navbar.jsx";
+
+// Offline / Sync
+export { default as SyncStatusBar } from "./SyncStatusBar.jsx";

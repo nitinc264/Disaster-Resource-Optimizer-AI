@@ -667,6 +667,7 @@ export async function dispatchAlertToStation(
           emergencyStatus: "assigned",
           emergencyType: emergencyType,
           emergencyAlertId: alert.alertId,
+          dispatch_status: "Pending",
           "assignedStation.stationId": targetStationDoc._id,
           "assignedStation.stationName": targetStationDoc.name,
           "assignedStation.stationType": targetStationDoc.type,

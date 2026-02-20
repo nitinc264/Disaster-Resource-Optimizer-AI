@@ -28,7 +28,11 @@ import {
   requestLogger,
 } from "./middleware/index.js";
 import { initializeDefaultManager } from "./controllers/authController.js";
-import { dispatchEmergencyAlert } from "./services/emergencyAlertService.js";
+import {
+  dispatchEmergencyAlert,
+  dispatchAlertToStation,
+} from "./services/emergencyAlertService.js";
+import Need from "./models/NeedModel.js";
 
 // ES Module directory resolution
 const __filename = fileURLToPath(import.meta.url);
@@ -438,9 +442,10 @@ app.patch("/api/reports/:id/update-agent", async (req, res) => {
           // Check if it's a valid disaster (high confidence or high severity)
           const confidence = updatedReport.sentinelData?.confidence || 0;
           const severity = updatedReport.oracleData?.severity || 0;
-          const tag = updatedReport.sentinelData?.tag || "";
+          const tag = (updatedReport.sentinelData?.tag || "").toLowerCase();
+          const text = (updatedReport.text || "").toLowerCase();
 
-          // Dispatch if: high confidence detection OR high severity OR has specific disaster tags
+          // Dispatch if: confidence OR severity OR disaster tags OR text keywords
           const disasterTags = [
             "fire",
             "flood",
@@ -448,11 +453,18 @@ app.patch("/api/reports/:id/update-agent", async (req, res) => {
             "accident",
             "collapse",
             "rescue",
+            "disaster",
+          ];
+          const textKeywords = [
+            "fire", "flood", "earthquake", "accident", "collapse", "rescue",
+            "burning", "trapped", "help", "emergency", "disaster", "injured",
+            "drowning", "stampede", "explosion", "landslide", "storm",
           ];
           const isDisaster =
-            confidence >= 0.6 ||
-            severity >= 5 ||
-            disasterTags.some((t) => tag.toLowerCase().includes(t));
+            confidence >= 0.5 ||
+            severity >= 3 ||
+            disasterTags.some((dt) => tag.includes(dt)) ||
+            textKeywords.some((kw) => text.includes(kw));
 
           if (isDisaster) {
             console.log(`🚨 Dispatching emergency alert for report ${id}`);
@@ -483,6 +495,76 @@ app.patch("/api/reports/:id/update-agent", async (req, res) => {
     res.json(updatedReport);
   } catch (error) {
     res.status(500).json({ message: error.message });
+  }
+});
+
+// PATCH /api/reports/:id/reroute - Reroute a rejected report/need to a specific station
+app.patch("/api/reports/:id/reroute", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { station } = req.body;
+
+    if (!station || !station.type || !station.name) {
+      return res.status(400).json({
+        error: "Missing station data",
+        message: "Station type and name are required",
+      });
+    }
+
+    // Try to find as a Report first (by ObjectId or UUID reportId), then as a Need
+    let sourceData = null;
+    let sourceType = "Report";
+
+    // Try MongoDB ObjectId lookup first
+    if (id.match(/^[0-9a-fA-F]{24}$/)) {
+      sourceData = await Report.findById(id);
+    }
+    // Try UUID reportId lookup
+    if (!sourceData) {
+      sourceData = await Report.findOne({ reportId: id });
+    }
+    // Try as a Need by ObjectId
+    if (!sourceData) {
+      if (id.match(/^[0-9a-fA-F]{24}$/)) {
+        sourceData = await Need.findById(id);
+      }
+      if (sourceData) sourceType = "Need";
+    }
+
+    if (!sourceData) {
+      return res.status(404).json({ error: "Report or need not found" });
+    }
+
+    // Dispatch alert to the selected station
+    const alertResult = await dispatchAlertToStation(
+      sourceData,
+      sourceType,
+      station,
+    );
+
+    if (alertResult.success) {
+      console.log(
+        `\u2705 Rerouted ${sourceType.toLowerCase()} ${id} to ${station.name}`,
+      );
+      return res.json({
+        success: true,
+        message: `Rerouted to ${station.name}`,
+        alertId: alertResult.alertId,
+        stationName: alertResult.stationName,
+        stationType: alertResult.stationType,
+      });
+    } else {
+      return res.status(500).json({
+        error: "Reroute failed",
+        message: alertResult.error || "Failed to dispatch alert to station",
+      });
+    }
+  } catch (error) {
+    console.error("Error rerouting report/need:", error);
+    return res.status(500).json({
+      error: "Failed to reroute",
+      message: error.message,
+    });
   }
 });
 

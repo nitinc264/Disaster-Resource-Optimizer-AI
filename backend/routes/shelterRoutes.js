@@ -199,6 +199,7 @@ router.patch("/shelters/:id", requireManager, async (req, res) => {
       contact,
       capacity,
       facilities,
+      supplies,
       status,
       type,
       notes,
@@ -247,10 +248,36 @@ router.patch("/shelters/:id", requireManager, async (req, res) => {
       };
     }
 
+    // Update supplies
+    if (supplies) {
+      shelter.supplies = {
+        ...shelter.supplies,
+        ...supplies,
+      };
+    }
+
     shelter.updatedAt = new Date();
+
+    // Auto-update status based on capacity changes
+    if (shelter.capacity.current >= shelter.capacity.total) {
+      shelter.status = "full";
+    } else if (shelter.status === "full") {
+      shelter.status = "open";
+    }
+
     await shelter.save();
 
-    sendSuccess(res, shelter, "Shelter updated successfully");
+    // Return computed fields alongside saved data
+    const result = shelter.toObject();
+    result.occupancyPercentage = shelter.capacity.total
+      ? Math.round((shelter.capacity.current / shelter.capacity.total) * 100)
+      : 0;
+    result.availableSpots = Math.max(
+      0,
+      shelter.capacity.total - shelter.capacity.current,
+    );
+
+    sendSuccess(res, result, "Shelter updated successfully");
   } catch (error) {
     console.error("Error updating shelter:", error);
     sendError(

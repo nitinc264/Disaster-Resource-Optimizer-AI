@@ -46,3 +46,11 @@ db.version(4)
       // Table may already be removed; ignore failures to maintain compatibility
     }
   });
+
+// Version 5: Add offlineQueue store for generic offline request queuing
+db.version(5).stores({
+  pendingVerifications: "++id, taskId",
+  offlineReports: "id, timestamp, hasImage",
+  mapTiles: "key",
+  offlineQueue: "++id, status, createdAt",
+});

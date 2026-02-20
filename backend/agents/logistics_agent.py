@@ -306,6 +306,7 @@ def get_critical_reports(db):
     query = {
         'oracleData.severity': {'$gt': SEVERITY_THRESHOLD},
         'status': {'$in': ['Analyzed_Full', 'Analyzed']},
+        'emergencyStatus': {'$nin': ['rejected']},
         '$or': [
             {'dispatch_status': {'$exists': False}},
             {'dispatch_status': 'Unassigned'},
@@ -332,6 +333,7 @@ def get_verified_needs(db):
     # Query for verified needs that haven't been dispatched yet
     query = {
         'status': 'Verified',
+        'emergencyStatus': {'$nin': ['rejected']},
         '$or': [
             {'dispatch_status': {'$exists': False}},
             {'dispatch_status': 'Unassigned'},

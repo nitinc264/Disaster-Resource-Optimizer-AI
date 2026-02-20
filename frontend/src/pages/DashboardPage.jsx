@@ -22,6 +22,7 @@ import {
   getMissions,
   completeMission,
   rerouteMission,
+  rerouteRejectedReport,
   getUnverifiedTasks,
   getRoadConditions,
   getShelters,
@@ -55,6 +56,7 @@ function DashboardPage() {
   } = useVolunteerRoute();
   const [selectedReportId, setSelectedReportId] = useState(null);
   const [reroutingMissionId, setReroutingMissionId] = useState(null);
+  const [reroutingReportId, setReroutingReportId] = useState(null);
   const [activeTab, setActiveTab] = useState("map"); // "map" | "analytics" | "resources"
   const [activePanel, setActivePanel] = useState("missions"); // "missions" | "reports"
   const [isPanelOpen, setIsPanelOpen] = useState(false); // Mobile panel state
@@ -313,6 +315,7 @@ function DashboardPage() {
     // For managers, show all needs, reports, and SOS alerts
     const reportItems = analyzedReports.map((report) => ({
       id: `report-${report.id}`,
+      rawId: report.id,
       lat: report.lat,
       lon: report.lon,
       status: report.status === "InProgress" ? "InProgress" : "Report",
@@ -321,6 +324,9 @@ function DashboardPage() {
       needs: report.needs,
       text: report.text || report.transcription,
       isReport: true,
+      emergencyStatus: report.emergencyStatus || "none",
+      emergencyType: report.emergencyType || "general",
+      assignedStation: report.assignedStation,
     }));
     return [...needs, ...reportItems, ...sosMapItems, ...roadConditionMapItems];
   }, [
@@ -334,6 +340,17 @@ function DashboardPage() {
 
   const handleReportClick = (report) => {
     setSelectedReportId(report.id);
+  };
+
+  // Handle clicking a rejected pin on the map to start rerouting
+  const handlePinClick = (needId) => {
+    const item = allMapItems.find((n) => n.id === needId);
+    if (item && item.emergencyStatus === "rejected") {
+      // Enter reroute mode for this rejected report/need
+      const idToReroute = item.rawId || item.id;
+      setReroutingReportId(idToReroute);
+      setReroutingMissionId(null); // Cancel any mission reroute
+    }
   };
 
   const handleCompleteMission = async (missionId) => {
@@ -365,13 +382,52 @@ function DashboardPage() {
   // Re-routing handlers
   const handleStartReroute = (missionId) => {
     setReroutingMissionId(missionId);
+    setReroutingReportId(null); // Cancel any report reroute
   };
 
   const handleCancelReroute = () => {
     setReroutingMissionId(null);
+    setReroutingReportId(null);
+  };
+
+  // Start rerouting for a rejected report from the ReportsList
+  const handleStartReportReroute = (reportId) => {
+    setReroutingReportId(reportId);
+    setReroutingMissionId(null); // Cancel any mission reroute
   };
 
   const handleStationClick = async (station) => {
+    // Handle rejected report/need rerouting
+    if (reroutingReportId) {
+      try {
+        await rerouteRejectedReport(reroutingReportId, station);
+        setReroutingReportId(null);
+
+        alert(t("mission.rerouteSuccess", { name: station.name }));
+
+        // Immediate refresh
+        queryClient.invalidateQueries({ queryKey: ["missions"] });
+        queryClient.invalidateQueries({ queryKey: ["map-needs"] });
+        queryClient.invalidateQueries({ queryKey: ["reports"] });
+
+        // Poll for update after logistics agent processes
+        setTimeout(() => {
+          queryClient.invalidateQueries({ queryKey: ["missions"] });
+          queryClient.invalidateQueries({ queryKey: ["map-needs"] });
+          queryClient.invalidateQueries({ queryKey: ["reports"] });
+        }, 6000);
+      } catch (error) {
+        console.error("Failed to reroute rejected report:", error);
+        alert(
+          t("mission.rerouteFailed") +
+            ": " +
+            (error.message || t("common.unknownError")),
+        );
+      }
+      return;
+    }
+
+    // Handle mission rerouting
     if (!reroutingMissionId) {
       return;
     }
@@ -533,9 +589,9 @@ function DashboardPage() {
                 <MapComponent
                   needs={allMapItems}
                   selectedNeedIds={new Set()}
-                  onPinClick={() => {}}
+                  onPinClick={handlePinClick}
                   missionRoutes={missionRoutes}
-                  isRerouteMode={!!reroutingMissionId}
+                  isRerouteMode={!!reroutingMissionId || !!reroutingReportId}
                   onStationClick={handleStationClick}
                   volunteerMode={isVolunteer}
                   volunteerLocation={volunteerLocation}
@@ -543,6 +599,17 @@ function DashboardPage() {
                   isRouteFallback={routeInfo?.isFallback || false}
                   shelters={sheltersData}
                 />
+                {/* Reroute mode banner for rejected reports */}
+                {reroutingReportId && (
+                  <div className="dash-reroute-banner">
+                    <span>
+                      🔄 {t("reports.rerouteMode", "Click a station on the map to reroute this rejected alert")}
+                    </span>
+                    <button onClick={handleCancelReroute}>
+                      ✕ {t("common.cancel", "Cancel")}
+                    </button>
+                  </div>
+                )}
                 {(isNeedsLoading ||
                   isReportsLoading ||
                   isRoadConditionsLoading) &&
@@ -609,6 +676,8 @@ function DashboardPage() {
                         reports={unroutedReports}
                         onReportClick={handleReportClick}
                         selectedReportId={selectedReportId}
+                        onRerouteReport={handleStartReportReroute}
+                        reroutingReportId={reroutingReportId}
                       />
                     )}
                   </div>

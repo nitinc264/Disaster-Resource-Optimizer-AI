@@ -11,7 +11,7 @@ import {
 } from "./components";
 import Navbar from "./components/Navbar";
 import MessagingModal from "./components/MessagingModal";
-import { AuthProvider, useAuth, VolunteerRouteProvider } from "./contexts";
+import { AuthProvider, useAuth, VolunteerRouteProvider, OfflineProvider } from "./contexts";
 import {
   VolunteerPage,
   DashboardPage,
@@ -20,6 +20,7 @@ import {
   PublicDashboard,
 } from "./pages";
 import { initSyncListeners } from "./services/syncService";
+import SyncStatusBar from "./components/SyncStatusBar";
 import "./App.css";
 
 // Create a react-query client
@@ -99,6 +100,7 @@ function AuthenticatedApp() {
       />
 
       <MessagingModal isOpen={messagingOpen} onClose={handleCloseMessaging} />
+      <SyncStatusBar />
     </BrowserRouter>
   );
 }
@@ -170,20 +172,33 @@ function App() {
 
   // Public mode
   if (appMode === "public") {
-    return <PublicDashboard onExit={handlePublicExit} />;
+    return (
+      <>
+        <PublicDashboard onExit={handlePublicExit} />
+        <SyncStatusBar />
+      </>
+    );
   }
 
   // PIN Login for Manager/Volunteer
   if (appMode === "pinLogin") {
-    return <PinLogin onBack={handleBackFromPin} selectedRole={selectedRole} />;
+    return (
+      <>
+        <PinLogin onBack={handleBackFromPin} selectedRole={selectedRole} />
+        <SyncStatusBar />
+      </>
+    );
   }
 
   // Role selection screen (default for unauthenticated users)
   return (
-    <RoleSelector
-      onSelectRole={handleRoleSelect}
-      onPublicAccess={handlePublicAccess}
-    />
+    <>
+      <RoleSelector
+        onSelectRole={handleRoleSelect}
+        onPublicAccess={handlePublicAccess}
+      />
+      <SyncStatusBar />
+    </>
   );
 }
 
@@ -192,9 +207,11 @@ function AppWrapper() {
     <AccessibilityProvider>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
-          <VolunteerRouteProvider>
-            <App />
-          </VolunteerRouteProvider>
+          <OfflineProvider>
+            <VolunteerRouteProvider>
+              <App />
+            </VolunteerRouteProvider>
+          </OfflineProvider>
         </AuthProvider>
       </QueryClientProvider>
     </AccessibilityProvider>

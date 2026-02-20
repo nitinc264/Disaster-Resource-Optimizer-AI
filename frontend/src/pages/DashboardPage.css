@@ -286,6 +286,44 @@
 }
 
 /* ================================================
+   REROUTE BANNER
+   ================================================ */
+
+.dash-reroute-banner {
+  position: absolute;
+  top: var(--space-3);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1001;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-4);
+  background: rgba(249, 115, 22, 0.95);
+  color: white;
+  border-radius: var(--radius-md);
+  font-size: 0.85rem;
+  font-weight: 500;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(8px);
+}
+
+.dash-reroute-banner button {
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: white;
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.dash-reroute-banner button:hover {
+  background: rgba(255, 255, 255, 0.35);
+}
+
+/* ================================================
    SIDE PANEL — Missions & Reports
    ================================================ */
 .dash-panel {

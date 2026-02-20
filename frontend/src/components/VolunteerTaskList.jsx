@@ -215,13 +215,6 @@ export default function VolunteerTaskList() {
         <span className="task-count">{tasks?.length || 0}</span>
       </div>
 
-      {!isOnline && (
-        <div className="offline-banner">
-          <AlertTriangle size={14} />
-          <span>{t("taskList.offline")}</span>
-        </div>
-      )}
-
       {/* Pending Sync Banner */}
       {pendingCount > 0 && (
         <div className="pending-sync-banner">

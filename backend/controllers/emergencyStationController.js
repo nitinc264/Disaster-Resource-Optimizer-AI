@@ -701,6 +701,7 @@ export async function stationRejectCallback(req, res) {
         const updateData = {
           emergencyStatus: allRejected ? "rejected" : "pending",
           ...(allRejected && {
+            dispatch_status: "Rejected",
             "assignedStation.rejectionReason": reason || "Station rejected",
             "assignedStation.rejectedAt": new Date(),
           }),
