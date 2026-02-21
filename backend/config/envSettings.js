@@ -3,7 +3,7 @@ import { ENVIRONMENTS } from "../constants/index.js";
 /**
  * Development environment configuration
  */
-export const development = {
+const development = {
   port: 3000,
   mongoUri:
     process.env.MONGO_URI || "mongodb://localhost:27017/DisasterResponseDB",
@@ -23,7 +23,7 @@ export const development = {
 /**
  * Production environment configuration
  */
-export const production = {
+const production = {
   port: process.env.PORT || 3000,
   mongoUri: process.env.MONGO_URI,
   cors: {
@@ -39,7 +39,7 @@ export const production = {
 /**
  * Test environment configuration
  */
-export const test = {
+const test = {
   port: 3001,
   mongoUri:
     process.env.MONGO_URI ||

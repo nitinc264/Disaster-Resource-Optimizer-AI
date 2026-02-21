@@ -45,7 +45,6 @@ function ManagerRoute({ children }) {
 }
 
 function AuthenticatedApp() {
-  const { t } = useTranslation();
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [messagingOpen, setMessagingOpen] = useState(false);
 

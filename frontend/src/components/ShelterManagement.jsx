@@ -84,13 +84,6 @@ const ShelterCard = ({ shelter, onEdit, onUpdate }) => {
   const [expanded, setExpanded] = useState(false);
   const { t } = useTranslation();
 
-  // Normalize capacity numbers to avoid NaN/0% display when values are strings or missing
-  const currentNum = Number(shelter.capacity?.current) || 0;
-  const totalNumRaw = Number(shelter.capacity?.total);
-  const totalNum =
-    Number.isFinite(totalNumRaw) && totalNumRaw > 0 ? totalNumRaw : 100;
-  const occupancyPercentage = Math.round((currentNum / totalNum) * 100);
-
   // Helper to get facilities array
   const facilitiesList = Array.isArray(shelter.facilities)
     ? shelter.facilities

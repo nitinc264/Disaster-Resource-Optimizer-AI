@@ -1,6 +1,12 @@
-import { createContext, useContext, useState, useEffect, useCallback, useRef } from "react";
 import {
-  syncOfflineQueue,
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+  useRef,
+} from "react";
+import {
   getPendingCount,
   getFailedCount,
   OFFLINE_SYNC_EVENT,
@@ -53,7 +59,10 @@ export function OfflineProvider({ children }) {
       setLastSyncResult({
         synced: totalSynced,
         failed: totalFailed,
-        errors: [...(result.verifications?.errors || []), ...(result.queue?.errors || [])],
+        errors: [
+          ...(result.verifications?.errors || []),
+          ...(result.queue?.errors || []),
+        ],
         ts: Date.now(),
       });
     } catch (err) {

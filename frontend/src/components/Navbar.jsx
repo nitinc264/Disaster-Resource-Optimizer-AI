@@ -29,7 +29,7 @@ function Navbar({ onOpenSettings, onOpenMessaging }) {
         if (result.success) {
           setUnreadMessages(result.data.unreadCount);
         }
-      } catch (err) {
+      } catch {
         // Silently fail
       }
     };

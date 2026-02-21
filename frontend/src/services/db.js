@@ -42,7 +42,7 @@ db.version(4)
   .upgrade(async (tx) => {
     try {
       await tx.table("relayReports").clear();
-    } catch (error) {
+    } catch {
       // Table may already be removed; ignore failures to maintain compatibility
     }
   });

@@ -5,15 +5,12 @@ import {
   AlertTriangle,
   X,
   MapPin,
-  Clock,
   CheckCircle,
   AlertCircle,
   Car,
   Droplets,
   Construction,
   Trash2,
-  ChevronDown,
-  ChevronUp,
   Plus,
   RefreshCw,
   Navigation,
@@ -371,7 +368,10 @@ const ReportConditionForm = ({
   );
 };
 
-export default function RoadConditions({ currentLocation, onConditionClick }) {
+export default function RoadConditions({
+  currentLocation,
+  onConditionClick: _onConditionClick,
+}) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [showReportForm, setShowReportForm] = useState(false);

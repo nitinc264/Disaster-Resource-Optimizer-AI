@@ -18,7 +18,6 @@ export default function SOSButton({
   const [location, setLocation] = useState(null);
   const [isLocating, setIsLocating] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
-  const [alertSent, setAlertSent] = useState(false);
 
   const HOLD_DURATION = 1500; // 1.5 seconds to activate (faster for emergencies)
   const HOLD_INTERVAL = 50; // Update every 50ms
@@ -87,7 +86,6 @@ export default function SOSButton({
       console.error("Failed to send SOS to backend:", err);
     }
 
-    setAlertSent(true);
     setShowConfirmation(true);
   }, [volunteerId, volunteerName, getCurrentLocation]);
 
@@ -123,7 +121,6 @@ export default function SOSButton({
     setIsPressed(false);
     setHoldProgress(0);
     setShowConfirmation(false);
-    setAlertSent(false);
 
     // TODO: Send cancellation to backend
   };

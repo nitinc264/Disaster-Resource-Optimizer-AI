@@ -60,7 +60,7 @@ export default function EmergencyStations() {
         }),
       );
       fetchData();
-    } catch (err) {
+    } catch {
       console.error(t("emergencyStations.failedToPing"));
     }
   };
@@ -77,7 +77,7 @@ export default function EmergencyStations() {
     try {
       await deleteStation(stationId);
       fetchData();
-    } catch (err) {
+    } catch {
       console.error(t("emergencyStations.failedToDelete"));
     }
   };
@@ -87,7 +87,7 @@ export default function EmergencyStations() {
     try {
       await updateAlertStatus(alertId, newStatus);
       fetchData();
-    } catch (err) {
+    } catch {
       console.error(t("emergencyStations.failedToUpdateAlert"));
     }
   };
@@ -393,7 +393,7 @@ export default function EmergencyStations() {
                         <span className="stations-label">
                           {t("emergencyStations.sentTo")}
                         </span>
-                        {alert.sentToStations.map((s, idx) => {
+                        {alert.sentToStations.map((s, _idx) => {
                           const stationTypeInfo = getStationTypeInfo(
                             s.stationType,
                           );

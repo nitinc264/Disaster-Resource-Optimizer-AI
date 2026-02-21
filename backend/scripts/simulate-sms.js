@@ -75,7 +75,6 @@ async function simulateSMS() {
       if (response.ok) {
         const text = await response.text();
         console.log("✅ Success:", response.status);
-        // console.log("Response:", text);
         successCount++;
       } else {
         console.error("❌ Failed:", response.status, response.statusText);

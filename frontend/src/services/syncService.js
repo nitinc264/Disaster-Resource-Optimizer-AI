@@ -1,6 +1,6 @@
 import { db } from "./db.js";
 import { postVerification } from "./apiService.js";
-import { syncOfflineQueue, getPendingCount, getFailedCount } from "./offlineQueueService.js";
+import { syncOfflineQueue } from "./offlineQueueService.js";
 
 // Event name for sync completion notification
 export const SYNC_COMPLETE_EVENT = "verification-sync-complete";

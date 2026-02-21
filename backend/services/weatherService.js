@@ -252,9 +252,3 @@ function getOperationalWarnings(weather, data) {
 
   return warnings;
 }
-
-export default {
-  getCurrentWeather,
-  getWeatherAlerts,
-  getWeatherForecast,
-};

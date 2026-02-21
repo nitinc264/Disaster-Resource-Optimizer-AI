@@ -75,7 +75,7 @@ export default function VolunteerManagement() {
       if (result.success) {
         setVolunteers(result.data);
       }
-    } catch (err) {
+    } catch {
       setError(t("volunteer.failedToLoad"));
     } finally {
       setLoading(false);
@@ -128,7 +128,7 @@ export default function VolunteerManagement() {
         setSuccess(t("volunteer.deactivated", { name }));
         fetchVolunteers();
       }
-    } catch (err) {
+    } catch {
       setError(t("volunteer.failedToDeactivate"));
     }
   };
@@ -169,7 +169,7 @@ export default function VolunteerManagement() {
       } else {
         setError(t("volunteer.failedToSendMessage"));
       }
-    } catch (err) {
+    } catch {
       setError(t("volunteer.failedToSendMessage"));
     } finally {
       setSendingMessage(false);

@@ -17,7 +17,6 @@ import {
   Droplets,
   Stethoscope,
   Car,
-  HelpCircle,
   RefreshCw,
 } from "lucide-react";
 import { getAnalytics } from "../services";
@@ -204,7 +203,7 @@ export default function AnalyticsDashboard() {
           {(analytics.responseTimeTrend || []).length > 0 ? (
             <>
               <div className="sparkline-chart">
-                {(analytics.responseTimeTrend || []).map((point, idx) => {
+                {(analytics.responseTimeTrend || []).map((point, _idx) => {
                   const value = point.value || 0;
                   const maxValue = Math.max(
                     ...(analytics.responseTimeTrend || []).map(

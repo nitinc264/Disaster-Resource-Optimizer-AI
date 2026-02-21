@@ -251,7 +251,7 @@ function MissingPersonReport() {
           </div>
           {photos.length > 0 && (
             <div className="photo-preview-grid">
-              {photos.map((photo) => (
+              {photos.map((photo, index) => (
                 <div key={photo.preview} className="photo-preview-item">
                   <img src={photo.preview} alt={`Preview ${index + 1}`} />
                   <button

@@ -22,13 +22,8 @@ const dispatchedIcon = createCustomIcon("dispatched"); // Orange - dispatched fr
 const rejectedIcon = createCustomIcon("rejected"); // Red - rejected, needs reroute
 const selectedIcon = createCustomIcon("selected"); // Cyan - selected for action
 const resolvedIcon = createCustomIcon("resolved"); // Dim - resolved
-
-// Legacy icons for backward compatibility
-const unverifiedIcon = createCustomIcon("unverified");
 const inProgressIcon = createCustomIcon("in-progress");
 const reportIcon = createCustomIcon("report");
-const reportSelectedIcon = createCustomIcon("report-selected");
-const reportInProgressIcon = createCustomIcon("report-in-progress");
 
 function MapPin({ need, isSelected, onClick }) {
   const { t } = useTranslation();

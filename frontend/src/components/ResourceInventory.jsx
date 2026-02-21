@@ -12,7 +12,6 @@ import {
   Minus,
   Save,
   AlertTriangle,
-  CheckCircle,
   RefreshCw,
   Building2,
 } from "lucide-react";
@@ -178,7 +177,7 @@ export default function ResourceInventory() {
             </span>
           </div>
           <div className="alert-list">
-            {alerts.slice(0, 3).map((alert, idx) => {
+            {alerts.slice(0, 3).map((alert, _idx) => {
               const category = SUPPLY_CATEGORIES[alert.supplyType];
               return (
                 <div

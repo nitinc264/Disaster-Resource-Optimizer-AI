@@ -38,12 +38,6 @@ const formatDuration = (seconds) => {
   return `${hours}h ${mins}m`;
 };
 
-// Truncate task ID for display
-const truncateId = (id) => {
-  if (!id) return "";
-  return id.length > 8 ? `${id.slice(-6)}` : id;
-};
-
 export default function VolunteerTaskList() {
   const { t } = useTranslation();
   const navigate = useNavigate();

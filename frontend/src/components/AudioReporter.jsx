@@ -18,7 +18,7 @@ const AudioReporter = () => {
   const [audioBlob, setAudioBlob] = useState(null);
   const [audioUrl, setAudioUrl] = useState(null);
   const [error, setError] = useState(null);
-  const [permissionStatus, setPermissionStatus] = useState("prompt"); // 'granted', 'denied', 'prompt'
+  const [_permissionStatus, setPermissionStatus] = useState("prompt"); // 'granted', 'denied', 'prompt'
   const [isUploading, setIsUploading] = useState(false);
   const [uploadSuccess, setUploadSuccess] = useState(null);
   const [recordingTime, setRecordingTime] = useState(0);
@@ -212,8 +212,8 @@ const AudioReporter = () => {
               {isRecording
                 ? t("audio.recording")
                 : audioUrl
-                ? t("audio.preview")
-                : t("audio.recordingHint")}
+                  ? t("audio.preview")
+                  : t("audio.recordingHint")}
             </p>
 
             {error && (
@@ -230,9 +230,7 @@ const AudioReporter = () => {
                   <button
                     className={`mic-button ${isRecording ? "recording" : ""}`}
                     onClick={handleToggleRecording}
-                    aria-label={
-                      isRecording ? "Stop" : "Start"
-                    }
+                    aria-label={isRecording ? "Stop" : "Start"}
                   >
                     {isRecording ? (
                       <div

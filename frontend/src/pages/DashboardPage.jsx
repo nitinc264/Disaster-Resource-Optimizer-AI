@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useCallback } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import {
@@ -6,7 +6,6 @@ import {
   ReportsList,
   MissionPanel,
   TriageAlertBanner,
-  ResourceTracker,
   AnalyticsDashboard,
   getTriageCategoryFromUrgency,
   RoadConditions,
@@ -64,15 +63,6 @@ function DashboardPage() {
   const [currentLocation, setCurrentLocation] = useState(null);
   const queryClient = useQueryClient();
 
-  // Toast notification helper (replaces alert() for non-blocking feedback)
-  const showToast = useCallback((message, isError = false) => {
-    // Use console + queryClient invalidation instead of blocking alert()
-    if (isError) {
-      console.error(message);
-    }
-    // The message is visible through the existing UI's status badges and refresh mechanism
-  }, []);
-
   // Get current location for new features
   useEffect(() => {
     if (navigator.geolocation) {
@@ -83,7 +73,7 @@ function DashboardPage() {
             lng: position.coords.longitude,
           });
         },
-        (error) => {
+        (_error) => {
           // Default to Pune city center (consistent with other services)
           setCurrentLocation({ lat: 18.5204, lng: 73.8567 });
         },

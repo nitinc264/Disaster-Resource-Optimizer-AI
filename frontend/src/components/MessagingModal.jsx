@@ -6,7 +6,6 @@ import {
   Loader2,
   Check,
   CheckCheck,
-  User,
   Users,
   ArrowLeft,
   RefreshCw,
@@ -17,7 +16,6 @@ import {
   getConversations,
   getConversation,
   markAsRead,
-  getUnreadCount,
 } from "../services/messagingService";
 import { getVolunteers } from "../services/authService";
 import { useAuth } from "../contexts/AuthContext";
@@ -220,7 +218,10 @@ export default function MessagingModal({ isOpen, onClose }) {
     const days = Math.floor(diff / (1000 * 60 * 60 * 24));
 
     if (days === 0) {
-      return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+      return date.toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+      });
     } else if (days === 1) {
       return t("messaging.yesterday") || "Yesterday";
     } else if (days < 7) {
@@ -274,7 +275,9 @@ export default function MessagingModal({ isOpen, onClose }) {
               </div>
               <div className="conversation-info">
                 <div className="conversation-header">
-                  <span className="conversation-name">{conv.partner?.name}</span>
+                  <span className="conversation-name">
+                    {conv.partner?.name}
+                  </span>
                   <span className="conversation-time">
                     {formatTime(conv.lastMessage?.createdAt)}
                   </span>
@@ -282,7 +285,9 @@ export default function MessagingModal({ isOpen, onClose }) {
                 <div className="conversation-preview">
                   <span className="preview-text">
                     {conv.lastMessage?.senderId === user?._id && (
-                      <span className="you-prefix">{t("messaging.you") || "You"}: </span>
+                      <span className="you-prefix">
+                        {t("messaging.you") || "You"}:{" "}
+                      </span>
                     )}
                     {conv.lastMessage?.text?.substring(0, 50)}
                     {conv.lastMessage?.text?.length > 50 && "..."}
@@ -306,7 +311,9 @@ export default function MessagingModal({ isOpen, onClose }) {
         <button className="btn-back" onClick={handleBack}>
           <ArrowLeft size={20} />
         </button>
-        <div className="chat-partner-avatar">{getInitials(selectedPartner?.name)}</div>
+        <div className="chat-partner-avatar">
+          {getInitials(selectedPartner?.name)}
+        </div>
         <div className="chat-partner-info">
           <span className="partner-name">{selectedPartner?.name}</span>
           <span className="partner-role">
@@ -324,13 +331,18 @@ export default function MessagingModal({ isOpen, onClose }) {
           </div>
         ) : messages.length === 0 ? (
           <div className="empty-chat">
-            <p>{t("messaging.startTyping") || "Start the conversation by sending a message"}</p>
+            <p>
+              {t("messaging.startTyping") ||
+                "Start the conversation by sending a message"}
+            </p>
           </div>
         ) : (
           <>
             {messages.map((msg) => {
-              const isSent = msg.senderId?._id === user?._id || msg.senderId === user?._id;
-              const senderRole = msg.senderRole || (msg.senderId?.role) || "volunteer";
+              const isSent =
+                msg.senderId?._id === user?._id || msg.senderId === user?._id;
+              const senderRole =
+                msg.senderRole || msg.senderId?.role || "volunteer";
               return (
                 <div
                   key={msg._id}
@@ -339,7 +351,9 @@ export default function MessagingModal({ isOpen, onClose }) {
                   <div className="message-bubble">
                     {!isSent && (
                       <span className={`sender-role-label ${senderRole}`}>
-                        {senderRole === "manager" ? t("roles.manager") || "Manager" : t("roles.volunteer") || "Volunteer"}
+                        {senderRole === "manager"
+                          ? t("roles.manager") || "Manager"
+                          : t("roles.volunteer") || "Volunteer"}
                       </span>
                     )}
                     <p className="message-text">{msg.text}</p>
@@ -352,13 +366,13 @@ export default function MessagingModal({ isOpen, onClose }) {
                           {msg.isRead ? (
                             <CheckCheck size={14} className="read" />
                           ) : (
-                          <Check size={14} />
-                        )}
-                      </span>
-                    )}
+                            <Check size={14} />
+                          )}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
               );
             })}
             <div ref={messagesEndRef} />
@@ -380,7 +394,11 @@ export default function MessagingModal({ isOpen, onClose }) {
           onClick={handleSendMessage}
           disabled={!newMessage.trim() || sending}
         >
-          {sending ? <Loader2 size={20} className="spin" /> : <Send size={20} />}
+          {sending ? (
+            <Loader2 size={20} className="spin" />
+          ) : (
+            <Send size={20} />
+          )}
         </button>
       </div>
     </div>
@@ -424,7 +442,9 @@ export default function MessagingModal({ isOpen, onClose }) {
               <div className="contact-avatar">{getInitials(contact.name)}</div>
               <div className="contact-info">
                 <span className="contact-name">{contact.name}</span>
-                {contact.phone && <span className="contact-phone">{contact.phone}</span>}
+                {contact.phone && (
+                  <span className="contact-phone">{contact.phone}</span>
+                )}
               </div>
               <MessageSquare size={18} className="contact-action" />
             </div>

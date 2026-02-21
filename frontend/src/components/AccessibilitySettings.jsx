@@ -84,9 +84,6 @@ export default function AccessibilitySettings({ isOpen, onClose }) {
     i18n.changeLanguage(langCode);
   };
 
-  const currentLang =
-    languages.find((l) => l.code === i18n.language) || languages[0];
-
   return (
     <div
       className="settings-overlay"

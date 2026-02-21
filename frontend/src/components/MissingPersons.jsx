@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import {
@@ -14,8 +14,6 @@ import {
   AlertCircle,
   Heart,
   RefreshCw,
-  ChevronDown,
-  ChevronUp,
   Eye,
   Share2,
   User,
@@ -646,7 +644,7 @@ const ReportMissingForm = ({
 
             {photos.length > 0 && (
               <div className="photo-preview-grid">
-                {photos.map((photo) => (
+                {photos.map((photo, index) => (
                   <div key={photo.preview} className="photo-preview-item">
                     <img src={photo.preview} alt={`Preview ${index + 1}`} />
                     <button

@@ -179,7 +179,7 @@ export default function ResourcesPage() {
               </span>
             </div>
             <div className="alert-items">
-              {summary.lowStockAlerts.slice(0, 5).map((alert, idx) => (
+              {summary.lowStockAlerts.slice(0, 5).map((alert, _idx) => (
                 <div
                   key={`${alert.stationName}-${alert.type}`}
                   className="alert-chip"
