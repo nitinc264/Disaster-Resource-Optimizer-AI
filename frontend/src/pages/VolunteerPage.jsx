@@ -41,6 +41,13 @@ function MissingPersonReport() {
   });
   const [photos, setPhotos] = useState([]);
 
+  // Clean up blob URLs on unmount to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      photos.forEach((photo) => URL.revokeObjectURL(photo.preview));
+    };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   useEffect(() => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
@@ -244,8 +251,8 @@ function MissingPersonReport() {
           </div>
           {photos.length > 0 && (
             <div className="photo-preview-grid">
-              {photos.map((photo, index) => (
-                <div key={index} className="photo-preview-item">
+              {photos.map((photo) => (
+                <div key={photo.preview} className="photo-preview-item">
                   <img src={photo.preview} alt={`Preview ${index + 1}`} />
                   <button
                     type="button"

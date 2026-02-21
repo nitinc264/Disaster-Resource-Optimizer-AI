@@ -11,10 +11,12 @@ function verifyApiKey(req, res, next) {
   const apiKey = req.headers["x-api-key"];
   const stationConfig = req.app.get("stationConfig");
 
-  // For demo purposes, accept any key or the configured key
-  // In production, this should be strictly validated
-  if (!apiKey) {
-    console.warn(`[${stationConfig.name}] Request without API key`);
+  if (!apiKey || apiKey !== stationConfig.apiKey) {
+    console.warn(`[${stationConfig.name}] Invalid or missing API key`);
+    return res.status(401).json({
+      success: false,
+      message: "Valid X-API-Key header required",
+    });
   }
 
   next();
@@ -40,6 +42,29 @@ router.post("/alerts/receive", verifyApiKey, async (req, res) => {
       timestamp,
       fromStation,
     } = req.body;
+
+    // Input validation
+    if (
+      !alertId ||
+      !location ||
+      typeof location.lat !== "number" ||
+      typeof location.lng !== "number"
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Missing required fields: alertId, location.lat, location.lng",
+      });
+    }
+
+    if (
+      severity !== undefined &&
+      (typeof severity !== "number" || severity < 0 || severity > 10)
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Severity must be a number between 0 and 10",
+      });
+    }
 
     console.log(`\n${"=".repeat(60)}`);
     console.log(`🚨 INCOMING ALERT - ${stationConfig.name}`);
@@ -87,7 +112,7 @@ router.post("/alerts/receive", verifyApiKey, async (req, res) => {
     });
 
     console.log(
-      `[${stationConfig.name}] Alert saved and broadcasted to dashboards`
+      `[${stationConfig.name}] Alert saved and broadcasted to dashboards`,
     );
 
     res.status(200).json({
@@ -101,7 +126,7 @@ router.post("/alerts/receive", verifyApiKey, async (req, res) => {
     console.error(`[${stationConfig.name}] Error processing alert:`, error);
     res.status(500).json({
       success: false,
-      error: error.message,
+      error: "Internal server error",
     });
   }
 });
@@ -119,9 +144,12 @@ router.get("/alerts", async (req, res) => {
     const filter = {};
     if (status) filter.status = status;
 
+    // Clamp limit to [1, 200] to prevent abuse
+    const clampedLimit = Math.max(1, Math.min(200, parseInt(limit) || 50));
+
     const alerts = await Alert.find(filter)
       .sort({ severity: -1, createdAt: -1 })
-      .limit(parseInt(limit));
+      .limit(clampedLimit);
 
     res.json({
       success: true,
@@ -130,9 +158,10 @@ router.get("/alerts", async (req, res) => {
       alerts,
     });
   } catch (error) {
+    console.error("Error fetching alerts:", error);
     res.status(500).json({
       success: false,
-      error: error.message,
+      error: "Internal server error",
     });
   }
 });
@@ -157,9 +186,10 @@ router.get("/alerts/:alertId", async (req, res) => {
       alert,
     });
   } catch (error) {
+    console.error("Error fetching alert:", error);
     res.status(500).json({
       success: false,
-      error: error.message,
+      error: "Internal server error",
     });
   }
 });
@@ -179,7 +209,7 @@ router.put("/alerts/:alertId/acknowledge", async (req, res) => {
         status: "acknowledged",
         acknowledgedAt: new Date(),
       },
-      { new: true }
+      { new: true },
     );
 
     if (!alert) {
@@ -192,13 +222,13 @@ router.put("/alerts/:alertId/acknowledge", async (req, res) => {
     // Notify main platform about acknowledgment
     try {
       const mainPlatformUrl =
-        process.env.MAIN_PLATFORM_URL || "http://localhost:5000";
+        process.env.MAIN_PLATFORM_URL || "http://localhost:3000";
       await axios.post(
         `${mainPlatformUrl}/api/emergency-stations/alerts/${alert.alertId}/acknowledge`,
         {
           stationId: stationConfig.stationId,
           notes: req.body.notes || "Alert acknowledged",
-        }
+        },
       );
     } catch (err) {
       console.warn("Could not notify main platform:", err.message);
@@ -213,9 +243,10 @@ router.put("/alerts/:alertId/acknowledge", async (req, res) => {
       alert,
     });
   } catch (error) {
+    console.error("Error acknowledging alert:", error);
     res.status(500).json({
       success: false,
-      error: error.message,
+      error: "Internal server error",
     });
   }
 });
@@ -230,15 +261,15 @@ router.put("/alerts/:alertId/status", async (req, res) => {
   try {
     const { status, notes } = req.body;
 
-    const updates = { status };
+    const updates = { $set: { status } };
 
     // Add timestamp based on status
-    if (status === "acknowledged") updates.acknowledgedAt = new Date();
-    if (status === "dispatched") updates.dispatchedAt = new Date();
-    if (status === "on_scene") updates.arrivedAt = new Date();
-    if (status === "resolved") updates.resolvedAt = new Date();
+    if (status === "acknowledged") updates.$set.acknowledgedAt = new Date();
+    if (status === "dispatched") updates.$set.dispatchedAt = new Date();
+    if (status === "on_scene") updates.$set.arrivedAt = new Date();
+    if (status === "resolved") updates.$set.resolvedAt = new Date();
 
-    // Add notes if provided
+    // Add notes if provided (only add $push when notes exist)
     if (notes) {
       updates.$push = {
         notes: {
@@ -251,7 +282,7 @@ router.put("/alerts/:alertId/status", async (req, res) => {
     const alert = await Alert.findOneAndUpdate(
       { alertId: req.params.alertId },
       updates,
-      { new: true }
+      { new: true },
     );
 
     if (!alert) {
@@ -269,9 +300,10 @@ router.put("/alerts/:alertId/status", async (req, res) => {
       alert,
     });
   } catch (error) {
+    console.error("Error updating alert status:", error);
     res.status(500).json({
       success: false,
-      error: error.message,
+      error: "Internal server error",
     });
   }
 });
@@ -300,7 +332,7 @@ router.post("/alerts/:alertId/dispatch", async (req, res) => {
           },
         },
       },
-      { new: true }
+      { new: true },
     );
 
     if (!alert) {
@@ -317,10 +349,10 @@ router.post("/alerts/:alertId/dispatch", async (req, res) => {
       const apiKey = stationConfig.apiKey || process.env.STATION_API_KEY;
 
       console.log(
-        `[${stationConfig.name}] Sending dispatch callback to ${mainPlatformUrl}/api/emergency-stations/callback/dispatched`
+        `[${stationConfig.name}] Sending dispatch callback to ${mainPlatformUrl}/api/emergency-stations/callback/dispatched`,
       );
       console.log(
-        `[${stationConfig.name}] Payload: alertId=${alert.alertId}, stationId=${stationConfig.stationId}`
+        `[${stationConfig.name}] Payload: alertId=${alert.alertId}, stationId=${stationConfig.stationId}`,
       );
 
       const response = await axios.post(
@@ -328,21 +360,21 @@ router.post("/alerts/:alertId/dispatch", async (req, res) => {
         {
           alertId: alert.alertId,
           stationId: stationConfig.stationId,
-          apiKey: apiKey,
+          apiKey,
           dispatchedUnits: [{ unitId, unitName }],
           estimatedArrival: estimatedArrival || "15 minutes",
           notes: notes || `Unit ${unitName || unitId} dispatched`,
-        }
+        },
       );
 
       console.log(
         `[${stationConfig.name}] Dispatch callback response:`,
-        response.data
+        response.data,
       );
     } catch (err) {
       console.error(
         `[${stationConfig.name}] Could not notify main platform of dispatch:`,
-        err.response?.data || err.message
+        err.response?.data || err.message,
       );
     }
 
@@ -361,9 +393,10 @@ router.post("/alerts/:alertId/dispatch", async (req, res) => {
       alert,
     });
   } catch (error) {
+    console.error("Error dispatching unit:", error);
     res.status(500).json({
       success: false,
-      error: error.message,
+      error: "Internal server error",
     });
   }
 });
@@ -386,7 +419,7 @@ router.post("/alerts/:alertId/reject", async (req, res) => {
         rejectedAt: new Date(),
         rejectionReason: reason || "No reason provided",
       },
-      { new: true }
+      { new: true },
     );
 
     if (!alert) {
@@ -407,18 +440,18 @@ router.post("/alerts/:alertId/reject", async (req, res) => {
         {
           alertId: alert.alertId,
           stationId: stationConfig.stationId,
-          apiKey: apiKey,
+          apiKey,
           reason: reason || "Station unable to respond",
-        }
+        },
       );
 
       console.log(
-        `[${stationConfig.name}] Rejection callback sent to main platform for alert ${alert.alertId}`
+        `[${stationConfig.name}] Rejection callback sent to main platform for alert ${alert.alertId}`,
       );
     } catch (err) {
       console.warn(
         `[${stationConfig.name}] Could not notify main platform of rejection:`,
-        err.message
+        err.message,
       );
     }
 
@@ -435,9 +468,10 @@ router.post("/alerts/:alertId/reject", async (req, res) => {
       alert,
     });
   } catch (error) {
+    console.error("Error rejecting alert:", error);
     res.status(500).json({
       success: false,
-      error: error.message,
+      error: "Internal server error",
     });
   }
 });
@@ -453,21 +487,26 @@ router.post("/alerts/:alertId/resolve", async (req, res) => {
   try {
     const { notes, outcome } = req.body;
 
-    const alert = await Alert.findOneAndUpdate(
-      { alertId: req.params.alertId },
-      {
+    const updateOps = {
+      $set: {
         status: "resolved",
         resolvedAt: new Date(),
-        $push: notes
-          ? {
-              notes: {
-                text: notes,
-                createdAt: new Date(),
-              },
-            }
-          : undefined,
       },
-      { new: true }
+    };
+    // Only add $push when notes are provided (avoids $push: undefined)
+    if (notes) {
+      updateOps.$push = {
+        notes: {
+          text: notes,
+          createdAt: new Date(),
+        },
+      };
+    }
+
+    const alert = await Alert.findOneAndUpdate(
+      { alertId: req.params.alertId },
+      updateOps,
+      { new: true },
     );
 
     if (!alert) {
@@ -488,19 +527,19 @@ router.post("/alerts/:alertId/resolve", async (req, res) => {
         {
           alertId: alert.alertId,
           stationId: stationConfig.stationId,
-          apiKey: apiKey,
+          apiKey,
           notes: notes,
           outcome: outcome || "Emergency resolved",
-        }
+        },
       );
 
       console.log(
-        `[${stationConfig.name}] Resolved callback sent to main platform for alert ${alert.alertId}`
+        `[${stationConfig.name}] Resolved callback sent to main platform for alert ${alert.alertId}`,
       );
     } catch (err) {
       console.warn(
         `[${stationConfig.name}] Could not notify main platform of resolution:`,
-        err.message
+        err.message,
       );
     }
 
@@ -517,9 +556,10 @@ router.post("/alerts/:alertId/resolve", async (req, res) => {
       alert,
     });
   } catch (error) {
+    console.error("Error resolving alert:", error);
     res.status(500).json({
       success: false,
-      error: error.message,
+      error: "Internal server error",
     });
   }
 });
@@ -540,9 +580,11 @@ router.get("/stats", async (req, res) => {
       severity: { $gte: 7 },
       status: { $nin: ["resolved"] },
     });
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
     const resolvedToday = await Alert.countDocuments({
       status: "resolved",
-      resolvedAt: { $gte: new Date().setHours(0, 0, 0, 0) },
+      resolvedAt: { $gte: todayStart },
     });
 
     res.json({
@@ -556,9 +598,10 @@ router.get("/stats", async (req, res) => {
       },
     });
   } catch (error) {
+    console.error("Error fetching stats:", error);
     res.status(500).json({
       success: false,
-      error: error.message,
+      error: "Internal server error",
     });
   }
 });

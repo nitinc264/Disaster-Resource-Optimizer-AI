@@ -136,7 +136,10 @@ function MissionPanel({
                     {/* Route details */}
                     <div className="route-list">
                       {(mission.routes || []).map((route, idx) => (
-                        <div key={idx} className="route-item">
+                        <div
+                          key={route._id || route.stationId || idx}
+                          className="route-item"
+                        >
                           <div
                             className="route-color-bar"
                             style={{

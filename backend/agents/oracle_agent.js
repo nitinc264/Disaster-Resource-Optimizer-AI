@@ -39,9 +39,14 @@ const __dirname = dirname(__filename);
 dotenv.config({ path: join(__dirname, "../.env") });
 
 // Configuration
-const MONGO_URI = process.env.MONGO_URI || "mongodb://localhost:27017/aegis_db";
+const MONGO_URI =
+  process.env.MONGO_URI || "mongodb://localhost:27017/DisasterResponseDB";
 const POLL_INTERVAL = 3000; // 3 seconds
 const RUN_ONCE = (process.env.ORACLE_RUN_ONCE || "").toLowerCase() === "true";
+const MAX_RETRIES = 3; // Max retries per report before giving up
+
+// Track retry counts per report to avoid infinite retry loops
+const retryCounts = new Map();
 
 console.log("[Oracle] Using shared Gemini Service for AI analysis...");
 
@@ -83,7 +88,7 @@ async function findAndLockReport() {
     },
     {
       new: true,
-    }
+    },
   );
 
   return report;
@@ -97,7 +102,7 @@ async function processReport(report) {
   console.log(
     `[Oracle] Sentinel Data: ${report.sentinelData?.tag || "N/A"} (${(
       (report.sentinelData?.confidence || 0) * 100
-    ).toFixed(1)}%)`
+    ).toFixed(1)}%)`,
   );
   console.log(`[Oracle] User Text: ${report.text || "None"}`);
 
@@ -107,38 +112,66 @@ async function processReport(report) {
     const analysisResult = await analyzeReport(report);
 
     // Update the document with Oracle results
-    const updatedReport = await Report.findByIdAndUpdate(report._id, {
-      $set: {
-        oracleData: {
-          severity: analysisResult.severity,
-          needs: analysisResult.needs,
-          summary: analysisResult.summary,
+    const updatedReport = await Report.findByIdAndUpdate(
+      report._id,
+      {
+        $set: {
+          oracleData: {
+            severity: analysisResult.severity,
+            needs: analysisResult.needs,
+            summary: analysisResult.summary,
+          },
+          status: "Analyzed_Full",
         },
-        status: "Analyzed_Full",
       },
-    }, { new: true });
+      { new: true },
+    );
 
     console.log(
-      `[Oracle] Rated Severity: ${analysisResult.severity} for Report ID: ${report._id}`
+      `[Oracle] Rated Severity: ${analysisResult.severity} for Report ID: ${report._id}`,
     );
     console.log(`[Oracle] Needs: ${analysisResult.needs.join(", ")}`);
     console.log(`[Oracle] Summary: ${analysisResult.summary}`);
     console.log(`[Oracle] Report ${report._id} processed successfully!`);
 
     // Dispatch emergency alert to nearest station
-    if (updatedReport && updatedReport.location?.lat && updatedReport.location?.lng) {
+    if (
+      updatedReport &&
+      updatedReport.location?.lat &&
+      updatedReport.location?.lng
+    ) {
       const confidence = updatedReport.sentinelData?.confidence || 0;
       const severity = updatedReport.oracleData?.severity || 0;
       const tag = (updatedReport.sentinelData?.tag || "").toLowerCase();
       const text = (updatedReport.text || "").toLowerCase();
 
       const disasterTags = [
-        "fire", "flood", "earthquake", "accident", "collapse", "rescue", "disaster",
+        "fire",
+        "flood",
+        "earthquake",
+        "accident",
+        "collapse",
+        "rescue",
+        "disaster",
       ];
       const textKeywords = [
-        "fire", "flood", "earthquake", "accident", "collapse", "rescue",
-        "burning", "trapped", "help", "emergency", "disaster", "injured",
-        "drowning", "stampede", "explosion", "landslide", "storm",
+        "fire",
+        "flood",
+        "earthquake",
+        "accident",
+        "collapse",
+        "rescue",
+        "burning",
+        "trapped",
+        "help",
+        "emergency",
+        "disaster",
+        "injured",
+        "drowning",
+        "stampede",
+        "explosion",
+        "landslide",
+        "storm",
       ];
       const isDisaster =
         confidence >= 0.5 ||
@@ -147,22 +180,32 @@ async function processReport(report) {
         textKeywords.some((kw) => text.includes(kw));
 
       if (isDisaster) {
-        console.log(`[Oracle] 🚨 Dispatching emergency alert for report ${report._id}`);
+        console.log(
+          `[Oracle] 🚨 Dispatching emergency alert for report ${report._id}`,
+        );
         try {
-          const alertResult = await dispatchEmergencyAlert(updatedReport, "Report");
+          const alertResult = await dispatchEmergencyAlert(
+            updatedReport,
+            "Report",
+          );
           if (alertResult.success) {
             console.log(
-              `[Oracle] ✅ Alert dispatched: ${alertResult.alertId} to ${alertResult.stationsNotified} station(s)`
+              `[Oracle] ✅ Alert dispatched: ${alertResult.alertId} to ${alertResult.stationsNotified} station(s)`,
             );
           } else {
-            console.warn(`[Oracle] ⚠️ Alert dispatch failed: ${alertResult.error}`);
+            console.warn(
+              `[Oracle] ⚠️ Alert dispatch failed: ${alertResult.error}`,
+            );
           }
         } catch (alertError) {
-          console.error(`[Oracle] ❌ Error dispatching emergency alert:`, alertError.message);
+          console.error(
+            `[Oracle] ❌ Error dispatching emergency alert:`,
+            alertError.message,
+          );
         }
       } else {
         console.log(
-          `[Oracle] ℹ️ Report ${report._id} not classified as emergency (confidence: ${confidence}, severity: ${severity})`
+          `[Oracle] ℹ️ Report ${report._id} not classified as emergency (confidence: ${confidence}, severity: ${severity})`,
         );
       }
     }
@@ -170,16 +213,42 @@ async function processReport(report) {
     console.log("-".repeat(50));
   } catch (error) {
     console.error(
-      `[Oracle] Error processing report ${report._id}: ${error.message}`
+      `[Oracle] Error processing report ${report._id}: ${error.message}`,
     );
 
-    // Revert status so the report can be retried after resolving the issue
-    await Report.findByIdAndUpdate(report._id, {
-      $set: {
-        status: "Analyzed_Visual",
-        errorMessage: `Oracle processing failed: ${error.message}`,
-      },
-    });
+    // Track retries to avoid infinite retry loops
+    const reportId = report._id.toString();
+    const retries = (retryCounts.get(reportId) || 0) + 1;
+    retryCounts.set(reportId, retries);
+
+    if (retries >= MAX_RETRIES) {
+      // Give up after MAX_RETRIES — mark as Error so it isn't picked up again
+      console.error(
+        `[Oracle] Report ${report._id} failed ${retries} times. Marking as Error.`,
+      );
+      await Report.findByIdAndUpdate(report._id, {
+        $set: {
+          status: "Error",
+          errorMessage: `Oracle processing failed after ${retries} attempts: ${error.message}`,
+        },
+      });
+      retryCounts.delete(reportId);
+    } else {
+      // Revert status so the report can be retried with exponential backoff
+      console.warn(
+        `[Oracle] Retry ${retries}/${MAX_RETRIES} for report ${report._id}. Backing off...`,
+      );
+      await Report.findByIdAndUpdate(report._id, {
+        $set: {
+          status: "Analyzed_Visual",
+          errorMessage: `Oracle processing failed (attempt ${retries}): ${error.message}`,
+        },
+      });
+      // Exponential backoff: wait 2^retries seconds before next poll picks it up
+      await new Promise((resolve) =>
+        setTimeout(resolve, Math.pow(2, retries) * 1000),
+      );
+    }
   }
 }
 
@@ -197,7 +266,7 @@ async function pollForReports() {
     }
   } catch (error) {
     console.error(
-      `[Oracle] Unexpected error in polling loop: ${error.message}`
+      `[Oracle] Unexpected error in polling loop: ${error.message}`,
     );
   }
 }

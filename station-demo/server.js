@@ -31,7 +31,7 @@ const httpServer = createServer(app);
 // Socket.IO for real-time alerts
 const io = new Server(httpServer, {
   cors: {
-    origin: "*",
+    origin: process.env.CORS_ORIGIN || "http://localhost:3000",
     methods: ["GET", "POST"],
   },
 });
@@ -41,8 +41,41 @@ app.set("io", io);
 app.set("stationConfig", stationConfig);
 
 // Middleware
-app.use(cors());
-app.use(express.json());
+app.use(
+  cors({
+    origin: process.env.CORS_ORIGIN || "http://localhost:3000",
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
+    credentials: true,
+  }),
+);
+app.use(express.json({ limit: "1mb" }));
+
+// Simple in-memory rate limiter (100 requests per minute per IP)
+const rateLimitMap = new Map();
+const RATE_LIMIT_WINDOW = 60_000; // 1 minute
+const RATE_LIMIT_MAX = 100;
+app.use((req, res, next) => {
+  const ip = req.ip;
+  const now = Date.now();
+  const entry = rateLimitMap.get(ip);
+  if (!entry || now - entry.start > RATE_LIMIT_WINDOW) {
+    rateLimitMap.set(ip, { start: now, count: 1 });
+    return next();
+  }
+  entry.count++;
+  if (entry.count > RATE_LIMIT_MAX) {
+    return res.status(429).json({ success: false, error: "Too many requests" });
+  }
+  next();
+});
+// Periodically clean up stale entries
+setInterval(() => {
+  const now = Date.now();
+  for (const [ip, entry] of rateLimitMap) {
+    if (now - entry.start > RATE_LIMIT_WINDOW) rateLimitMap.delete(ip);
+  }
+}, RATE_LIMIT_WINDOW);
+
 app.use(express.static(path.join(__dirname, "public")));
 app.use("/sounds", express.static(path.join(__dirname, "alert sound")));
 
@@ -74,7 +107,6 @@ app.get("/api/station", (req, res) => {
     type: stationConfig.type,
     location: stationConfig.location,
     capabilities: stationConfig.capabilities,
-    apiKey: stationConfig.apiKey,
     status: "active",
   });
 });
@@ -85,6 +117,19 @@ app.get("/", (req, res) => {
 });
 
 // Socket.IO connection handling
+const STATION_SOCKET_TOKEN = process.env.STATION_SOCKET_TOKEN || null;
+
+io.use((socket, next) => {
+  // If a token is configured, require it for connections
+  if (STATION_SOCKET_TOKEN) {
+    const token = socket.handshake.auth?.token || socket.handshake.query?.token;
+    if (token !== STATION_SOCKET_TOKEN) {
+      return next(new Error("Authentication failed: invalid token"));
+    }
+  }
+  next();
+});
+
 io.on("connection", (socket) => {
   console.log(`[${stationConfig.name}] Dashboard connected: ${socket.id}`);
 

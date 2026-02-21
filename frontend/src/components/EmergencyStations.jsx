@@ -54,14 +54,14 @@ export default function EmergencyStations() {
   const handlePing = async (stationId) => {
     try {
       const result = await pingStation(stationId);
-      alert(
+      console.log(
         t("emergencyStations.pingResult", {
           status: result.data?.status || "unknown",
         }),
       );
       fetchData();
     } catch (err) {
-      alert(t("emergencyStations.failedToPing"));
+      console.error(t("emergencyStations.failedToPing"));
     }
   };
 
@@ -78,7 +78,7 @@ export default function EmergencyStations() {
       await deleteStation(stationId);
       fetchData();
     } catch (err) {
-      alert(t("emergencyStations.failedToDelete"));
+      console.error(t("emergencyStations.failedToDelete"));
     }
   };
 
@@ -88,7 +88,7 @@ export default function EmergencyStations() {
       await updateAlertStatus(alertId, newStatus);
       fetchData();
     } catch (err) {
-      alert(t("emergencyStations.failedToUpdateAlert"));
+      console.error(t("emergencyStations.failedToUpdateAlert"));
     }
   };
 
@@ -399,7 +399,7 @@ export default function EmergencyStations() {
                           );
                           return (
                             <span
-                              key={idx}
+                              key={s.stationId}
                               className={`station-tag ${s.deliveryStatus}`}
                               title={`${s.distance?.toFixed(2) || "?"} km away`}
                             >

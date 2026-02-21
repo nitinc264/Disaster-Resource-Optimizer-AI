@@ -180,7 +180,10 @@ export default function ResourcesPage() {
             </div>
             <div className="alert-items">
               {summary.lowStockAlerts.slice(0, 5).map((alert, idx) => (
-                <div key={idx} className="alert-chip">
+                <div
+                  key={`${alert.stationName}-${alert.type}`}
+                  className="alert-chip"
+                >
                   <strong>{alert.stationName}</strong>:{" "}
                   {t(SUPPLY_CONFIG[alert.type]?.labelKey || alert.type)} (
                   {alert.current}/{alert.minimum})

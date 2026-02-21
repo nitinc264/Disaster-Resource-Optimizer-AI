@@ -46,8 +46,14 @@ export const checkSession = async () => {
     const response = await apiClient.get("/auth/session");
     if (response.data.success && response.data.authenticated) {
       const userData = response.data.data;
-      storeAuth(userData);
-      apiClient.defaults.headers.common["x-auth-pin"] = userData.pin;
+      // Restore PIN from local storage (server no longer returns it)
+      const storedAuth = getStoredAuth();
+      if (storedAuth?.pin) {
+        storeAuth({ ...userData, pin: storedAuth.pin });
+        apiClient.defaults.headers.common["x-auth-pin"] = storedAuth.pin;
+      } else {
+        storeAuth(userData);
+      }
       return { authenticated: true, user: userData };
     }
     return { authenticated: false };
@@ -62,7 +68,8 @@ export const checkSession = async () => {
 export const loginWithPin = async (pin) => {
   const response = await apiClient.post("/auth/login", { pin });
   if (response.data.success) {
-    storeAuth(response.data.data);
+    // Store auth data along with the PIN from user input (server no longer returns it)
+    storeAuth({ ...response.data.data, pin });
     // Set default header for future requests
     apiClient.defaults.headers.common["x-auth-pin"] = pin;
   }

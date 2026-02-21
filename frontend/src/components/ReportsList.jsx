@@ -37,7 +37,13 @@ const EMERGENCY_STATUS_COLORS = {
   resolved: "#6b7280",
 };
 
-function ReportsList({ reports, onReportClick, selectedReportId, onRerouteReport, reroutingReportId }) {
+function ReportsList({
+  reports,
+  onReportClick,
+  selectedReportId,
+  onRerouteReport,
+  reroutingReportId,
+}) {
   const { t } = useTranslation();
   const [expandedReportId, setExpandedReportId] = useState(null);
 
@@ -180,8 +186,8 @@ function ReportsList({ reports, onReportClick, selectedReportId, onRerouteReport
                     )}
                     {report.needs && report.needs.length > 0 && (
                       <div className="report-needs">
-                        {report.needs.map((need, idx) => (
-                          <span key={idx} className="need-badge">
+                        {report.needs.map((need) => (
+                          <span key={need} className="need-badge">
                             {need}
                           </span>
                         ))}
@@ -200,33 +206,43 @@ function ReportsList({ reports, onReportClick, selectedReportId, onRerouteReport
                 )}
 
                 {/* Emergency status badge */}
-                {report.emergencyStatus && report.emergencyStatus !== "none" && (
-                  <div className="report-emergency-status">
-                    <span
-                      className="emergency-status-badge"
-                      style={{
-                        color: EMERGENCY_STATUS_COLORS[report.emergencyStatus] || "#6b7280",
-                      }}
-                    >
-                      🚨{" "}
-                      {report.emergencyStatus === "rejected"
-                        ? t("reports.rejectedByStation", "Rejected by Station")
-                        : report.emergencyStatus.charAt(0).toUpperCase() +
-                          report.emergencyStatus.slice(1)}
-                    </span>
-                    {report.assignedStation?.stationName && (
-                      <span className="emergency-station-name">
-                        📍 {report.assignedStation.stationName}
+                {report.emergencyStatus &&
+                  report.emergencyStatus !== "none" && (
+                    <div className="report-emergency-status">
+                      <span
+                        className="emergency-status-badge"
+                        style={{
+                          color:
+                            EMERGENCY_STATUS_COLORS[report.emergencyStatus] ||
+                            "#6b7280",
+                        }}
+                      >
+                        🚨{" "}
+                        {report.emergencyStatus === "rejected"
+                          ? t(
+                              "reports.rejectedByStation",
+                              "Rejected by Station",
+                            )
+                          : report.emergencyStatus.charAt(0).toUpperCase() +
+                            report.emergencyStatus.slice(1)}
                       </span>
-                    )}
-                    {report.emergencyStatus === "rejected" &&
-                      report.assignedStation?.rejectionReason && (
-                        <span className="emergency-rejection-reason" style={{ color: "#ef4444" }}>
-                          {t("reports.reason", "Reason")}: {report.assignedStation.rejectionReason}
+                      {report.assignedStation?.stationName && (
+                        <span className="emergency-station-name">
+                          📍 {report.assignedStation.stationName}
                         </span>
                       )}
-                  </div>
-                )}
+                      {report.emergencyStatus === "rejected" &&
+                        report.assignedStation?.rejectionReason && (
+                          <span
+                            className="emergency-rejection-reason"
+                            style={{ color: "#ef4444" }}
+                          >
+                            {t("reports.reason", "Reason")}:{" "}
+                            {report.assignedStation.rejectionReason}
+                          </span>
+                        )}
+                    </div>
+                  )}
 
                 {/* Reroute button for rejected reports */}
                 {report.emergencyStatus === "rejected" && onRerouteReport && (

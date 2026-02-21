@@ -8,7 +8,10 @@ export const development = {
   mongoUri:
     process.env.MONGO_URI || "mongodb://localhost:27017/DisasterResponseDB",
   cors: {
-    origin: "*",
+    origin: process.env.ALLOWED_ORIGINS?.split(",") || [
+      "http://localhost:5173",
+      "http://localhost:3000",
+    ],
     credentials: true,
   },
   logging: {
@@ -42,7 +45,7 @@ export const test = {
     process.env.MONGO_URI ||
     "mongodb://localhost:27017/DisasterResponseDB-test",
   cors: {
-    origin: "*",
+    origin: ["http://localhost:5173", "http://localhost:3001"],
     credentials: true,
   },
   logging: {

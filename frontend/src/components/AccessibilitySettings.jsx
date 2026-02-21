@@ -12,7 +12,7 @@ export function useAccessibility() {
   const context = useContext(AccessibilityContext);
   if (!context) {
     throw new Error(
-      "useAccessibility must be used within AccessibilityProvider"
+      "useAccessibility must be used within AccessibilityProvider",
     );
   }
   return context;
@@ -21,12 +21,17 @@ export function useAccessibility() {
 // Accessibility Provider component
 export function AccessibilityProvider({ children }) {
   const [settings, setSettings] = useState(() => {
-    const saved = localStorage.getItem("accessibilitySettings");
-    return saved
-      ? JSON.parse(saved)
-      : {
-          darkMode: true,
-        };
+    try {
+      const saved = localStorage.getItem("accessibilitySettings");
+      return saved
+        ? JSON.parse(saved)
+        : {
+            darkMode: true,
+          };
+    } catch {
+      // Handle corrupted localStorage data gracefully
+      return { darkMode: true };
+    }
   });
 
   // Apply settings to document
@@ -133,7 +138,11 @@ export default function AccessibilitySettings({ isOpen, onClose }) {
             <div className="setting-item">
               <div className="setting-info">
                 {settings.darkMode ? <Moon size={18} /> : <Sun size={18} />}
-                <span>{settings.darkMode ? t("settings.darkMode") : t("settings.lightMode")}</span>
+                <span>
+                  {settings.darkMode
+                    ? t("settings.darkMode")
+                    : t("settings.lightMode")}
+                </span>
               </div>
               <button
                 className={`toggle ${settings.darkMode ? "on" : ""}`}

@@ -28,19 +28,21 @@
 #    - Update all processed reports: Set 'dispatch_status' = 'Assigned' (to prevent re-routing).
 # 5. Logging: Print clear updates like "[Logistics] 🚚 Processing...", "[Logistics] 🗺️ Route generated."
 
+import os
 import time
 import math
 import requests
 from datetime import datetime, timezone
 from pymongo import MongoClient
 
-# OSRM Configuration
-OSRM_BASE_URL = "https://router.project-osrm.org"
+# OSRM Configuration — set OSRM_BASE_URL to a self-hosted instance for production
+# The public demo server (router.project-osrm.org) has strict rate limits
+OSRM_BASE_URL = os.environ.get("OSRM_BASE_URL", "https://router.project-osrm.org")
 OSRM_TIMEOUT = 10  # seconds
 
 # MongoDB Connection Configuration
-MONGO_URI = "mongodb://localhost:27017"
-DATABASE_NAME = "DisasterResponseDB"
+MONGO_URI = os.environ.get("MONGO_URI", "mongodb://localhost:27017/DisasterResponseDB")
+DATABASE_NAME = os.environ.get("DATABASE_NAME", "DisasterResponseDB")
 REPORTS_COLLECTION = "reports"
 NEEDS_COLLECTION = "needs"
 MISSIONS_COLLECTION = "missions"
@@ -109,8 +111,12 @@ NEED_TO_STATION_MAP = [
     ("other", "rescue"),
 ]
 
-# Default fallback depot (Command Center)
-DEFAULT_DEPOT = {"name": "Command Center - Pune", "lat": 18.521, "lon": 73.854}
+# Default fallback depot (configurable via env vars)
+DEFAULT_DEPOT = {
+    "name": os.environ.get("DEFAULT_DEPOT_NAME", "Command Center - Pune"),
+    "lat": float(os.environ.get("DEFAULT_DEPOT_LAT", 18.521)),
+    "lon": float(os.environ.get("DEFAULT_DEPOT_LON", 73.854)),
+}
 
 
 def haversine(lat1, lon1, lat2, lon2):
@@ -340,7 +346,7 @@ def get_verified_needs(db):
             {'dispatch_status': 'Pending'}  # Include rerouted needs
         ],
         'coordinates.lat': {'$exists': True},
-        'coordinates.lon': {'$exists': True}
+        'coordinates.lng': {'$exists': True}
     }
     
     needs = list(needs_collection.find(query))
@@ -716,12 +722,12 @@ def run_logistics_agent():
                     try:
                         # Get need location
                         coords = need.get('coordinates', {})
-                        if not coords.get('lat') or not coords.get('lon'):
+                        if not coords.get('lat') or not coords.get('lng'):
                             print(f"[Logistics] ⚠️ Need {need['_id']} has no coordinates. Skipping...")
                             continue
                         
                         need_lat = coords['lat']
-                        need_lon = coords['lon']
+                        need_lon = coords['lng']
                         need_id = need['_id']
                         
                         # Determine which type of station should respond

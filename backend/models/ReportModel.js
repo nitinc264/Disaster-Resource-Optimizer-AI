@@ -126,6 +126,26 @@ const reportSchema = new mongoose.Schema(
       rejectionReason: String,
     },
 
+    // Dispatch tracking (set by logistics agent via pymongo and reroute endpoint)
+    dispatch_status: {
+      type: String,
+      enum: ["Pending", "Unassigned", "Assigned"],
+      default: "Unassigned",
+    },
+    mission_id: {
+      type: mongoose.Schema.Types.ObjectId,
+    },
+    assigned_station: {
+      type: mongoose.Schema.Types.Mixed,
+    },
+    assigned_at: {
+      type: Date,
+    },
+    // When rerouted to a specific station
+    rerouted_to_station: {
+      type: mongoose.Schema.Types.Mixed,
+    },
+
     // Metadata
     timestamp: {
       type: Date,
@@ -134,7 +154,7 @@ const reportSchema = new mongoose.Schema(
   },
   {
     timestamps: true, // Adds createdAt and updatedAt fields
-  }
+  },
 );
 
 // Indexes for common queries

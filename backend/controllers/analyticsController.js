@@ -184,7 +184,7 @@ export const getAnalytics = async (req, res) => {
               lng: { $round: ["$location.lng", 3] },
             },
             count: { $sum: 1 },
-            name: { $first: "$location.address" }, 
+            name: { $first: "$location.address" },
           },
         },
         { $sort: { count: -1 } },
@@ -252,21 +252,21 @@ export const getAnalytics = async (req, res) => {
 
       // 10. Need Hotspots (Cluster by rounding coordinates)
       Need.aggregate([
-        { 
-          $match: { 
+        {
+          $match: {
             createdAt: { $gte: startDate },
             "coordinates.lat": { $ne: null },
-            "coordinates.lon": { $ne: null }
-          } 
+            "coordinates.lng": { $ne: null },
+          },
         },
         {
           $group: {
             _id: {
               lat: { $round: ["$coordinates.lat", 3] },
-              lon: { $round: ["$coordinates.lon", 3] },
+              lon: { $round: ["$coordinates.lng", 3] },
             },
             count: { $sum: 1 },
-            name: { $first: "$coordinates.formattedAddress" }, 
+            name: { $first: "$coordinates.formattedAddress" },
           },
         },
         { $sort: { count: -1 } },
@@ -280,7 +280,9 @@ export const getAnalytics = async (req, res) => {
         .select("status triageData createdAt coordinates rawMessage"),
 
       // 12. Active Missions Count
-      mongoose.connection.db.collection("missions").countDocuments({ status: "Active" }),
+      mongoose.connection.db
+        .collection("missions")
+        .countDocuments({ status: "Active" }),
 
       // 13. Response Time Stats - time from creation to resolution/dispatch/update
       // Uses multiple fallbacks: dispatchedAt > assignedAt > updatedAt for resolved reports
@@ -339,12 +341,20 @@ export const getAnalytics = async (req, res) => {
           $group: {
             _id: {
               $dateToString: {
-                format: timeRange === "7d" || timeRange === "30d" ? "%Y-%m-%d" : "%H:00",
+                format:
+                  timeRange === "7d" || timeRange === "30d"
+                    ? "%Y-%m-%d"
+                    : "%H:00",
                 date: "$createdAt",
               },
             },
             avgTime: {
-              $avg: { $divide: [{ $subtract: ["$responseEndTime", "$createdAt"] }, 60000] },
+              $avg: {
+                $divide: [
+                  { $subtract: ["$responseEndTime", "$createdAt"] },
+                  60000,
+                ],
+              },
             },
             count: { $sum: 1 },
           },
@@ -375,12 +385,20 @@ export const getAnalytics = async (req, res) => {
           $group: {
             _id: {
               $dateToString: {
-                format: timeRange === "7d" || timeRange === "30d" ? "%Y-%m-%d" : "%H:00",
+                format:
+                  timeRange === "7d" || timeRange === "30d"
+                    ? "%Y-%m-%d"
+                    : "%H:00",
                 date: "$createdAt",
               },
             },
             avgTime: {
-              $avg: { $divide: [{ $subtract: ["$responseEndTime", "$createdAt"] }, 60000] },
+              $avg: {
+                $divide: [
+                  { $subtract: ["$responseEndTime", "$createdAt"] },
+                  60000,
+                ],
+              },
             },
             count: { $sum: 1 },
           },
@@ -391,23 +409,41 @@ export const getAnalytics = async (req, res) => {
     ]);
 
     // Process Results - Combine Report and Need data
-    const currentReport = currentReportStats[0] || { total: 0, resolved: 0, avgResolutionTime: 0 };
-    const previousReport = previousReportStats[0] || { total: 0, resolved: 0, avgResolutionTime: 0 };
-    const currentNeed = currentNeedStats[0] || { total: 0, resolved: 0, avgResolutionTime: 0 };
+    const currentReport = currentReportStats[0] || {
+      total: 0,
+      resolved: 0,
+      avgResolutionTime: 0,
+    };
+    const previousReport = previousReportStats[0] || {
+      total: 0,
+      resolved: 0,
+      avgResolutionTime: 0,
+    };
+    const currentNeed = currentNeedStats[0] || {
+      total: 0,
+      resolved: 0,
+      avgResolutionTime: 0,
+    };
     const previousNeed = previousNeedStats[0] || { total: 0, resolved: 0 };
-    const responseTime = responseTimeStats[0] || { avgResponseTime: 0, count: 0 };
+    const responseTime = responseTimeStats[0] || {
+      avgResponseTime: 0,
+      count: 0,
+    };
 
     // Calculate effective avg response time with fallbacks
     // Priority: actual response time > report resolution time > need resolution time
-    const effectiveResponseTimeMs = responseTime.avgResponseTime || 
-                                     currentReport.avgResolutionTime || 
-                                     currentNeed.avgResolutionTime || 0;
+    const effectiveResponseTimeMs =
+      responseTime.avgResponseTime ||
+      currentReport.avgResolutionTime ||
+      currentNeed.avgResolutionTime ||
+      0;
 
     // Combined stats
     const current = {
       total: currentReport.total + currentNeed.total,
       resolved: currentReport.resolved + currentNeed.resolved,
-      avgResolutionTime: currentReport.avgResolutionTime || currentNeed.avgResolutionTime || 0,
+      avgResolutionTime:
+        currentReport.avgResolutionTime || currentNeed.avgResolutionTime || 0,
       avgResponseTime: effectiveResponseTimeMs,
     };
     const previous = {
@@ -433,13 +469,13 @@ export const getAnalytics = async (req, res) => {
 
     // Combine Incident Types from both Report and Need
     const incidentTypeMap = new Map();
-    
+
     // Add report incident types
     reportIncidentTypes.forEach((type) => {
       const name = type._id || "Unknown";
       incidentTypeMap.set(name, (incidentTypeMap.get(name) || 0) + type.count);
     });
-    
+
     // Add need incident types
     needIncidentTypes.forEach((type) => {
       const name = type._id || "Unknown";
@@ -467,7 +503,7 @@ export const getAnalytics = async (req, res) => {
 
     // Combine Hotspots from both Report and Need
     const hotspotMap = new Map();
-    
+
     // Add report hotspots
     reportHotspots.forEach((spot) => {
       const key = `${spot._id?.lat},${spot._id?.lng}`;
@@ -483,7 +519,7 @@ export const getAnalytics = async (req, res) => {
         });
       }
     });
-    
+
     // Add need hotspots
     needHotspots.forEach((spot) => {
       const key = `${spot._id?.lat},${spot._id?.lon}`;
@@ -518,11 +554,13 @@ export const getAnalytics = async (req, res) => {
         timestamp: need.createdAt,
         status: need.status,
       })),
-    ].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)).slice(0, 10);
+    ]
+      .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+      .slice(0, 10);
 
     // Combine response time trend data from Reports and Needs
     const trendMap = new Map();
-    
+
     // Add Report response times
     (responseTimeTrendData || []).forEach((item) => {
       if (item._id) {
@@ -530,24 +568,36 @@ export const getAnalytics = async (req, res) => {
         if (existing) {
           // Weighted average
           const totalCount = existing.count + item.count;
-          existing.avgTime = ((existing.avgTime * existing.count) + ((item.avgTime || 0) * item.count)) / totalCount;
+          existing.avgTime =
+            (existing.avgTime * existing.count +
+              (item.avgTime || 0) * item.count) /
+            totalCount;
           existing.count = totalCount;
         } else {
-          trendMap.set(item._id, { avgTime: item.avgTime || 0, count: item.count });
+          trendMap.set(item._id, {
+            avgTime: item.avgTime || 0,
+            count: item.count,
+          });
         }
       }
     });
-    
+
     // Add Need response times
     (needResponseTimeTrendData || []).forEach((item) => {
       if (item._id) {
         const existing = trendMap.get(item._id);
         if (existing) {
           const totalCount = existing.count + item.count;
-          existing.avgTime = ((existing.avgTime * existing.count) + ((item.avgTime || 0) * item.count)) / totalCount;
+          existing.avgTime =
+            (existing.avgTime * existing.count +
+              (item.avgTime || 0) * item.count) /
+            totalCount;
           existing.count = totalCount;
         } else {
-          trendMap.set(item._id, { avgTime: item.avgTime || 0, count: item.count });
+          trendMap.set(item._id, {
+            avgTime: item.avgTime || 0,
+            count: item.count,
+          });
         }
       }
     });
@@ -568,7 +618,9 @@ export const getAnalytics = async (req, res) => {
       },
       previous: {
         incidents: previous.total,
-        avgResponseTime: Math.round((previousReport.avgResolutionTime || 0) / 60000),
+        avgResponseTime: Math.round(
+          (previousReport.avgResolutionTime || 0) / 60000,
+        ),
         resolved: previous.resolved,
       },
       historical: true,
@@ -582,6 +634,10 @@ export const getAnalytics = async (req, res) => {
     sendSuccess(res, responseData);
   } catch (error) {
     console.error("Error in getAnalytics:", error);
-    sendError(res, "Failed to fetch analytics data", HTTP_STATUS.INTERNAL_SERVER_ERROR);
+    sendError(
+      res,
+      "Failed to fetch analytics data",
+      HTTP_STATUS.INTERNAL_SERVER_ERROR,
+    );
   }
 };

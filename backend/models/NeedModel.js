@@ -27,10 +27,10 @@ const TriageDataSchema = new mongoose.Schema({
 const CoordinateSchema = new mongoose.Schema(
   {
     lat: Number,
-    lon: Number,
+    lng: Number,
     formattedAddress: String,
   },
-  { _id: false }
+  { _id: false },
 );
 
 /**
@@ -88,6 +88,29 @@ const NeedSchema = new mongoose.Schema(
       rejectionReason: String,
     },
     /**
+     * Dispatch tracking (set by logistics agent via pymongo and reroute endpoint)
+     */
+    dispatch_status: {
+      type: String,
+      enum: ["Pending", "Unassigned", "Assigned"],
+      default: "Unassigned",
+    },
+    mission_id: {
+      type: mongoose.Schema.Types.ObjectId,
+    },
+    assigned_station: {
+      type: mongoose.Schema.Types.Mixed,
+    },
+    assigned_at: {
+      type: Date,
+    },
+    /**
+     * When rerouted to a specific station, stores the target station info
+     */
+    rerouted_to_station: {
+      type: mongoose.Schema.Types.Mixed,
+    },
+    /**
      * Stores the structured data from the Gemini AI triage.
      */
     triageData: TriageDataSchema,
@@ -100,7 +123,13 @@ const NeedSchema = new mongoose.Schema(
   },
   {
     timestamps: true, // Adds createdAt and updatedAt timestamps
-  }
+  },
 );
+
+// Indexes for common queries
+NeedSchema.index({ status: 1, createdAt: -1 });
+NeedSchema.index({ fromNumber: 1, status: 1 });
+NeedSchema.index({ "coordinates.lat": 1, "coordinates.lng": 1 });
+NeedSchema.index({ emergencyStatus: 1 });
 
 export default mongoose.model("Need", NeedSchema);

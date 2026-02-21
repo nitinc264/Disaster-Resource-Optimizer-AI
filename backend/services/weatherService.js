@@ -6,7 +6,12 @@
 import fetch from "node-fetch";
 import { logger } from "../utils/appLogger.js";
 
-const OPENWEATHER_API_KEY = process.env.OPENWEATHER_API_KEY;
+// Read API key lazily so dotenv has time to load
+let _openweatherApiKey;
+function getOpenWeatherApiKey() {
+  if (!_openweatherApiKey) _openweatherApiKey = process.env.OPENWEATHER_API_KEY;
+  return _openweatherApiKey;
+}
 const OPENWEATHER_BASE_URL = "https://api.openweathermap.org/data/2.5";
 
 // Cache weather data for 10 minutes to reduce API calls
@@ -28,14 +33,14 @@ export async function getCurrentWeather(lat, lon) {
   }
 
   try {
-    if (!OPENWEATHER_API_KEY) {
+    if (!getOpenWeatherApiKey()) {
       logger.warn(
-        "OpenWeatherMap API key not configured - set OPENWEATHER_API_KEY in .env"
+        "OpenWeatherMap API key not configured - set OPENWEATHER_API_KEY in .env",
       );
       return null;
     }
 
-    const url = `${OPENWEATHER_BASE_URL}/weather?lat=${lat}&lon=${lon}&appid=${OPENWEATHER_API_KEY}&units=metric`;
+    const url = `${OPENWEATHER_BASE_URL}/weather?lat=${lat}&lon=${lon}&appid=${getOpenWeatherApiKey()}&units=metric`;
     const response = await fetch(url);
 
     if (!response.ok) {
@@ -65,12 +70,12 @@ export async function getCurrentWeather(lat, lon) {
  */
 export async function getWeatherAlerts(lat, lon) {
   try {
-    if (!OPENWEATHER_API_KEY) {
+    if (!getOpenWeatherApiKey()) {
       return [];
     }
 
     // OneCall API for alerts (requires subscription)
-    const url = `${OPENWEATHER_BASE_URL}/onecall?lat=${lat}&lon=${lon}&appid=${OPENWEATHER_API_KEY}&exclude=minutely,hourly,daily`;
+    const url = `${OPENWEATHER_BASE_URL}/onecall?lat=${lat}&lon=${lon}&appid=${getOpenWeatherApiKey()}&exclude=minutely,hourly,daily`;
     const response = await fetch(url);
 
     if (!response.ok) {
@@ -93,11 +98,11 @@ export async function getWeatherAlerts(lat, lon) {
  */
 export async function getWeatherForecast(lat, lon) {
   try {
-    if (!OPENWEATHER_API_KEY) {
+    if (!getOpenWeatherApiKey()) {
       return [];
     }
 
-    const url = `${OPENWEATHER_BASE_URL}/forecast?lat=${lat}&lon=${lon}&appid=${OPENWEATHER_API_KEY}&units=metric&cnt=8`;
+    const url = `${OPENWEATHER_BASE_URL}/forecast?lat=${lat}&lon=${lon}&appid=${getOpenWeatherApiKey()}&units=metric&cnt=8`;
     const response = await fetch(url);
 
     if (!response.ok) {
@@ -203,14 +208,14 @@ function getOperationalWarnings(weather, data) {
     warnings.push({
       type: "severe",
       message: `High winds (${Math.round(
-        windSpeed * 3.6
+        windSpeed * 3.6,
       )} km/h) - Helicopter operations suspended`,
     });
   } else if (windSpeed > 15) {
     warnings.push({
       type: "warning",
       message: `Strong winds (${Math.round(
-        windSpeed * 3.6
+        windSpeed * 3.6,
       )} km/h) - Exercise caution`,
     });
   }

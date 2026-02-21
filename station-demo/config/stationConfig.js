@@ -87,21 +87,16 @@ export function getStationConfig() {
     process.exit(1);
   }
 
-  // Generate a consistent API key based on station type
-  const defaultApiKeys = {
-    fire: "fire-station-demo-key-2024",
-    hospital: "hospital-demo-key-2024",
-    police: "police-station-demo-key-2024",
-    rescue: "rescue-station-demo-key-2024",
-  };
+  // Use env-configured API key; fall back to a generated key from station type + a secret
+  // In production, STATION_API_KEY should always be set in .env
+  const fallbackKey = process.env.STATION_API_KEY_SECRET
+    ? `${stationType}-${process.env.STATION_API_KEY_SECRET}`
+    : `${stationType}-station-demo-key-2024`;
 
   return {
     ...config,
     port: parseInt(port),
-    apiKey:
-      process.env.STATION_API_KEY ||
-      defaultApiKeys[stationType] ||
-      `${stationType}-api-key-demo`,
+    apiKey: process.env.STATION_API_KEY || fallbackKey,
   };
 }
 

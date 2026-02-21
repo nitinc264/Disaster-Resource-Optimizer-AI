@@ -16,19 +16,22 @@ import resourceRoutes from "./resourceRoutes.js";
 
 const router = express.Router();
 
-router.use(authRoutes);
-router.use(smsWebhookRoutes);
-router.use(tasksRoutes);
+// These route files define their own path prefixes internally
+router.use(authRoutes); // /auth/*
+router.use(smsWebhookRoutes); // /sms
+router.use(tasksRoutes); // /tasks/*, /needs/*
+router.use(missionRoutes); // /missions/*
+router.use(weatherRoutes); // /weather/*
+router.use(roadConditionRoutes); // /roads/*
+router.use(missingPersonRoutes); // /missing-persons/*
+router.use(shelterRoutes); // /shelters/*
+router.use(routeRoutes); // /routes/*
+router.use(volunteerMessageRoutes); // /volunteer-messages/*, /messages/*
+router.use(analyticsRoutes); // /analytics
+
+// These route files expect to be mounted at a prefix
 router.use("/reports", reportsRoutes);
-router.use(missionRoutes);
-router.use(weatherRoutes);
-router.use(roadConditionRoutes);
-router.use(missingPersonRoutes);
-router.use(shelterRoutes);
-router.use(routeRoutes);
 router.use("/emergency-stations", emergencyStationRoutes);
-router.use(volunteerMessageRoutes);
-router.use(analyticsRoutes);
 router.use("/resources", resourceRoutes);
 
 export default router;

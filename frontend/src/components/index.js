@@ -31,6 +31,7 @@ export { default as EmergencyStations } from "./EmergencyStations.jsx";
 export {
   default as AccessibilitySettings,
   AccessibilityProvider,
+  SkipToContent,
 } from "./AccessibilitySettings.jsx";
 
 // Authentication components

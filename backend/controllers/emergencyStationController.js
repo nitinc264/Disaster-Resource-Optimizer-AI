@@ -136,12 +136,24 @@ export async function createStation(req, res) {
  */
 export async function updateStation(req, res) {
   try {
-    const updates = req.body;
-
-    // Don't allow updating certain fields directly
-    delete updates._id;
-    delete updates.stationId;
-    delete updates.stats;
+    // Whitelist allowed fields to prevent mass assignment
+    const allowedFields = [
+      "name",
+      "type",
+      "location",
+      "capabilities",
+      "status",
+      "contactInfo",
+      "operatingHours",
+      "notes",
+      "callbackUrl",
+    ];
+    const updates = {};
+    for (const field of allowedFields) {
+      if (req.body[field] !== undefined) {
+        updates[field] = req.body[field];
+      }
+    }
 
     const station = await EmergencyStation.findByIdAndUpdate(
       req.params.id,
@@ -411,11 +423,12 @@ export async function acknowledgeAlert(req, res) {
         name: { $regex: stationId, $options: "i" },
       });
     }
-    if (
-      station &&
-      station.apiConfig?.apiKey &&
-      station.apiConfig.apiKey !== apiKey
-    ) {
+
+    // Reject if station not found or API key doesn't match
+    if (!station) {
+      return sendError(res, "Station not found", 404);
+    }
+    if (station.apiConfig?.apiKey && station.apiConfig.apiKey !== apiKey) {
       return sendError(res, "Invalid API key", 403);
     }
 
@@ -515,20 +528,15 @@ export async function stationDispatchCallback(req, res) {
     }
 
     if (!station) {
-      logger.warn(
-        `Station not found: ${stationId}, proceeding without station verification`,
-      );
+      logger.warn(`Station not found: ${stationId}`);
+      return sendError(res, "Station not found", 404);
     }
 
     // Verify API key - reject if mismatch
     if (!apiKey) {
       return sendError(res, "API key is required", 401);
     }
-    if (
-      station &&
-      station.apiConfig?.apiKey &&
-      station.apiConfig.apiKey !== apiKey
-    ) {
+    if (station.apiConfig?.apiKey && station.apiConfig.apiKey !== apiKey) {
       logger.warn(`API key mismatch for station ${stationId}`);
       return sendError(res, "Invalid API key", 403);
     }
@@ -653,12 +661,13 @@ export async function stationRejectCallback(req, res) {
       });
     }
 
+    // Reject if station not found
+    if (!station) {
+      return sendError(res, "Station not found", 404);
+    }
+
     // Verify API key
-    if (
-      station &&
-      station.apiConfig?.apiKey &&
-      station.apiConfig.apiKey !== apiKey
-    ) {
+    if (station.apiConfig?.apiKey && station.apiConfig.apiKey !== apiKey) {
       logger.warn(`API key mismatch for station ${stationId}`);
       return sendError(res, "Invalid API key", 403);
     }
@@ -688,7 +697,8 @@ export async function stationRejectCallback(req, res) {
 
     // Check if all stations have rejected - if so, mark the report as rejected for rerouting
     const allRejected =
-      alert.sentToStations?.every((s) => s.status === "rejected") || true;
+      alert.sentToStations?.length > 0 &&
+      alert.sentToStations.every((s) => s.status === "rejected");
 
     // Update the linked report/need's emergencyStatus
     const reportId = alert.sourceDocument || alert.sourceId;
@@ -796,12 +806,13 @@ export async function stationResolvedCallback(req, res) {
       });
     }
 
+    // Reject if station not found
+    if (!station) {
+      return sendError(res, "Station not found", 404);
+    }
+
     // Verify API key
-    if (
-      station &&
-      station.apiConfig?.apiKey &&
-      station.apiConfig.apiKey !== apiKey
-    ) {
+    if (station.apiConfig?.apiKey && station.apiConfig.apiKey !== apiKey) {
       logger.warn(`API key mismatch for station ${stationId}`);
       return sendError(res, "Invalid API key", 403);
     }

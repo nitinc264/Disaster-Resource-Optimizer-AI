@@ -181,7 +181,10 @@ export default function ResourceInventory() {
             {alerts.slice(0, 3).map((alert, idx) => {
               const category = SUPPLY_CATEGORIES[alert.supplyType];
               return (
-                <div key={idx} className="alert-item">
+                <div
+                  key={`${alert.stationName}-${alert.supplyType}`}
+                  className="alert-item"
+                >
                   <category.icon size={16} style={{ color: category.color }} />
                   <span>
                     <strong>{alert.stationName}</strong>: {t(category.labelKey)}{" "}

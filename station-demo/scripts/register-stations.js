@@ -47,7 +47,7 @@ const DEMO_STATIONS = [
     apiConfig: {
       baseUrl: "http://localhost:4002",
       alertEndpoint: "/api/alerts/receive",
-      apiKey: "hospital-demo-key-2024",
+      apiKey: "hospital-station-demo-key-2024",
     },
     capabilities: ["medical", "rescue", "traffic_accident", "general"],
     contact: {
@@ -112,13 +112,13 @@ const DEMO_STATIONS = [
 
 async function registerStations() {
   console.log(
-    "╔══════════════════════════════════════════════════════════════╗"
+    "╔══════════════════════════════════════════════════════════════╗",
   );
   console.log(
-    "║     REGISTERING DEMO EMERGENCY STATIONS                      ║"
+    "║     REGISTERING DEMO EMERGENCY STATIONS                      ║",
   );
   console.log(
-    "╚══════════════════════════════════════════════════════════════╝\n"
+    "╚══════════════════════════════════════════════════════════════╝\n",
   );
 
   // First, authenticate (you may need to adjust this based on your auth setup)
@@ -133,7 +133,7 @@ async function registerStations() {
       },
       {
         withCredentials: true,
-      }
+      },
     );
 
     // Get session cookie
@@ -145,7 +145,7 @@ async function registerStations() {
     console.log("✅ Authenticated successfully\n");
   } catch (error) {
     console.log(
-      "⚠️  Could not authenticate. Proceeding without auth (may fail if auth required).\n"
+      "⚠️  Could not authenticate. Proceeding without auth (may fail if auth required).\n",
     );
   }
 
@@ -169,7 +169,7 @@ async function registerStations() {
             "Content-Type": "application/json",
             Cookie: authCookie,
           },
-        }
+        },
       );
 
       if (response.data.success !== false) {
@@ -192,7 +192,7 @@ async function registerStations() {
         }
         if (error.code === "ECONNREFUSED") {
           console.log(
-            `      ⚠️  Backend server not running at ${MAIN_PLATFORM_URL}`
+            `      ⚠️  Backend server not running at ${MAIN_PLATFORM_URL}`,
           );
         }
         results.failed.push(station.name);

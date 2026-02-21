@@ -1,31 +1,66 @@
 import User from "../models/UserModel.js";
+import crypto from "crypto";
+
+// Rate limiting for PIN login attempts (in-memory store)
+const loginAttempts = new Map(); // key: IP, value: { count, lastAttempt, lockedUntil }
+const MAX_LOGIN_ATTEMPTS = 5;
+const LOCKOUT_DURATION_MS = 15 * 60 * 1000; // 15 minutes
+const ATTEMPT_WINDOW_MS = 5 * 60 * 1000; // 5 minute window
+
+function checkRateLimit(ip) {
+  const now = Date.now();
+  const record = loginAttempts.get(ip);
+
+  if (!record) return { allowed: true };
+
+  // Check if currently locked out
+  if (record.lockedUntil && now < record.lockedUntil) {
+    const remainingSec = Math.ceil((record.lockedUntil - now) / 1000);
+    return { allowed: false, remainingSec };
+  }
+
+  // Reset if outside the attempt window
+  if (now - record.lastAttempt > ATTEMPT_WINDOW_MS) {
+    loginAttempts.delete(ip);
+    return { allowed: true };
+  }
+
+  if (record.count >= MAX_LOGIN_ATTEMPTS) {
+    record.lockedUntil = now + LOCKOUT_DURATION_MS;
+    const remainingSec = Math.ceil(LOCKOUT_DURATION_MS / 1000);
+    return { allowed: false, remainingSec };
+  }
+
+  return { allowed: true };
+}
+
+function recordFailedAttempt(ip) {
+  const now = Date.now();
+  const record = loginAttempts.get(ip) || { count: 0, lastAttempt: now };
+  record.count += 1;
+  record.lastAttempt = now;
+  loginAttempts.set(ip, record);
+}
+
+function clearAttempts(ip) {
+  loginAttempts.delete(ip);
+}
 
 const ensureDefaultManager = async () => {
-  const defaultPin = "0000";
-  const existing = await User.findOne({ pin: defaultPin });
+  // Only create a default manager if none exist at all
+  const existing = await User.findOne({ role: "manager", isActive: true });
+  if (existing) return;
 
-  if (!existing) {
-    await User.create({
-      pin: defaultPin,
-      name: "Default Manager",
-      role: "manager",
-      email: "admin@disaster-response.local",
-      isActive: true,
-    });
-    console.log(`Default manager (self-heal) created with PIN: ${defaultPin}`);
-    return;
-  }
-
-  // If the default manager exists but is inactive or has the wrong role, fix it
-  const updates = {};
-  if (!existing.isActive) updates.isActive = true;
-  if (existing.role !== "manager") updates.role = "manager";
-  if (Object.keys(updates).length > 0) {
-    await User.updateOne({ _id: existing._id }, { $set: updates });
-    console.log(
-      `Default manager (self-heal) reactivated with PIN: ${defaultPin}`,
-    );
-  }
+  // Generate a secure random 4-digit PIN instead of using "0000"
+  const defaultPin = String(Math.floor(1000 + Math.random() * 9000));
+  await User.create({
+    pin: defaultPin,
+    name: "Default Manager",
+    role: "manager",
+    email: "admin@disaster-response.local",
+    isActive: true,
+  });
+  console.log(`Default manager (self-heal) created with PIN: ${defaultPin}`);
 };
 
 /**
@@ -41,8 +76,8 @@ const generateUniquePin = async () => {
     // Generate random 4-digit PIN (1000-9999)
     pin = String(Math.floor(1000 + Math.random() * 9000));
 
-    // Check if PIN already exists
-    const existingUser = await User.findOne({ pin });
+    // Check if PIN already exists (need to compare against all users since PINs are hashed)
+    const existingUser = await User.findByPin(pin);
     if (!existingUser) {
       isUnique = true;
     }
@@ -63,6 +98,16 @@ const generateUniquePin = async () => {
 export const loginWithPin = async (req, res) => {
   try {
     const { pin } = req.body;
+    const clientIp = req.ip || req.connection.remoteAddress || "unknown";
+
+    // Check rate limit
+    const rateCheck = checkRateLimit(clientIp);
+    if (!rateCheck.allowed) {
+      return res.status(429).json({
+        success: false,
+        message: `Too many login attempts. Please try again in ${rateCheck.remainingSec} seconds.`,
+      });
+    }
 
     if (!pin || !/^\d{4}$/.test(pin)) {
       return res.status(400).json({
@@ -71,18 +116,22 @@ export const loginWithPin = async (req, res) => {
       });
     }
 
-    let user = await User.findOne({ pin, isActive: true });
+    let user = await User.findByPin(pin);
 
     if (!user) {
       await ensureDefaultManager();
-      user = await User.findOne({ pin, isActive: true });
+      user = await User.findByPin(pin);
       if (!user) {
+        recordFailedAttempt(clientIp);
         return res.status(401).json({
           success: false,
           message: "Invalid PIN",
         });
       }
     }
+
+    // Successful login — clear failed attempts
+    clearAttempts(clientIp);
 
     // Update last login
     user.lastLogin = new Date();
@@ -100,7 +149,6 @@ export const loginWithPin = async (req, res) => {
         id: user._id,
         name: user.name,
         role: user.role,
-        pin: user.pin,
         sessionExpires: Date.now() + 24 * 60 * 60 * 1000, // 24 hours from now
       },
     });
@@ -202,7 +250,7 @@ export const getCurrentUser = async (req, res) => {
       });
     }
 
-    const user = await User.findOne({ pin, isActive: true }).select("-__v");
+    const user = await User.findByPin(pin);
 
     if (!user) {
       return res.status(401).json({
@@ -283,7 +331,6 @@ export const checkSession = async (req, res) => {
             id: user._id,
             name: user.name,
             role: user.role,
-            pin: user.pin,
             sessionExpires:
               (req.session.loginTime || Date.now()) + 24 * 60 * 60 * 1000,
           },
@@ -344,7 +391,7 @@ export const initializeDefaultManager = async () => {
     const managerExists = await User.findOne({ role: "manager" });
 
     if (!managerExists) {
-      const defaultPin = "0000";
+      const defaultPin = String(Math.floor(1000 + Math.random() * 9000));
       await User.create({
         pin: defaultPin,
         name: "Alex Mercer",

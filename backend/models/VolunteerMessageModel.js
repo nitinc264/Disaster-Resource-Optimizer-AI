@@ -4,7 +4,8 @@ const volunteerMessageSchema = new mongoose.Schema(
   {
     // Legacy field for backward compatibility
     volunteerId: {
-      type: String,
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
     },
     // New two-way messaging fields
     senderId: {
@@ -45,7 +46,7 @@ const volunteerMessageSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 // Indexes for faster lookups
@@ -53,6 +54,9 @@ volunteerMessageSchema.index({ senderId: 1, receiverId: 1 });
 volunteerMessageSchema.index({ receiverId: 1, isRead: 1 });
 volunteerMessageSchema.index({ createdAt: -1 });
 
-const VolunteerMessage = mongoose.model("VolunteerMessage", volunteerMessageSchema);
+const VolunteerMessage = mongoose.model(
+  "VolunteerMessage",
+  volunteerMessageSchema,
+);
 
 export default VolunteerMessage;

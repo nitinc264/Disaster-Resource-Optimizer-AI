@@ -9,14 +9,17 @@
 import dotenv from "dotenv";
 dotenv.config();
 
+import crypto from "crypto";
 import express from "express";
 import cors from "cors";
 import session from "express-session";
+import MongoStore from "connect-mongo";
 import path from "path";
 import fs from "fs";
 import { fileURLToPath } from "url";
 import { spawn } from "child_process";
 import multer from "multer";
+import mongoose from "mongoose";
 import connectDB from "./config/db.js";
 import config from "./config/index.js";
 import apiRouter from "./routes/index.js";
@@ -27,6 +30,7 @@ import {
   notFoundHandler,
   requestLogger,
 } from "./middleware/index.js";
+import { requireAuth } from "./middleware/authMiddleware.js";
 import { initializeDefaultManager } from "./controllers/authController.js";
 import {
   dispatchEmergencyAlert,
@@ -115,6 +119,7 @@ function startAgents() {
         stdio: ["ignore", "pipe", "pipe"],
         env: {
           ...process.env,
+          AGENT_API_KEY: AGENT_API_KEY,
           PYTHONIOENCODING: "utf-8",
           PYTHONUNBUFFERED: "1",
           TF_CPP_MIN_LOG_LEVEL: "2", // Suppress TensorFlow info/warning logs
@@ -210,13 +215,30 @@ app.use(
 );
 
 // Session middleware - 24 hour persistence
+const sessionSecret = process.env.SESSION_SECRET;
+if (!sessionSecret) {
+  if (config.nodeEnv === "production") {
+    console.error(
+      "FATAL: SESSION_SECRET environment variable is required in production",
+    );
+    process.exit(1);
+  }
+  console.warn(
+    "⚠️  SESSION_SECRET not set — using random secret (sessions won't persist across restarts)",
+  );
+}
 app.use(
   session({
-    secret: process.env.SESSION_SECRET || "disaster-response-secret-key",
+    secret: sessionSecret || crypto.randomBytes(64).toString("hex"),
     resave: false,
     saveUninitialized: false,
+    store: MongoStore.create({
+      mongoUrl: config.mongoUri,
+      collectionName: "sessions",
+      ttl: 24 * 60 * 60, // 24 hours in seconds
+    }),
     cookie: {
-      secure: false, // Set to true in production with HTTPS
+      secure: config.nodeEnv === "production",
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
       httpOnly: true,
       sameSite: "lax",
@@ -225,8 +247,8 @@ app.use(
 );
 
 // Body parsing middleware
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: "1mb" }));
+app.use(express.urlencoded({ extended: true, limit: "1mb" }));
 
 // Request logging middleware (only in development)
 if (config.logging?.requests) {
@@ -397,8 +419,28 @@ app.post(
   },
 );
 
+// Internal agent API key middleware — agents must provide AGENT_API_KEY
+const AGENT_API_KEY =
+  process.env.AGENT_API_KEY || crypto.randomBytes(32).toString("hex");
+if (!process.env.AGENT_API_KEY) {
+  console.warn(
+    `⚠️  AGENT_API_KEY not set — generated ephemeral key: ${AGENT_API_KEY.slice(0, 8)}...`,
+  );
+}
+
+function requireAgentKey(req, res, next) {
+  const key = req.headers["x-agent-key"];
+  if (!key || key !== AGENT_API_KEY) {
+    return res.status(401).json({
+      error: "Unauthorized",
+      message: "Valid X-Agent-Key header required",
+    });
+  }
+  next();
+}
+
 // GET /api/reports/pending-visual - For Python Sentinel Agent
-app.get("/api/reports/pending-visual", async (req, res) => {
+app.get("/api/reports/pending-visual", requireAgentKey, async (req, res) => {
   try {
     const reports = await Report.find({
       status: "Pending",
@@ -411,95 +453,113 @@ app.get("/api/reports/pending-visual", async (req, res) => {
 });
 
 // PATCH /api/reports/:id/update-agent - For Agents to update report data
-app.patch("/api/reports/:id/update-agent", async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { sentinelData, oracleData, status } = req.body;
+app.patch(
+  "/api/reports/:id/update-agent",
+  requireAgentKey,
+  async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { sentinelData, oracleData, status } = req.body;
 
-    const updateData = {};
-    if (sentinelData) updateData.sentinelData = sentinelData;
-    if (oracleData) updateData.oracleData = oracleData;
-    if (status) updateData.status = status;
+      const updateData = {};
+      if (sentinelData) updateData.sentinelData = sentinelData;
+      if (oracleData) updateData.oracleData = oracleData;
+      if (status) updateData.status = status;
 
-    const updatedReport = await Report.findByIdAndUpdate(id, updateData, {
-      new: true,
-    });
+      const updatedReport = await Report.findByIdAndUpdate(id, updateData, {
+        new: true,
+      });
 
-    if (!updatedReport) {
-      return res.status(404).json({ message: "Report not found" });
-    }
-
-    // Dispatch emergency alert when report is fully analyzed
-    const analyzedStatuses = ["Analyzed", "Analyzed_Full"];
-    if (status && analyzedStatuses.includes(status)) {
-      try {
-        console.log(
-          `📢 Report ${id} analyzed, checking for emergency dispatch...`,
-        );
-
-        // Only dispatch if we have location and a valid disaster detection
-        if (updatedReport.location?.lat && updatedReport.location?.lng) {
-          // Check if it's a valid disaster (high confidence or high severity)
-          const confidence = updatedReport.sentinelData?.confidence || 0;
-          const severity = updatedReport.oracleData?.severity || 0;
-          const tag = (updatedReport.sentinelData?.tag || "").toLowerCase();
-          const text = (updatedReport.text || "").toLowerCase();
-
-          // Dispatch if: confidence OR severity OR disaster tags OR text keywords
-          const disasterTags = [
-            "fire",
-            "flood",
-            "earthquake",
-            "accident",
-            "collapse",
-            "rescue",
-            "disaster",
-          ];
-          const textKeywords = [
-            "fire", "flood", "earthquake", "accident", "collapse", "rescue",
-            "burning", "trapped", "help", "emergency", "disaster", "injured",
-            "drowning", "stampede", "explosion", "landslide", "storm",
-          ];
-          const isDisaster =
-            confidence >= 0.5 ||
-            severity >= 3 ||
-            disasterTags.some((dt) => tag.includes(dt)) ||
-            textKeywords.some((kw) => text.includes(kw));
-
-          if (isDisaster) {
-            console.log(`🚨 Dispatching emergency alert for report ${id}`);
-            const alertResult = await dispatchEmergencyAlert(
-              updatedReport,
-              "Report",
-            );
-
-            if (alertResult.success) {
-              console.log(
-                `✅ Alert dispatched: ${alertResult.alertId} to ${alertResult.stationsNotified} stations`,
-              );
-            } else {
-              console.warn(`⚠️ Alert dispatch failed: ${alertResult.error}`);
-            }
-          } else {
-            console.log(
-              `ℹ️ Report ${id} not classified as emergency (confidence: ${confidence}, severity: ${severity})`,
-            );
-          }
-        }
-      } catch (alertError) {
-        console.error("Error dispatching emergency alert:", alertError);
-        // Don't fail the update if alert dispatch fails
+      if (!updatedReport) {
+        return res.status(404).json({ message: "Report not found" });
       }
-    }
 
-    res.json(updatedReport);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-});
+      // Dispatch emergency alert when report is fully analyzed
+      const analyzedStatuses = ["Analyzed", "Analyzed_Full"];
+      if (status && analyzedStatuses.includes(status)) {
+        try {
+          console.log(
+            `📢 Report ${id} analyzed, checking for emergency dispatch...`,
+          );
+
+          // Only dispatch if we have location and a valid disaster detection
+          if (updatedReport.location?.lat && updatedReport.location?.lng) {
+            // Check if it's a valid disaster (high confidence or high severity)
+            const confidence = updatedReport.sentinelData?.confidence || 0;
+            const severity = updatedReport.oracleData?.severity || 0;
+            const tag = (updatedReport.sentinelData?.tag || "").toLowerCase();
+            const text = (updatedReport.text || "").toLowerCase();
+
+            // Dispatch if: confidence OR severity OR disaster tags OR text keywords
+            const disasterTags = [
+              "fire",
+              "flood",
+              "earthquake",
+              "accident",
+              "collapse",
+              "rescue",
+              "disaster",
+            ];
+            const textKeywords = [
+              "fire",
+              "flood",
+              "earthquake",
+              "accident",
+              "collapse",
+              "rescue",
+              "burning",
+              "trapped",
+              "help",
+              "emergency",
+              "disaster",
+              "injured",
+              "drowning",
+              "stampede",
+              "explosion",
+              "landslide",
+              "storm",
+            ];
+            const isDisaster =
+              confidence >= 0.5 ||
+              severity >= 3 ||
+              disasterTags.some((dt) => tag.includes(dt)) ||
+              textKeywords.some((kw) => text.includes(kw));
+
+            if (isDisaster) {
+              console.log(`🚨 Dispatching emergency alert for report ${id}`);
+              const alertResult = await dispatchEmergencyAlert(
+                updatedReport,
+                "Report",
+              );
+
+              if (alertResult.success) {
+                console.log(
+                  `✅ Alert dispatched: ${alertResult.alertId} to ${alertResult.stationsNotified} stations`,
+                );
+              } else {
+                console.warn(`⚠️ Alert dispatch failed: ${alertResult.error}`);
+              }
+            } else {
+              console.log(
+                `ℹ️ Report ${id} not classified as emergency (confidence: ${confidence}, severity: ${severity})`,
+              );
+            }
+          }
+        } catch (alertError) {
+          console.error("Error dispatching emergency alert:", alertError);
+          // Don't fail the update if alert dispatch fails
+        }
+      }
+
+      res.json(updatedReport);
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
+  },
+);
 
 // PATCH /api/reports/:id/reroute - Reroute a rejected report/need to a specific station
-app.patch("/api/reports/:id/reroute", async (req, res) => {
+app.patch("/api/reports/:id/reroute", requireAuth, async (req, res) => {
   try {
     const { id } = req.params;
     const { station } = req.body;
@@ -535,7 +595,61 @@ app.patch("/api/reports/:id/reroute", async (req, res) => {
       return res.status(404).json({ error: "Report or need not found" });
     }
 
-    // Dispatch alert to the selected station
+    // 1) Cancel existing mission(s) for this report/need so the old route disappears
+    const sourceObjectId = sourceData._id;
+    const missionQuery =
+      sourceType === "Need"
+        ? { need_ids: sourceObjectId, status: "Active" }
+        : { report_ids: sourceObjectId, status: "Active" };
+    await mongoose.connection.db
+      .collection("missions")
+      .updateMany(missionQuery, {
+        $set: {
+          status: "Rerouted",
+          reroutedAt: new Date().toISOString(),
+          reroutedTo: station,
+        },
+      });
+
+    // 2) Cancel existing emergency alerts
+    await mongoose.connection.db.collection("emergencyalerts").updateMany(
+      { sourceId: sourceObjectId, status: { $nin: ["cancelled", "resolved"] } },
+      {
+        $set: {
+          status: "cancelled",
+          cancelledAt: new Date().toISOString(),
+          cancelReason: `Rerouted to ${station.name}`,
+        },
+      },
+    );
+
+    // 3) Reset the report/need so the logistics agent picks it up with the new station
+    const resetData = {
+      status: sourceType === "Need" ? "Verified" : "Analyzed",
+      dispatch_status: "Pending",
+      emergencyStatus: "pending",
+      rerouted_to_station: station,
+    };
+    if (sourceType === "Need") {
+      await Need.findByIdAndUpdate(sourceObjectId, {
+        $set: resetData,
+        $unset: { mission_id: "", assigned_station: "", emergencyAlertId: "" },
+      });
+    } else {
+      await Report.findByIdAndUpdate(sourceObjectId, {
+        $set: resetData,
+        $unset: { mission_id: "", assigned_station: "", emergencyAlertId: "" },
+      });
+    }
+
+    // Re-read the updated document so dispatchAlertToStation has fresh data
+    if (sourceType === "Need") {
+      sourceData = await Need.findById(sourceObjectId);
+    } else {
+      sourceData = await Report.findById(sourceObjectId);
+    }
+
+    // 4) Dispatch emergency alert to the new station
     const alertResult = await dispatchAlertToStation(
       sourceData,
       sourceType,

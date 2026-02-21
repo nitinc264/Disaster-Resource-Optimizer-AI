@@ -4,176 +4,171 @@ import mongoose from "mongoose";
  * Shelter Schema
  * Evacuation center management - capacity and needs tracking
  */
-const shelterSchema = new mongoose.Schema({
-  // Unique identifier
-  shelterId: {
-    type: String,
-    required: true,
-    unique: true,
-  },
+const shelterSchema = new mongoose.Schema(
+  {
+    // Unique identifier
+    shelterId: {
+      type: String,
+      required: true,
+      unique: true,
+    },
 
-  // Basic information
-  name: {
-    type: String,
-    required: true,
-  },
-  type: {
-    type: String,
-    enum: [
-      "school",
-      "community_center",
-      "stadium",
-      "government_building",
-      "religious",
-      "temporary",
-      "other",
+    // Basic information
+    name: {
+      type: String,
+      required: true,
+    },
+    type: {
+      type: String,
+      enum: [
+        "school",
+        "community_center",
+        "stadium",
+        "government_building",
+        "religious",
+        "temporary",
+        "other",
+      ],
+      default: "other",
+    },
+
+    // Location
+    location: {
+      lat: { type: Number, required: true },
+      lng: { type: Number, required: true },
+      address: String,
+      landmark: String,
+      area: String,
+    },
+
+    // Contact
+    contact: {
+      managerName: String,
+      phone: String,
+      alternatePhone: String,
+      email: String,
+    },
+
+    // Capacity
+    capacity: {
+      total: { type: Number, required: true },
+      current: { type: Number, default: 0 },
+      families: { type: Number, default: 0 },
+      individuals: { type: Number, default: 0 },
+      children: { type: Number, default: 0 },
+      elderly: { type: Number, default: 0 },
+      specialNeeds: { type: Number, default: 0 },
+    },
+
+    // Facilities available
+    facilities: {
+      hasMedicalFacility: { type: Boolean, default: false },
+      hasKitchen: { type: Boolean, default: false },
+      hasToilets: { type: Number, default: 0 },
+      hasShowers: { type: Number, default: 0 },
+      hasElectricity: { type: Boolean, default: true },
+      hasWater: { type: Boolean, default: true },
+      hasInternet: { type: Boolean, default: false },
+      isAccessible: { type: Boolean, default: false }, // Wheelchair accessible
+      hasPetArea: { type: Boolean, default: false },
+    },
+
+    // Current supplies inventory
+    supplies: {
+      water: {
+        available: Number,
+        needed: Number,
+        unit: { type: String, default: "liters" },
+      },
+      food: {
+        available: Number,
+        needed: Number,
+        unit: { type: String, default: "meals" },
+      },
+      blankets: {
+        available: Number,
+        needed: Number,
+        unit: { type: String, default: "pieces" },
+      },
+      medicalKits: {
+        available: Number,
+        needed: Number,
+        unit: { type: String, default: "kits" },
+      },
+      hygiene: {
+        available: Number,
+        needed: Number,
+        unit: { type: String, default: "kits" },
+      },
+      diapers: {
+        available: Number,
+        needed: Number,
+        unit: { type: String, default: "packs" },
+      },
+      medicines: {
+        available: Number,
+        needed: Number,
+        unit: { type: String, default: "units" },
+      },
+    },
+
+    // Urgent needs
+    urgentNeeds: [
+      {
+        item: String,
+        quantity: Number,
+        priority: { type: String, enum: ["low", "medium", "high", "critical"] },
+        requestedAt: { type: Date, default: Date.now },
+      },
     ],
-    default: "other",
-  },
 
-  // Location
-  location: {
-    lat: { type: Number, required: true },
-    lng: { type: Number, required: true },
-    address: String,
-    landmark: String,
-    area: String,
-  },
-
-  // Contact
-  contact: {
-    managerName: String,
-    phone: String,
-    alternatePhone: String,
-    email: String,
-  },
-
-  // Capacity
-  capacity: {
-    total: { type: Number, required: true },
-    current: { type: Number, default: 0 },
-    families: { type: Number, default: 0 },
-    individuals: { type: Number, default: 0 },
-    children: { type: Number, default: 0 },
-    elderly: { type: Number, default: 0 },
-    specialNeeds: { type: Number, default: 0 },
-  },
-
-  // Facilities available
-  facilities: {
-    hasMedicalFacility: { type: Boolean, default: false },
-    hasKitchen: { type: Boolean, default: false },
-    hasToilets: { type: Number, default: 0 },
-    hasShowers: { type: Number, default: 0 },
-    hasElectricity: { type: Boolean, default: true },
-    hasWater: { type: Boolean, default: true },
-    hasInternet: { type: Boolean, default: false },
-    isAccessible: { type: Boolean, default: false }, // Wheelchair accessible
-    hasPetArea: { type: Boolean, default: false },
-  },
-
-  // Current supplies inventory
-  supplies: {
-    water: {
-      available: Number,
-      needed: Number,
-      unit: { type: String, default: "liters" },
+    // Status
+    status: {
+      type: String,
+      enum: ["open", "full", "closed", "preparing", "evacuating"],
+      default: "open",
     },
-    food: {
-      available: Number,
-      needed: Number,
-      unit: { type: String, default: "meals" },
-    },
-    blankets: {
-      available: Number,
-      needed: Number,
-      unit: { type: String, default: "pieces" },
-    },
-    medicalKits: {
-      available: Number,
-      needed: Number,
-      unit: { type: String, default: "kits" },
-    },
-    hygiene: {
-      available: Number,
-      needed: Number,
-      unit: { type: String, default: "kits" },
-    },
-    diapers: {
-      available: Number,
-      needed: Number,
-      unit: { type: String, default: "packs" },
-    },
-    medicines: {
-      available: Number,
-      needed: Number,
-      unit: { type: String, default: "units" },
-    },
-  },
 
-  // Urgent needs
-  urgentNeeds: [
-    {
-      item: String,
-      quantity: Number,
-      priority: { type: String, enum: ["low", "medium", "high", "critical"] },
-      requestedAt: { type: Date, default: Date.now },
+    // Conditions
+    conditions: {
+      type: String,
+      enum: ["good", "fair", "poor", "critical"],
+      default: "good",
     },
-  ],
 
-  // Status
-  status: {
-    type: String,
-    enum: ["open", "full", "closed", "preparing", "evacuating"],
-    default: "open",
-  },
+    // Operating hours
+    operatingHours: {
+      is24Hours: { type: Boolean, default: true },
+      openTime: String,
+      closeTime: String,
+    },
 
-  // Conditions
-  conditions: {
-    type: String,
-    enum: ["good", "fair", "poor", "critical"],
-    default: "good",
-  },
-
-  // Operating hours
-  operatingHours: {
-    is24Hours: { type: Boolean, default: true },
-    openTime: String,
-    closeTime: String,
-  },
-
-  // Last inspected
-  lastInspection: {
-    date: Date,
-    inspector: String,
-    notes: String,
-    issues: [String],
-  },
-
-  // Check-in/out log (summary)
-  dailyStats: [
-    {
+    // Last inspected
+    lastInspection: {
       date: Date,
-      checkIns: Number,
-      checkOuts: Number,
-      mealsServed: Number,
-      medicalCases: Number,
+      inspector: String,
+      notes: String,
+      issues: [String],
     },
-  ],
 
-  // Notes
-  notes: String,
+    // Check-in/out log (summary)
+    dailyStats: [
+      {
+        date: Date,
+        checkIns: Number,
+        checkOuts: Number,
+        mealsServed: Number,
+        medicalCases: Number,
+      },
+    ],
 
-  // Timestamps
-  createdAt: {
-    type: Date,
-    default: Date.now,
+    // Notes
+    notes: String,
   },
-  updatedAt: {
-    type: Date,
-    default: Date.now,
+  {
+    timestamps: true,
   },
-});
+);
 
 // Indexes
 shelterSchema.index({ status: 1 });

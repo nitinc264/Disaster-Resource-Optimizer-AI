@@ -17,10 +17,21 @@ export async function uploadAudioReport(audioBlob, location) {
     });
     formData.append("audio", audioFile);
 
-    // Append location data - use default if not available
-    // Default to 0,0 if location not provided (backend can handle this)
-    const lat = location?.lat ?? 0;
-    const lng = location?.lng ?? 0;
+    // Append location data - use Pune default if not provided (avoid 0,0 which maps to the Atlantic Ocean)
+    const DEFAULT_LAT = 18.5204;
+    const DEFAULT_LNG = 73.8567;
+    const lat =
+      location?.lat &&
+      location?.lng &&
+      !(location.lat === 0 && location.lng === 0)
+        ? location.lat
+        : DEFAULT_LAT;
+    const lng =
+      location?.lat &&
+      location?.lng &&
+      !(location.lat === 0 && location.lng === 0)
+        ? location.lng
+        : DEFAULT_LNG;
     formData.append("lat", lat.toString());
     formData.append("lng", lng.toString());
 
@@ -39,7 +50,8 @@ export async function uploadAudioReport(audioBlob, location) {
     if (error.response) {
       // Server responded with error
       throw new Error(
-        error.response.data?.message || `Server error: ${error.response.status}`
+        error.response.data?.message ||
+          `Server error: ${error.response.status}`,
       );
     } else if (error.request) {
       // Request made but no response
@@ -95,7 +107,7 @@ export async function getCurrentLocation() {
         timeout: 15000,
         // Allow cached location up to 5 minutes old (helps when offline)
         maximumAge: 300000,
-      }
+      },
     );
   });
 }

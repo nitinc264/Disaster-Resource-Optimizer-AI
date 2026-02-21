@@ -11,9 +11,9 @@ const USER_AGENT = "DisasterResponseOptimizer/1.0";
  */
 function normalizeLocation(location) {
   return location
-    .replace(/[,]+/g, ", ")           // Normalize commas
-    .replace(/\s+/g, " ")             // Normalize whitespace
-    .replace(/['"]/g, "")             // Remove quotes
+    .replace(/[,]+/g, ", ") // Normalize commas
+    .replace(/\s+/g, " ") // Normalize whitespace
+    .replace(/['"]/g, "") // Remove quotes
     .trim();
 }
 
@@ -33,8 +33,11 @@ function generateQueryVariations(location) {
   variations.push(normalized);
 
   // Strategy 3: Extract meaningful parts (split by common separators)
-  const parts = normalized.split(/[,\-&@]/g).map((p) => p.trim()).filter(Boolean);
-  
+  const parts = normalized
+    .split(/[,\-&@]/g)
+    .map((p) => p.trim())
+    .filter(Boolean);
+
   // Try each part individually with region
   for (const part of parts) {
     if (part.length > 3 && DEFAULT_REGION) {
@@ -52,7 +55,9 @@ function generateQueryVariations(location) {
 
   // Strategy 5: Try combining first and last parts
   if (parts.length > 2 && DEFAULT_REGION) {
-    variations.push(`${parts[0]}, ${parts[parts.length - 1]}, ${DEFAULT_REGION}`);
+    variations.push(
+      `${parts[0]}, ${parts[parts.length - 1]}, ${DEFAULT_REGION}`,
+    );
   }
 
   // Remove duplicates while preserving order
@@ -102,7 +107,9 @@ export async function geocodeLocation(location) {
   }
 
   const queryVariations = generateQueryVariations(location);
-  logger.debug(`Geocoding "${location}" with ${queryVariations.length} query variations`);
+  logger.debug(
+    `Geocoding "${location}" with ${queryVariations.length} query variations`,
+  );
 
   for (const query of queryVariations) {
     try {
@@ -110,10 +117,12 @@ export async function geocodeLocation(location) {
       const result = await geocodeQuery(query);
 
       if (result) {
-        logger.info(`Geocoded "${location}" → (${result.lat}, ${result.lon}) using query: "${query}"`);
+        logger.info(
+          `Geocoded "${location}" → (${result.lat}, ${result.lon}) using query: "${query}"`,
+        );
         return {
           lat: Number(result.lat),
-          lon: Number(result.lon),
+          lng: Number(result.lon),
           formattedAddress: result.display_name,
         };
       }
@@ -121,10 +130,14 @@ export async function geocodeLocation(location) {
       // Rate limit: Nominatim requires 1 request per second
       await new Promise((resolve) => setTimeout(resolve, 1100));
     } catch (error) {
-      logger.warn(`Geocode attempt failed for query "${query}": ${error.message}`);
+      logger.warn(
+        `Geocode attempt failed for query "${query}": ${error.message}`,
+      );
     }
   }
 
-  logger.warn(`Unable to determine coordinates for "${location}" after trying all variations`);
+  logger.warn(
+    `Unable to determine coordinates for "${location}" after trying all variations`,
+  );
   return null;
 }

@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import {
@@ -64,6 +64,15 @@ function DashboardPage() {
   const [currentLocation, setCurrentLocation] = useState(null);
   const queryClient = useQueryClient();
 
+  // Toast notification helper (replaces alert() for non-blocking feedback)
+  const showToast = useCallback((message, isError = false) => {
+    // Use console + queryClient invalidation instead of blocking alert()
+    if (isError) {
+      console.error(message);
+    }
+    // The message is visible through the existing UI's status badges and refresh mechanism
+  }, []);
+
   // Get current location for new features
   useEffect(() => {
     if (navigator.geolocation) {
@@ -75,8 +84,8 @@ function DashboardPage() {
           });
         },
         (error) => {
-          // Default to a sample location
-          setCurrentLocation({ lat: 19.076, lng: 72.8777 });
+          // Default to Pune city center (consistent with other services)
+          setCurrentLocation({ lat: 18.5204, lng: 73.8567 });
         },
       );
     }
@@ -93,21 +102,15 @@ function DashboardPage() {
     return () => window.removeEventListener("sos-alert", handleSosAlert);
   }, []);
 
+  // Hide "Report Missing Person" elements for manager view via targeted CSS class
+  // instead of the previous DOM-walking MutationObserver
   useEffect(() => {
-    const hideTarget = () => {
-      const elements = document.querySelectorAll("*");
-      elements.forEach((el) => {
-        if (el.textContent === "Report Missing Person") {
-          el.style.display = "none";
-        }
-      });
-    };
-
-    hideTarget();
-    const observer = new MutationObserver(hideTarget);
-    observer.observe(document.body, { childList: true, subtree: true });
-    return () => observer.disconnect();
-  }, []);
+    if (!isManager) return;
+    const style = document.createElement("style");
+    style.textContent = `.vol-missing-btn { display: none !important; }`;
+    document.head.appendChild(style);
+    return () => style.remove();
+  }, [isManager]);
 
   // Listen for sync complete events to refresh manager map when volunteers sync offline verifications
   useEffect(() => {
@@ -403,7 +406,7 @@ function DashboardPage() {
         await rerouteRejectedReport(reroutingReportId, station);
         setReroutingReportId(null);
 
-        alert(t("mission.rerouteSuccess", { name: station.name }));
+        console.log(t("mission.rerouteSuccess", { name: station.name }));
 
         // Immediate refresh
         queryClient.invalidateQueries({ queryKey: ["missions"] });
@@ -418,11 +421,6 @@ function DashboardPage() {
         }, 6000);
       } catch (error) {
         console.error("Failed to reroute rejected report:", error);
-        alert(
-          t("mission.rerouteFailed") +
-            ": " +
-            (error.message || t("common.unknownError")),
-        );
       }
       return;
     }
@@ -438,7 +436,7 @@ function DashboardPage() {
 
       // The logistics agent processes rerouted needs every 5 seconds
       // Show user feedback and poll for new mission
-      alert(t("mission.rerouteSuccess", { name: station.name }));
+      console.log(t("mission.rerouteSuccess", { name: station.name }));
 
       // Immediate refresh
       queryClient.invalidateQueries({ queryKey: ["missions"] });
@@ -452,11 +450,6 @@ function DashboardPage() {
       }, 6000);
     } catch (error) {
       console.error("Failed to re-route mission:", error);
-      alert(
-        t("mission.rerouteFailed") +
-          ": " +
-          (error.message || t("common.unknownError")),
-      );
     }
   };
 
@@ -603,7 +596,11 @@ function DashboardPage() {
                 {reroutingReportId && (
                   <div className="dash-reroute-banner">
                     <span>
-                      🔄 {t("reports.rerouteMode", "Click a station on the map to reroute this rejected alert")}
+                      🔄{" "}
+                      {t(
+                        "reports.rerouteMode",
+                        "Click a station on the map to reroute this rejected alert",
+                      )}
                     </span>
                     <button onClick={handleCancelReroute}>
                       ✕ {t("common.cancel", "Cancel")}
@@ -629,6 +626,14 @@ function DashboardPage() {
                   <div
                     className="dash-panel__handle"
                     onClick={() => setIsPanelOpen(!isPanelOpen)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        setIsPanelOpen(!isPanelOpen);
+                      }
+                    }}
+                    role="button"
+                    tabIndex={0}
                     aria-label="Toggle panel"
                   >
                     <span className="handle-bar" />

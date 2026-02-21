@@ -115,27 +115,11 @@ class CustomF1Score(tf.keras.metrics.Metric):
         self.false_positives.assign(0)
         self.false_negatives.assign(0)
 
-# Connect to MongoDB
-print("[Sentinel] Connecting to MongoDB...")
-client = MongoClient(MONGO_URI)
-
-if MONGO_DB_NAME:
-    db = client[MONGO_DB_NAME]
-else:
-    try:
-        db = client.get_database()
-    except ConfigurationError:
-        db = client["DisasterResponseDB"]
-
-collection = db[COLLECTION_NAME]
-print(
-    f"[Sentinel] Connected to MongoDB '{db.name}' collection '{COLLECTION_NAME}' successfully!"
-)
-
-# Load the TensorFlow model
-print("[Sentinel] Loading disaster classification model...")
-model = load_model(MODEL_PATH)
-print("[Sentinel] Model loaded successfully!")
+# Module-level references initialized in main()
+client = None
+db = None
+collection = None
+model = None
 
 
 def download_image(image_url):
@@ -259,6 +243,30 @@ def find_and_lock_pending_report():
 
 def main():
     """Main loop: continuously poll database for pending reports."""
+    global client, db, collection, model
+
+    # Connect to MongoDB
+    print("[Sentinel] Connecting to MongoDB...")
+    client = MongoClient(MONGO_URI)
+
+    if MONGO_DB_NAME:
+        db = client[MONGO_DB_NAME]
+    else:
+        try:
+            db = client.get_database()
+        except ConfigurationError:
+            db = client["DisasterResponseDB"]
+
+    collection = db[COLLECTION_NAME]
+    print(
+        f"[Sentinel] Connected to MongoDB '{db.name}' collection '{COLLECTION_NAME}' successfully!"
+    )
+
+    # Load the TensorFlow model
+    print("[Sentinel] Loading disaster classification model...")
+    model = load_model(MODEL_PATH)
+    print("[Sentinel] Model loaded successfully!")
+
     print("[Sentinel] Starting Sentinel Agent...")
     print(f"[Sentinel] Polling interval: {POLL_INTERVAL} seconds")
     print("[Sentinel] Watching for pending reports with images...")
@@ -295,5 +303,7 @@ if __name__ == "__main__":
         main()
     except KeyboardInterrupt:
         print("\n[Sentinel] Shutting down gracefully...")
-        client.close()
-        print("[Sentinel] Disconnected from MongoDB. Goodbye!")
+    finally:
+        if client is not None:
+            client.close()
+            print("[Sentinel] Disconnected from MongoDB. Goodbye!")

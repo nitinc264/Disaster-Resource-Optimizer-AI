@@ -172,8 +172,8 @@ const ShelterCard = ({ shelter, onEdit, onUpdate }) => {
             <div className="detail-section">
               <h5>{t("shelter.facilitiesAvailable")}</h5>
               <div className="facilities-list">
-                {facilitiesList.map((facility, index) => (
-                  <span key={index} className="facility-tag">
+                {facilitiesList.map((facility) => (
+                  <span key={facility} className="facility-tag">
                     <FacilityIcon facility={facility} />
                     {facility}
                   </span>
@@ -189,8 +189,8 @@ const ShelterCard = ({ shelter, onEdit, onUpdate }) => {
                 {t("shelter.urgentNeeds")}
               </h5>
               <div className="needs-list">
-                {shelter.urgentNeeds.map((need, index) => (
-                  <span key={index} className="need-tag">
+                {shelter.urgentNeeds.map((need) => (
+                  <span key={need} className="need-tag">
                     {need}
                   </span>
                 ))}
@@ -270,9 +270,10 @@ const ShelterCard = ({ shelter, onEdit, onUpdate }) => {
                   window.open(
                     `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`,
                     "_blank",
+                    "noopener,noreferrer",
                   );
                 } else {
-                  alert(t("shelter.locationNotSpecified"));
+                  console.warn(t("shelter.locationNotSpecified"));
                 }
               }}
             >
@@ -949,10 +950,26 @@ const UpdateCapacityModal = ({ shelter, onUpdate, onClose, t }) => {
             <h5>{t("shelter.supplyStatus")}</h5>
             <div className="supply-inputs">
               {[
-                { key: "food", label: t("shelter.food"), unit: t("shelter.meals", "meals") },
-                { key: "water", label: t("shelter.water"), unit: t("shelter.liters", "liters") },
-                { key: "medicalKits", label: t("shelter.medical"), unit: t("shelter.kits", "kits") },
-                { key: "blankets", label: t("shelter.blankets"), unit: t("shelter.pieces", "pieces") },
+                {
+                  key: "food",
+                  label: t("shelter.food"),
+                  unit: t("shelter.meals", "meals"),
+                },
+                {
+                  key: "water",
+                  label: t("shelter.water"),
+                  unit: t("shelter.liters", "liters"),
+                },
+                {
+                  key: "medicalKits",
+                  label: t("shelter.medical"),
+                  unit: t("shelter.kits", "kits"),
+                },
+                {
+                  key: "blankets",
+                  label: t("shelter.blankets"),
+                  unit: t("shelter.pieces", "pieces"),
+                },
               ].map(({ key, label, unit }) => (
                 <div className="supply-input-row" key={key}>
                   <span className="supply-input-label">{label}</span>

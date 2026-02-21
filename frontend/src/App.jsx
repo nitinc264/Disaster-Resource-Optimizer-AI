@@ -5,13 +5,19 @@ import { useTranslation } from "react-i18next";
 import {
   AccessibilityProvider,
   AccessibilitySettings,
+  SkipToContent,
   PinLogin,
   EmergencyStations,
   RoleSelector,
 } from "./components";
 import Navbar from "./components/Navbar";
 import MessagingModal from "./components/MessagingModal";
-import { AuthProvider, useAuth, VolunteerRouteProvider, OfflineProvider } from "./contexts";
+import {
+  AuthProvider,
+  useAuth,
+  VolunteerRouteProvider,
+  OfflineProvider,
+} from "./contexts";
 import {
   VolunteerPage,
   DashboardPage,
@@ -54,6 +60,7 @@ function AuthenticatedApp() {
 
   return (
     <BrowserRouter>
+      <SkipToContent />
       <div className="app-shell">
         <Navbar
           onOpenSettings={() => setSettingsOpen(true)}

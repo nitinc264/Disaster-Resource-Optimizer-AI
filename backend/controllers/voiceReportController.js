@@ -1,8 +1,10 @@
 import fs from "fs";
+import fsp from "fs/promises";
 import OpenAI from "openai";
 import Report from "../models/ReportModel.js";
 import config from "../config/index.js";
 import { geocodeLocation } from "../services/addressGeocodingService.js";
+import { analyzeTranscription } from "../services/geminiService.js";
 import { sendSuccess, sendError } from "../utils/apiResponse.js";
 import { logger } from "../utils/appLogger.js";
 import { AI_MODELS, HTTP_STATUS } from "../constants/index.js";
@@ -11,6 +13,35 @@ import { AI_MODELS, HTTP_STATUS } from "../constants/index.js";
 const openai = new OpenAI({
   apiKey: config.openaiApiKey,
 });
+
+/** Maximum number of reports returned per query */
+const MAX_REPORT_LIMIT = 500;
+
+/**
+ * Transform a report document into frontend-friendly format
+ */
+function transformReport(report) {
+  return {
+    id: report.reportId,
+    reportId: report.reportId,
+    source: report.source,
+    text: report.text,
+    status: report.status,
+    emergencyStatus: report.emergencyStatus || "none",
+    emergencyAlertId: report.emergencyAlertId,
+    assignedStation: report.assignedStation,
+    location: report.location,
+    lat: report.location?.lat,
+    lon: report.location?.lng,
+    tag: report.sentinelData?.tag,
+    severity: report.oracleData?.severity,
+    needs: report.oracleData?.needs || [],
+    confidence: report.sentinelData?.confidence,
+    transcription: report.audioData?.transcription,
+    createdAt: report.createdAt,
+    updatedAt: report.updatedAt,
+  };
+}
 
 /**
  * GET /api/reports
@@ -25,31 +56,16 @@ export async function getAllReports(req, res) {
       query.status = status;
     }
 
+    const parsedLimit = Math.min(
+      Math.max(parseInt(limit, 10) || 50, 1),
+      MAX_REPORT_LIMIT,
+    );
+
     const reports = await Report.find(query)
       .sort({ createdAt: -1 })
-      .limit(parseInt(limit));
+      .limit(parsedLimit);
 
-    // Transform reports for frontend
-    const transformedReports = reports.map((report) => ({
-      id: report.reportId,
-      reportId: report.reportId,
-      source: report.source,
-      text: report.text,
-      status: report.status,
-      emergencyStatus: report.emergencyStatus || "none",
-      emergencyAlertId: report.emergencyAlertId,
-      assignedStation: report.assignedStation,
-      location: report.location,
-      lat: report.location?.lat,
-      lon: report.location?.lng,
-      tag: report.sentinelData?.tag,
-      severity: report.oracleData?.severity,
-      needs: report.oracleData?.needs || [],
-      confidence: report.sentinelData?.confidence,
-      transcription: report.audioData?.transcription,
-      createdAt: report.createdAt,
-      updatedAt: report.updatedAt,
-    }));
+    const transformedReports = reports.map(transformReport);
 
     sendSuccess(res, transformedReports, "Reports fetched successfully");
   } catch (error) {
@@ -58,7 +74,7 @@ export async function getAllReports(req, res) {
       res,
       "Failed to fetch reports",
       HTTP_STATUS.INTERNAL_SERVER_ERROR,
-      error.message
+      error.message,
     );
   }
 }
@@ -77,26 +93,7 @@ export async function getReportById(req, res) {
       return sendError(res, "Report not found", HTTP_STATUS.NOT_FOUND);
     }
 
-    const transformedReport = {
-      id: report.reportId,
-      reportId: report.reportId,
-      source: report.source,
-      text: report.text,
-      status: report.status,
-      emergencyStatus: report.emergencyStatus || "none",
-      emergencyAlertId: report.emergencyAlertId,
-      assignedStation: report.assignedStation,
-      location: report.location,
-      lat: report.location?.lat,
-      lon: report.location?.lng,
-      tag: report.sentinelData?.tag,
-      severity: report.oracleData?.severity,
-      needs: report.oracleData?.needs || [],
-      confidence: report.sentinelData?.confidence,
-      transcription: report.audioData?.transcription,
-      createdAt: report.createdAt,
-      updatedAt: report.updatedAt,
-    };
+    const transformedReport = transformReport(report);
 
     sendSuccess(res, transformedReport, "Report fetched successfully");
   } catch (error) {
@@ -105,97 +102,9 @@ export async function getReportById(req, res) {
       res,
       "Failed to fetch report",
       HTTP_STATUS.INTERNAL_SERVER_ERROR,
-      error.message
+      error.message,
     );
   }
-}
-
-/**
- * Mock function to analyze transcribed text using Gemini
- * This will be replaced with actual Gemini integration
- * @param {string} text - The transcribed text from Whisper
- * @returns {Promise<Object>} Analysis results
- */
-async function analyzeTextWithGemini(text) {
-  // TODO: Replace this mock with actual Gemini API call
-  // For now, return a mock analysis based on keywords
-
-  const textLower = text.toLowerCase();
-
-  // Simple keyword-based analysis (to be replaced with Gemini)
-  let severity = 5;
-  let tag = "Other";
-  let needs = [];
-
-  // Urgency keywords
-  if (
-    textLower.includes("emergency") ||
-    textLower.includes("urgent") ||
-    textLower.includes("critical") ||
-    textLower.includes("trapped") ||
-    textLower.includes("dying")
-  ) {
-    severity = 9;
-  } else if (
-    textLower.includes("help") ||
-    textLower.includes("need") ||
-    textLower.includes("please")
-  ) {
-    severity = 7;
-  }
-
-  // Need type detection
-  if (
-    textLower.includes("water") ||
-    textLower.includes("thirsty") ||
-    textLower.includes("drink")
-  ) {
-    tag = "Water";
-    needs.push("Water");
-  }
-
-  if (
-    textLower.includes("food") ||
-    textLower.includes("hungry") ||
-    textLower.includes("eat")
-  ) {
-    tag = "Food";
-    needs.push("Food");
-  }
-
-  if (
-    textLower.includes("medical") ||
-    textLower.includes("doctor") ||
-    textLower.includes("medicine") ||
-    textLower.includes("injured") ||
-    textLower.includes("sick")
-  ) {
-    tag = "Medical";
-    needs.push("Medical");
-    severity = Math.max(severity, 8);
-  }
-
-  if (
-    textLower.includes("rescue") ||
-    textLower.includes("trapped") ||
-    textLower.includes("stuck") ||
-    textLower.includes("help")
-  ) {
-    tag = "Rescue";
-    needs.push("Rescue");
-    severity = Math.max(severity, 9);
-  }
-
-  if (needs.length === 0) {
-    needs.push("Other");
-  }
-
-  return {
-    tag,
-    confidence: 0.75, // Mock confidence score
-    severity,
-    needs,
-  };
 }
 
 /**
@@ -219,7 +128,7 @@ export async function processAudioReport(req, res) {
     if (!lat || !lng) {
       // Clean up uploaded file
       if (req.file.path) {
-        fs.unlinkSync(req.file.path);
+        await fsp.unlink(req.file.path).catch(() => {});
       }
       return res.status(400).json({
         error: "Missing location data",
@@ -264,16 +173,28 @@ export async function processAudioReport(req, res) {
         whisperError.message?.includes("quota")
       ) {
         logger.warn(
-          "OpenAI quota exceeded - saving report for later processing"
+          "OpenAI quota exceeded - saving report for later processing",
         );
       }
     }
 
-    // If transcription succeeded, analyze it
+    // If transcription succeeded, analyze it with Gemini
     let analysis = null;
     if (transcription) {
-      // Step 3: Analyze transcription with Gemini (mock for now)
-      analysis = await analyzeTextWithGemini(transcription);
+      try {
+        analysis = await analyzeTranscription(transcription);
+      } catch (analysisError) {
+        logger.warn(
+          "Gemini transcription analysis failed, using defaults:",
+          analysisError.message,
+        );
+        analysis = {
+          tag: "Other",
+          confidence: 0,
+          severity: 5,
+          needs: ["Unknown"],
+        };
+      }
     }
 
     // Step 4: Update Report with available data
@@ -318,9 +239,11 @@ export async function processAudioReport(req, res) {
 
     // Step 5: Clean up temporary file only if transcription succeeded
     if (transcription && fs.existsSync(tempFilePath)) {
-      fs.unlinkSync(tempFilePath);
+      await fsp.unlink(tempFilePath).catch((err) => {
+        logger.warn("Failed to clean up temp file:", err.message);
+      });
     } else if (!transcription) {
-      console.log("⚠️ Keeping audio file for later processing");
+      logger.info("Keeping audio file for later processing");
     }
 
     // Step 6: Return success response
@@ -349,18 +272,16 @@ export async function processAudioReport(req, res) {
       },
     });
   } catch (error) {
-    console.error("Error processing audio report:", error);
+    logger.error("Error processing audio report:", error);
 
     // Clean up temporary file on error (but not for quota errors)
     const isQuotaError =
       error.status === 429 || error.message?.includes("quota");
 
     if (tempFilePath && fs.existsSync(tempFilePath) && !isQuotaError) {
-      try {
-        fs.unlinkSync(tempFilePath);
-      } catch (unlinkError) {
-        console.error("Error deleting temporary file:", unlinkError);
-      }
+      await fsp.unlink(tempFilePath).catch((unlinkError) => {
+        logger.error("Error deleting temporary file:", unlinkError);
+      });
     }
 
     // Handle specific OpenAI errors
@@ -413,7 +334,7 @@ export async function createReport(req, res) {
     if (location) {
       const geoResult = await geocodeLocation(location);
       if (geoResult) {
-        coords = { lat: geoResult.lat, lng: geoResult.lon };
+        coords = { lat: geoResult.lat, lng: geoResult.lng };
       }
     }
 
@@ -444,7 +365,7 @@ export async function createReport(req, res) {
       res,
       { reportId: report.reportId },
       "Report created successfully",
-      HTTP_STATUS.CREATED
+      HTTP_STATUS.CREATED,
     );
   } catch (error) {
     logger.error("Error creating report:", error);
@@ -452,7 +373,7 @@ export async function createReport(req, res) {
       res,
       "Failed to create report",
       HTTP_STATUS.INTERNAL_SERVER_ERROR,
-      error.message
+      error.message,
     );
   }
 }

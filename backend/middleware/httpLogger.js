@@ -1,3 +1,5 @@
+import { logger } from "../utils/appLogger.js";
+
 /**
  * Request logging middleware
  */
@@ -6,14 +8,14 @@ export function requestLogger(req, res, next) {
   const { method, url, ip } = req;
 
   // Log request
-  console.log(`[REQUEST] ${method} ${url} - IP: ${ip}`);
+  logger.debug(`${method} ${url} - IP: ${ip}`);
 
   // Log response when finished
   res.on("finish", () => {
     const duration = Date.now() - start;
     const { statusCode } = res;
-    console.log(
-      `[RESPONSE] ${method} ${url} - Status: ${statusCode} - Duration: ${duration}ms`,
+    logger.debug(
+      `${method} ${url} - Status: ${statusCode} - Duration: ${duration}ms`,
     );
   });
 

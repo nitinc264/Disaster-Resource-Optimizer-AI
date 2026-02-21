@@ -30,7 +30,7 @@ const toTaskDto = (need) => ({
   status: need.status,
   createdAt: need.createdAt,
   lat: need.coordinates?.lat,
-  lon: need.coordinates?.lon,
+  lon: need.coordinates?.lng,
 });
 
 /**
@@ -41,7 +41,7 @@ const toMapNeedDto = (need, index = 0) => {
   // Check if need has valid coordinates
   const hasValidCoordinates =
     typeof need.coordinates?.lat === "number" &&
-    typeof need.coordinates?.lon === "number";
+    typeof need.coordinates?.lng === "number";
 
   // For needs without coordinates, add a small offset based on index
   // This prevents multiple pins from overlapping at the exact same location
@@ -49,7 +49,7 @@ const toMapNeedDto = (need, index = 0) => {
   let lat, lon;
   if (hasValidCoordinates) {
     lat = need.coordinates.lat;
-    lon = need.coordinates.lon;
+    lon = need.coordinates.lng;
   } else {
     // Create a small offset in a spiral pattern (max ~500m radius)
     const angle = index * 137.5 * (Math.PI / 180); // Golden angle for even distribution
@@ -127,7 +127,7 @@ export const verifyTask = asyncHandler(async (req, res) => {
   try {
     const hasValidCoordinates =
       typeof updatedNeed.coordinates?.lat === "number" &&
-      typeof updatedNeed.coordinates?.lon === "number";
+      typeof updatedNeed.coordinates?.lng === "number";
 
     // If no valid coordinates, persist fallback coordinates to the Need document
     // so the logistics agent can pick it up for route generation
@@ -137,7 +137,7 @@ export const verifyTask = asyncHandler(async (req, res) => {
       );
       updatedNeed.coordinates = {
         lat: GEOCODE_DEFAULTS.DEFAULT_LAT,
-        lon: GEOCODE_DEFAULTS.DEFAULT_LON,
+        lng: GEOCODE_DEFAULTS.DEFAULT_LON,
         formattedAddress:
           updatedNeed.triageData?.location || "Pune, India (approximate)",
       };
@@ -210,7 +210,7 @@ export const getNeedsForMap = asyncHandler(async (req, res) => {
   const mapReadyNeeds = needs.map((need) => {
     const hasCoords =
       typeof need.coordinates?.lat === "number" &&
-      typeof need.coordinates?.lon === "number";
+      typeof need.coordinates?.lng === "number";
     const dto = toMapNeedDto(need, hasCoords ? 0 : noCoordIndex);
     if (!hasCoords) noCoordIndex++;
     return dto;

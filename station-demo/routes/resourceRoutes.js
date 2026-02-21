@@ -9,6 +9,22 @@ import axios from "axios";
 
 const router = express.Router();
 
+/**
+ * Middleware to verify API key for resource endpoints
+ */
+function verifyApiKey(req, res, next) {
+  const apiKey = req.headers["x-api-key"];
+  const stationConfig = req.app.get("stationConfig");
+
+  if (!apiKey || apiKey !== stationConfig.apiKey) {
+    return res.status(401).json({
+      success: false,
+      message: "Valid X-API-Key header required",
+    });
+  }
+  next();
+}
+
 // Helper: get main platform URL and auth header
 function getPlatformConfig(req) {
   const stationConfig = req.app.get("stationConfig");

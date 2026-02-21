@@ -86,16 +86,18 @@ async function checkAndUpdatePendingNeed(fromNumber, rawMessage) {
   // Try to geocode the new message as a location
   const coordinates = await geocodeLocation(rawMessage);
 
-  if (coordinates && coordinates.lat && coordinates.lon) {
+  if (coordinates && coordinates.lat && coordinates.lng) {
     // Update the pending need with the new location
     pendingNeed.coordinates = coordinates;
     pendingNeed.verificationNotes = pendingNeed.verificationNotes.replace(
       "LOCATION_REQUIRED: User needs to provide location",
-      `Location provided via follow-up SMS: ${rawMessage}`
+      `Location provided via follow-up SMS: ${rawMessage}`,
     );
     await pendingNeed.save();
 
-    logger.info(`Updated pending need ${pendingNeed._id} with location from follow-up SMS`);
+    logger.info(
+      `Updated pending need ${pendingNeed._id} with location from follow-up SMS`,
+    );
     return pendingNeed;
   }
 
@@ -115,12 +117,12 @@ export async function handleIncomingSms(req, res) {
   try {
     // First, check if this is a follow-up message providing location
     const updatedNeed = await checkAndUpdatePendingNeed(fromNumber, rawMessage);
-    
+
     if (updatedNeed) {
       respondWithMessage(
         res,
         200,
-        `✅ Thank you! Your location has been updated.\n\nYour Report ID: ${updatedNeed._id}\nLocation: ${updatedNeed.coordinates.formattedAddress || rawMessage}\n\nA volunteer will verify your request soon.`
+        `✅ Thank you! Your location has been updated.\n\nYour Report ID: ${updatedNeed._id}\nLocation: ${updatedNeed.coordinates.formattedAddress || rawMessage}\n\nA volunteer will verify your request soon.`,
       );
       return;
     }
@@ -129,9 +131,9 @@ export async function handleIncomingSms(req, res) {
     const coordinates = await resolveCoordinates(triageData, rawMessage);
 
     // Check if location could be determined
-    if (!coordinates || !coordinates.lat || !coordinates.lon) {
+    if (!coordinates || !coordinates.lat || !coordinates.lng) {
       logger.warn(`Could not determine location for SMS from ${fromNumber}`);
-      
+
       // Save the need anyway but with a flag indicating location is needed
       const newNeed = new Need({
         fromNumber,
@@ -149,7 +151,7 @@ export async function handleIncomingSms(req, res) {
       respondWithMessage(
         res,
         200,
-        `Your emergency has been received (ID: ${newNeed._id}).\n\n⚠️ We could not determine your location.\n\nPlease reply with your LOCATION (landmark, street name, area) so we can send help quickly.\n\nExample: "Near City Hospital, MG Road" or "Shivaji Nagar Bus Stand"`
+        `Your emergency has been received (ID: ${newNeed._id}).\n\n⚠️ We could not determine your location.\n\nPlease reply with your LOCATION (landmark, street name, area) so we can send help quickly.\n\nExample: "Near City Hospital, MG Road" or "Shivaji Nagar Bus Stand"`,
       );
       return;
     }
@@ -168,7 +170,7 @@ export async function handleIncomingSms(req, res) {
     respondWithMessage(
       res,
       200,
-      `Your request has been received and logged. \nA volunteer will verify it soon. \nYour Report ID: ${newNeed._id}`
+      `Your request has been received and logged. \nA volunteer will verify it soon. \nYour Report ID: ${newNeed._id}`,
     );
   } catch (error) {
     logger.error("Error in SMS webhook:", error);
@@ -176,7 +178,7 @@ export async function handleIncomingSms(req, res) {
     respondWithMessage(
       res,
       500,
-      "We apologize, there was an error processing your request. Please try again."
+      "We apologize, there was an error processing your request. Please try again.",
     );
   }
 }

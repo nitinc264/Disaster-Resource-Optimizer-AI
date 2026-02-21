@@ -30,13 +30,14 @@ export function errorHandler(err, req, res, next) {
     console.error(err.stack);
   }
 
-  // Send error response
+  // Send error response — hide stack traces unless explicitly in development
+  const isDev = process.env.NODE_ENV === "development";
   res.status(statusCode).json({
     success: false,
     error: {
       message,
       ...(details && { details }),
-      ...(process.env.NODE_ENV === "development" && { stack: err.stack }),
+      ...(isDev ? { stack: err.stack } : {}),
     },
   });
 }

@@ -14,21 +14,20 @@
     "db:clear": "node scripts/clear-db.js --confirm",
     "monitor": "node scripts/monitor-data-changes.js",
     "agent:oracle": "node agents/oracle_agent.js",
-    "agent:sentinel": "cd agents && venv/Scripts/python sentinel_agent.py",
-    "agent:logistics": "cd agents && venv/Scripts/python logistics_agent.py"
+    "agent:sentinel": "cd agents && node -e \"const p=process.platform==='win32'?'venv/Scripts/python':'venv/bin/python';require('child_process').execSync(p+' sentinel_agent.py',{stdio:'inherit'})\"",
+    "agent:logistics": "cd agents && node -e \"const p=process.platform==='win32'?'venv/Scripts/python':'venv/bin/python';require('child_process').execSync(p+' logistics_agent.py',{stdio:'inherit'})\""
   },
   "keywords": [],
   "author": "Omkar Kale",
   "license": "ISC",
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
+    "bcryptjs": "^3.0.3",
     "chalk": "^5.6.2",
     "cloudinary": "^2.9.0",
-    "connect-mongo": "^3.2.0",
+    "connect-mongo": "^5.1.0",
     "cors": "^2.8.5",
-    "disaster-response-platform": "file:..",
     "dotenv": "^16.3.1",
-    "eslint": "10.0.1",
     "express": "^4.18.2",
     "express-session": "^1.18.2",
     "express-validator": "^7.3.1",
@@ -40,6 +39,7 @@
     "uuid": "^13.0.0"
   },
   "devDependencies": {
+    "eslint": "^10.0.1",
     "nodemon": "^3.0.1"
   }
 }

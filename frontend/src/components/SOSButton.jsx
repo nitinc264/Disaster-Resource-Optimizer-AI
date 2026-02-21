@@ -1,6 +1,7 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { AlertTriangle, MapPin, Phone, Loader2 } from "lucide-react";
+import { apiClient } from "../services/api";
 import "./SOSButton.css";
 
 /**
@@ -54,32 +55,11 @@ export default function SOSButton({
     });
   }, []);
 
-  // Handle hold progress
-  useEffect(() => {
-    let interval;
-
-    if (isPressed && !isActivated) {
-      interval = setInterval(() => {
-        setHoldProgress((prev) => {
-          const newProgress = prev + (HOLD_INTERVAL / HOLD_DURATION) * 100;
-
-          if (newProgress >= 100) {
-            setIsActivated(true);
-            triggerSOS();
-            return 100;
-          }
-          return newProgress;
-        });
-      }, HOLD_INTERVAL);
-    } else if (!isPressed) {
-      setHoldProgress(0);
-    }
-
-    return () => clearInterval(interval);
-  }, [isPressed, isActivated]);
+  // Handle hold progress — uses a ref to avoid stale closure
+  const triggerSOSRef = useRef(null);
 
   // Trigger SOS alert
-  const triggerSOS = async () => {
+  const triggerSOS = useCallback(async () => {
     // Vibrate if supported
     if (navigator.vibrate) {
       navigator.vibrate([200, 100, 200, 100, 200]);
@@ -88,7 +68,6 @@ export default function SOSButton({
     // Get location
     const loc = await getCurrentLocation();
 
-    // Send SOS alert (mock for now)
     const sosData = {
       volunteerId,
       volunteerName,
@@ -101,12 +80,42 @@ export default function SOSButton({
 
     window.dispatchEvent(new CustomEvent("sos-alert", { detail: sosData }));
 
-    // TODO: Send to backend
-    // await sendSOSAlert(sosData);
+    // Send to backend
+    try {
+      await apiClient.post("/reports/sos", sosData);
+    } catch (err) {
+      console.error("Failed to send SOS to backend:", err);
+    }
 
     setAlertSent(true);
     setShowConfirmation(true);
-  };
+  }, [volunteerId, volunteerName, getCurrentLocation]);
+
+  triggerSOSRef.current = triggerSOS;
+
+  useEffect(() => {
+    let interval;
+
+    if (isPressed && !isActivated) {
+      interval = setInterval(() => {
+        setHoldProgress((prev) => {
+          const newProgress = prev + (HOLD_INTERVAL / HOLD_DURATION) * 100;
+
+          if (newProgress >= 100) {
+            setIsActivated(true);
+            // Call via ref to avoid stale closure; outside state updater to avoid side-effect
+            setTimeout(() => triggerSOSRef.current?.(), 0);
+            return 100;
+          }
+          return newProgress;
+        });
+      }, HOLD_INTERVAL);
+    } else if (!isPressed) {
+      setHoldProgress(0);
+    }
+
+    return () => clearInterval(interval);
+  }, [isPressed, isActivated]);
 
   // Cancel SOS
   const cancelSOS = () => {

@@ -1,7 +1,4 @@
-import dotenv from "dotenv";
 import { v2 as cloudinary } from "cloudinary";
-
-dotenv.config();
 
 const hasUrl = Boolean(process.env.CLOUDINARY_URL);
 const hasExplicitCreds =

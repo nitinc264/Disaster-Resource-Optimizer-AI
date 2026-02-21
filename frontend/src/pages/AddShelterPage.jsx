@@ -22,8 +22,9 @@ export default function AddShelterPage() {
     },
     onError: (err) => {
       console.error("Error registering shelter:", err);
-      const message = err?.response?.data?.message || t("shelter.errorRegister");
-      alert(message || "Failed to register shelter");
+      const message =
+        err?.response?.data?.message || t("shelter.errorRegister");
+      console.error(message || "Failed to register shelter");
       setIsSubmitting(false);
     },
   });

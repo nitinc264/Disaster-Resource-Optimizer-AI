@@ -214,7 +214,7 @@ export default function AnalyticsDashboard() {
                   );
                   return (
                     <div
-                      key={idx}
+                      key={point.label}
                       className="sparkline-bar"
                       style={{
                         height: `${Math.min(100, Math.max(5, (value / maxValue) * 100))}%`,
@@ -232,8 +232,8 @@ export default function AnalyticsDashboard() {
                       i === arr.length - 1 ||
                       i === Math.floor(arr.length / 2),
                   )
-                  .map((point, idx) => (
-                    <span key={idx}>{point.label}</span>
+                  .map((point) => (
+                    <span key={point.label}>{point.label}</span>
                   ))}
               </div>
             </>
@@ -291,7 +291,7 @@ export default function AnalyticsDashboard() {
         <div className="hotspots-list">
           {(analytics.hotspots || []).length > 0 ? (
             (analytics.hotspots || []).slice(0, 5).map((spot, idx) => (
-              <div key={idx} className="hotspot-item">
+              <div key={spot.name} className="hotspot-item">
                 <span className="hotspot-rank">#{idx + 1}</span>
                 <div className="hotspot-info">
                   <span className="hotspot-name">{spot.name}</span>
@@ -339,21 +339,20 @@ export default function AnalyticsDashboard() {
         </h3>
         <div className="activity-timeline">
           {(analytics.recentActivity || []).length > 0 ? (
-            (analytics.recentActivity || [])
-              .slice(0, 8)
-              .map((activity, idx) => (
-                <div key={idx} className="activity-item">
-                  <div className={`activity-dot ${activity.type}`} />
-                  <div className="activity-content">
-                    <span className="activity-text">
-                      {activity.description}
-                    </span>
-                    <span className="activity-time">
-                      {formatTime(activity.timestamp)}
-                    </span>
-                  </div>
+            (analytics.recentActivity || []).slice(0, 8).map((activity) => (
+              <div
+                key={`${activity.type}-${activity.timestamp}`}
+                className="activity-item"
+              >
+                <div className={`activity-dot ${activity.type}`} />
+                <div className="activity-content">
+                  <span className="activity-text">{activity.description}</span>
+                  <span className="activity-time">
+                    {formatTime(activity.timestamp)}
+                  </span>
                 </div>
-              ))
+              </div>
+            ))
           ) : (
             <div className="empty-chart-state">
               <Calendar size={32} />

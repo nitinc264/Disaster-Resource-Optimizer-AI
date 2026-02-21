@@ -75,6 +75,9 @@ export default function PinLogin({ onBack, selectedRole }) {
       return;
     }
 
+    // Prevent double submission (e.g. paste + onChange both firing)
+    if (loading) return;
+
     setLoading(true);
     setError("");
 

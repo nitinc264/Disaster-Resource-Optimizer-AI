@@ -40,14 +40,14 @@ const SAMPLE_MESSAGES = [
     body: "Main water pipe burst at Shivaji Nagar. Street is flooding rapidly.",
   },
   {
-    from: "+91980000010",
+    from: "+919800000010",
     body: "Stuck in the elevator at Sassoon Hospital. Power is out. Please help!",
   },
 ];
 
 async function simulateSMS() {
   console.log(
-    `Starting simulation of ${SAMPLE_MESSAGES.length} SMS messages...`
+    `Starting simulation of ${SAMPLE_MESSAGES.length} SMS messages...`,
   );
   console.log(`Target URL: ${API_URL}`);
 
@@ -57,7 +57,7 @@ async function simulateSMS() {
   for (const [index, msg] of SAMPLE_MESSAGES.entries()) {
     try {
       console.log(
-        `\n[${index + 1}/${SAMPLE_MESSAGES.length}] Sending from ${msg.from}...`
+        `\n[${index + 1}/${SAMPLE_MESSAGES.length}] Sending from ${msg.from}...`,
       );
       console.log(`Body: "${msg.body}"`);
 

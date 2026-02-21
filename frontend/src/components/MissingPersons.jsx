@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import {
@@ -303,7 +303,7 @@ const PersonCard = ({ person, onView, onMarkFound }) => {
             <div className="photos-gallery">
               {person.photos.map((photo, index) => (
                 <img
-                  key={index}
+                  key={photo.url || photo}
                   src={photo.url || photo}
                   alt={`${person.fullName} ${index + 1}`}
                 />
@@ -372,6 +372,13 @@ const ReportMissingForm = ({
   const [photos, setPhotos] = useState([]); // Stores { file, preview } objects
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
+
+  // Clean up blob URLs on unmount to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      photos.forEach((photo) => URL.revokeObjectURL(photo.preview));
+    };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handlePhotoChange = (e) => {
     const files = Array.from(e.target.files);
@@ -639,8 +646,8 @@ const ReportMissingForm = ({
 
             {photos.length > 0 && (
               <div className="photo-preview-grid">
-                {photos.map((photo, index) => (
-                  <div key={index} className="photo-preview-item">
+                {photos.map((photo) => (
+                  <div key={photo.preview} className="photo-preview-item">
                     <img src={photo.preview} alt={`Preview ${index + 1}`} />
                     <button
                       type="button"

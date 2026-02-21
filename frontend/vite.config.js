@@ -39,11 +39,16 @@ export default defineConfig({
         runtimeCaching: [
           {
             // Network First strategy for API calls
-            urlPattern: /^.*\/api\/.*/,
+            // Exclude auth endpoints from caching to prevent data leakage on shared devices
+            urlPattern: /^.*\/api\/(?!auth).*/,
             handler: "NetworkFirst",
             options: {
               cacheName: "api-cache",
               networkTimeoutSeconds: 10,
+              expiration: {
+                maxEntries: 50,
+                maxAgeSeconds: 5 * 60, // 5 minutes max
+              },
               cacheableResponse: {
                 statuses: [0, 200],
               },
