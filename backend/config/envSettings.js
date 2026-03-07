@@ -27,11 +27,11 @@ const production = {
   port: process.env.PORT || 3000,
   mongoUri: process.env.MONGO_URI,
   cors: {
-    origin: process.env.ALLOWED_ORIGINS?.split(",") || [],
+    origin: process.env.ALLOWED_ORIGINS?.split(",").map((s) => s.trim()).filter(Boolean) || [],
     credentials: true,
   },
   logging: {
-    level: "error",
+    level: process.env.LOG_LEVEL || "warn",
     requests: false,
   },
 };

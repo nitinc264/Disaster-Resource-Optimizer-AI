@@ -24,19 +24,19 @@ export function errorHandler(err, req, res, next) {
   const message = err.message || "Internal Server Error";
   const details = err.details || null;
 
-  // Log error details
+  // Log error details (always — for server-side observability)
   console.error(`[ERROR] ${err.name}: ${message}`);
-  if (err.stack) {
+  if (err.stack && process.env.NODE_ENV !== "production") {
     console.error(err.stack);
   }
 
-  // Send error response — hide stack traces unless explicitly in development
+  // Send error response — hide internals in production
   const isDev = process.env.NODE_ENV === "development";
   res.status(statusCode).json({
     success: false,
     error: {
-      message,
-      ...(details && { details }),
+      message: statusCode === 500 && !isDev ? "Internal Server Error" : message,
+      ...(details && isDev ? { details } : {}),
       ...(isDev ? { stack: err.stack } : {}),
     },
   });

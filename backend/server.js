@@ -12,6 +12,9 @@ dotenv.config();
 import crypto from "crypto";
 import express from "express";
 import cors from "cors";
+import helmet from "helmet";
+import compression from "compression";
+import rateLimit from "express-rate-limit";
 import session from "express-session";
 import MongoStore from "connect-mongo";
 import path from "path";
@@ -149,9 +152,32 @@ function startAgents() {
         });
       });
 
-      // Handle agent exit
+      // Handle agent exit — auto-restart on unexpected crash
       proc.on("close", (code) => {
         console.log(`${agent.emoji} ${agent.name} exited with code ${code}`);
+        if (code !== 0 && !proc._intentionalKill) {
+          const delay = 5000;
+          console.warn(`${agent.emoji} ${agent.name} crashed, restarting in ${delay / 1000}s...`);
+          setTimeout(() => {
+            try {
+              const newProc = spawn(agent.command, agent.args, {
+                cwd: agentsDir,
+                stdio: ["ignore", "pipe", "pipe"],
+                env: proc.spawnargs ? { ...process.env, AGENT_API_KEY, PYTHONIOENCODING: "utf-8", PYTHONUNBUFFERED: "1", TF_CPP_MIN_LOG_LEVEL: "2", TF_ENABLE_ONEDNN_OPTS: "0", PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION: "python" } : proc.env,
+                detached: false,
+              });
+              const idx = agentProcesses.findIndex((a) => a.name === agent.name);
+              if (idx !== -1) agentProcesses[idx].process = newProc;
+              console.log(`${agent.emoji} ${agent.name} restarted (PID: ${newProc.pid})`);
+              newProc.stdout.on("data", (data) => data.toString().trim().split("\n").forEach((line) => { if (line) console.log(`${agent.emoji} ${line}`); }));
+              newProc.stderr.on("data", (data) => data.toString().trim().split("\n").forEach((line) => { if (line) console.error(`${agent.emoji} [ERROR] ${line}`); }));
+              newProc.on("close", proc.listeners("close")[0]);
+              newProc.on("error", proc.listeners("error")[0]);
+            } catch (restartErr) {
+              console.error(`${agent.emoji} ${agent.name} restart failed:`, restartErr.message);
+            }
+          }, delay);
+        }
       });
 
       proc.on("error", (err) => {
@@ -177,21 +203,55 @@ function shutdownAgents() {
   console.log("\n🛑 Shutting down agents...");
   agentProcesses.forEach(({ name, process: proc }) => {
     if (proc && !proc.killed) {
+      proc._intentionalKill = true;
       console.log(`   Stopping ${name} (PID: ${proc.pid})`);
       proc.kill("SIGTERM");
     }
   });
 }
 
-// Handle process termination
-process.on("SIGINT", () => {
+/**
+ * Graceful shutdown — close DB connections, stop agents, drain requests
+ */
+let server; // Will be assigned when app.listen() is called
+
+async function gracefulShutdown(signal) {
+  console.log(`\n🛑 Received ${signal}. Starting graceful shutdown...`);
   shutdownAgents();
+
+  if (server) {
+    server.close(() => {
+      console.log("   HTTP server closed.");
+    });
+  }
+
+  try {
+    await mongoose.connection.close();
+    console.log("   MongoDB connection closed.");
+  } catch (err) {
+    console.error("   Error closing MongoDB:", err.message);
+  }
+
+  // Force exit after 10 seconds if graceful shutdown hangs
+  setTimeout(() => {
+    console.error("   Forced shutdown after timeout.");
+    process.exit(1);
+  }, 10000).unref();
+
   process.exit(0);
+}
+
+process.on("SIGINT", () => gracefulShutdown("SIGINT"));
+process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
+
+// Handle uncaught exceptions and unhandled promise rejections
+process.on("uncaughtException", (err) => {
+  console.error("UNCAUGHT EXCEPTION:", err);
+  gracefulShutdown("uncaughtException");
 });
 
-process.on("SIGTERM", () => {
-  shutdownAgents();
-  process.exit(0);
+process.on("unhandledRejection", (reason) => {
+  console.error("UNHANDLED REJECTION:", reason);
 });
 
 // Connect to database and initialize default manager
@@ -205,6 +265,33 @@ const app = express();
 // =============================================================================
 // MIDDLEWARE
 // =============================================================================
+
+// Security headers
+app.use(
+  helmet({
+    contentSecurityPolicy: config.nodeEnv === "production" ? undefined : false,
+    crossOriginEmbedderPolicy: false, // Allow loading cross-origin resources (maps, images)
+  }),
+);
+
+// Gzip/Brotli compression
+app.use(compression());
+
+// Global rate limiter — prevent abuse
+app.use(
+  rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: config.nodeEnv === "production" ? 300 : 1000,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { success: false, message: "Too many requests, please try again later." },
+  }),
+);
+
+// Trust proxy when behind a reverse proxy (needed for correct rate-limit IPs)
+if (config.nodeEnv === "production") {
+  app.set("trust proxy", 1);
+}
 
 // CORS middleware
 app.use(
@@ -295,13 +382,24 @@ const sanitizeSource = (source) => {
 // ROUTES
 // =============================================================================
 
-// Health check endpoint
+// Health check endpoint — includes dependency status
 app.get("/api/health", (req, res) => {
-  res.json({
-    success: true,
+  const dbState = mongoose.connection.readyState; // 0=disconnected, 1=connected, 2=connecting, 3=disconnecting
+  const dbStatus = dbState === 1 ? "connected" : dbState === 2 ? "connecting" : "disconnected";
+  const agentStatus = agentProcesses.map(({ name, process: proc }) => ({
+    name,
+    alive: proc && !proc.killed && proc.exitCode === null,
+  }));
+  const healthy = dbState === 1;
+
+  res.status(healthy ? 200 : 503).json({
+    success: healthy,
     message: "Disaster Response Resource Optimization Platform API",
     version: "1.0.0",
     environment: config.nodeEnv,
+    uptime: Math.floor(process.uptime()),
+    database: dbStatus,
+    agents: agentStatus,
   });
 });
 
@@ -343,6 +441,14 @@ app.post(
         });
       }
 
+      // Validate coordinate bounds
+      if (latNum < -90 || latNum > 90 || lngNum < -180 || lngNum > 180) {
+        return res.status(400).json({
+          error: "Invalid coordinates",
+          message: "Latitude must be between -90 and 90, longitude between -180 and 180",
+        });
+      }
+
       // Default to Pune city center if coordinates are 0,0 (invalid/unset)
       const DEFAULT_LAT = 18.5204;
       const DEFAULT_LNG = 73.8567;
@@ -359,13 +465,10 @@ app.post(
 
       let uploadResult;
       try {
-        console.log("Attempting Cloudinary upload...");
-        console.log("Cloud name:", process.env.CLOUDINARY_CLOUD_NAME);
         uploadResult = await uploadImageBuffer(req.file.buffer, {
           folder:
             process.env.CLOUDINARY_FOLDER || "disaster-response/reports/photos",
         });
-        console.log("Upload successful:", uploadResult.secure_url);
       } catch (uploadError) {
         console.error("Cloudinary upload failed:", uploadError);
         return res.status(502).json({
@@ -423,9 +526,11 @@ app.post(
 const AGENT_API_KEY =
   process.env.AGENT_API_KEY || crypto.randomBytes(32).toString("hex");
 if (!process.env.AGENT_API_KEY) {
-  console.warn(
-    `⚠️  AGENT_API_KEY not set — generated ephemeral key: ${AGENT_API_KEY.slice(0, 8)}...`,
-  );
+  if (config.nodeEnv === "production") {
+    console.error("FATAL: AGENT_API_KEY environment variable is required in production");
+    process.exit(1);
+  }
+  console.warn("⚠️  AGENT_API_KEY not set — generated ephemeral key (will not persist across restarts)");
 }
 
 function requireAgentKey(req, res, next) {
@@ -749,12 +854,16 @@ app.use(errorHandler);
 // =============================================================================
 
 const PORT = config.port || process.env.PORT || 3000;
-app.listen(PORT, () => {
+server = app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
   console.log(`Environment: ${config.nodeEnv}`);
 
   // Start all background agents after server is ready
   startAgents();
 });
+
+// Set server-level timeouts for production
+server.keepAliveTimeout = 65000; // Slightly higher than typical LB idle timeout (60s)
+server.headersTimeout = 66000;
 
 export default app;

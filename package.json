@@ -12,6 +12,8 @@
     "dev": "concurrently -n server,client -c blue,green \"npm run dev -w backend\" \"npm run dev -w frontend\"",
     "build": "npm run build -w frontend",
     "start": "npm start -w backend",
+    "start:prod": "cross-env NODE_ENV=production npm start -w backend",
+    "build:prod": "npm run build -w frontend && echo Build complete.",
     "test": "npm test --workspaces --if-present",
     "lint": "npm run lint --workspaces --if-present"
   },

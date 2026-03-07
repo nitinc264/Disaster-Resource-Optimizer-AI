@@ -59,7 +59,7 @@ const ensureDefaultManager = async () => {
     email: "admin@disaster-response.local",
     isActive: true,
   });
-  console.log(`Default manager (self-heal) created with PIN: ${defaultPin}`);
+  console.log("Default manager (self-heal) created. PIN was auto-generated.");
 };
 
 /**
@@ -138,7 +138,6 @@ export const loginWithPin = async (req, res) => {
 
     // Store user in session for 24-hour persistence
     req.session.userId = user._id;
-    req.session.userPin = user.pin;
     req.session.userRole = user.role;
     req.session.loginTime = Date.now();
 

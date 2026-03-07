@@ -12,6 +12,18 @@ const envConfig = getEnvironmentConfig();
  * Centralized application configuration
  * Combines environment variables with environment-specific settings
  */
+const isProd = (process.env.NODE_ENV || "development") === "production";
+
+// Fail fast if critical env vars are missing in production
+if (isProd) {
+  const required = ["MONGO_URI", "SESSION_SECRET", "ALLOWED_ORIGINS"];
+  const missing = required.filter((key) => !process.env[key]);
+  if (missing.length > 0) {
+    console.error(`FATAL: Missing required environment variables in production: ${missing.join(", ")}`);
+    process.exit(1);
+  }
+}
+
 export const config = {
   // Environment
   nodeEnv: process.env.NODE_ENV || "development",
