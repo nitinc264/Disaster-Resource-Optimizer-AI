@@ -5,6 +5,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "start": "node server.js",
     "start:fire": "cross-env STATION_TYPE=fire STATION_PORT=4001 node server.js",
     "start:hospital": "cross-env STATION_TYPE=hospital STATION_PORT=4002 node server.js",
     "start:police": "cross-env STATION_TYPE=police STATION_PORT=4003 node server.js",

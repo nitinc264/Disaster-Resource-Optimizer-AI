@@ -28,11 +28,22 @@ const stationConfig = getStationConfig();
 const app = express();
 const httpServer = createServer(app);
 
+// Trust proxy when behind a reverse proxy (Render, etc.)
+if (process.env.NODE_ENV === "production") {
+  app.set("trust proxy", 1);
+}
+
+// Determine allowed origins for CORS
+const allowedOrigins = process.env.CORS_ORIGIN
+  ? process.env.CORS_ORIGIN.split(",").map((s) => s.trim())
+  : ["http://localhost:3000"];
+
 // Socket.IO for real-time alerts
 const io = new Server(httpServer, {
   cors: {
-    origin: process.env.CORS_ORIGIN || "http://localhost:3000",
+    origin: allowedOrigins,
     methods: ["GET", "POST"],
+    credentials: true,
   },
 });
 
@@ -43,7 +54,7 @@ app.set("stationConfig", stationConfig);
 // Middleware
 app.use(
   cors({
-    origin: process.env.CORS_ORIGIN || "http://localhost:3000",
+    origin: allowedOrigins,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
     credentials: true,
   }),
@@ -188,8 +199,9 @@ io.on("connection", (socket) => {
   });
 });
 
-// Connect to station's own database
+// Connect to station's own database on Atlas
 const mongoUri =
+  process.env.MONGO_URI ||
   process.env[`MONGO_URI_${stationConfig.type.toUpperCase()}`] ||
   `mongodb://localhost:27017/emergency_station_${stationConfig.type}`;
 
@@ -198,9 +210,10 @@ mongoose
   .then(() => {
     console.log(`[${stationConfig.name}] Connected to database`);
 
-    // Start server
-    const PORT = stationConfig.port;
+    // Render sets PORT automatically; fall back to station config
+    const PORT = process.env.PORT || stationConfig.port;
     httpServer.listen(PORT, () => {
+      const baseUrl = process.env.RENDER_EXTERNAL_URL || `http://localhost:${PORT}`;
       console.log(`
 ╔══════════════════════════════════════════════════════════════╗
 ║                                                              ║
@@ -208,7 +221,7 @@ mongoose
 ║                                                              ║
 ║   Type: ${stationConfig.type.padEnd(52)}║
 ║   Port: ${String(PORT).padEnd(52)}║
-║   Dashboard: http://localhost:${PORT}/                       ║
+║   Dashboard: ${baseUrl.padEnd(46)}║
 ║                                                              ║
 ╚══════════════════════════════════════════════════════════════╝
       `);

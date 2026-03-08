@@ -1,0 +1,92 @@
+# Render Blueprint — Deploy all 4 emergency stations as separate web services
+# Usage: Push this repo to GitHub, then in Render Dashboard → New → Blueprint → select repo
+# Each service uses the SAME codebase but different STATION_TYPE env var.
+
+services:
+  # ─── Fire Station (port assigned by Render) ─────────────────────
+  - type: web
+    name: station-fire
+    runtime: node
+    rootDir: station-demo
+    buildCommand: npm install
+    startCommand: node server.js
+    plan: free
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: STATION_TYPE
+        value: fire
+      - key: MONGO_URI
+        sync: false  # Set manually in Render dashboard
+      - key: STATION_API_KEY
+        sync: false
+      - key: CORS_ORIGIN
+        sync: false
+      - key: MAIN_PLATFORM_URL
+        value: https://disaster-resource-optimizer-ai-1.onrender.com
+
+  # ─── Hospital ───────────────────────────────────────────────────
+  - type: web
+    name: station-hospital
+    runtime: node
+    rootDir: station-demo
+    buildCommand: npm install
+    startCommand: node server.js
+    plan: free
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: STATION_TYPE
+        value: hospital
+      - key: MONGO_URI
+        sync: false
+      - key: STATION_API_KEY
+        sync: false
+      - key: CORS_ORIGIN
+        sync: false
+      - key: MAIN_PLATFORM_URL
+        value: https://disaster-resource-optimizer-ai-1.onrender.com
+
+  # ─── Police Station ────────────────────────────────────────────
+  - type: web
+    name: station-police
+    runtime: node
+    rootDir: station-demo
+    buildCommand: npm install
+    startCommand: node server.js
+    plan: free
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: STATION_TYPE
+        value: police
+      - key: MONGO_URI
+        sync: false
+      - key: STATION_API_KEY
+        sync: false
+      - key: CORS_ORIGIN
+        sync: false
+      - key: MAIN_PLATFORM_URL
+        value: https://disaster-resource-optimizer-ai-1.onrender.com
+
+  # ─── Rescue Station ────────────────────────────────────────────
+  - type: web
+    name: station-rescue
+    runtime: node
+    rootDir: station-demo
+    buildCommand: npm install
+    startCommand: node server.js
+    plan: free
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: STATION_TYPE
+        value: rescue
+      - key: MONGO_URI
+        sync: false
+      - key: STATION_API_KEY
+        sync: false
+      - key: CORS_ORIGIN
+        sync: false
+      - key: MAIN_PLATFORM_URL
+        value: https://disaster-resource-optimizer-ai-1.onrender.com

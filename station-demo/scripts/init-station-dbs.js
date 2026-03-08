@@ -10,6 +10,28 @@
  */
 
 import mongoose from "mongoose";
+import dotenv from "dotenv";
+import { fileURLToPath } from "url";
+import path from "path";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+dotenv.config({ path: path.join(__dirname, "../.env") });
+
+// Base Atlas URI (without database name)
+const MONGO_BASE_URI = process.env.MONGO_URI;
+if (!MONGO_BASE_URI) {
+  console.error("FATAL: MONGO_URI not set in .env");
+  process.exit(1);
+}
+
+/**
+ * Build a per-station Atlas URI by replacing the database name in the base URI.
+ */
+function buildStationUri(baseUri, dbName) {
+  // mongodb+srv://user:pass@host/OriginalDB?params → mongodb+srv://user:pass@host/newDB?params
+  return baseUri.replace(/(\.net\/)[^?]*/, `$1${dbName}`);
+}
 
 const STATION_CONFIGS = [
   {
@@ -112,9 +134,11 @@ async function initializeStationDatabases() {
       console.log(`   Database: ${station.dbName}`);
       console.log(`   Port: ${station.port}`);
 
-      // Connect to station database
+      // Connect to station database on Atlas
+      const stationUri = buildStationUri(MONGO_BASE_URI, station.dbName);
+      console.log(`   Atlas DB: ${station.dbName}`);
       const conn = await mongoose
-        .createConnection(`mongodb://localhost:27017/${station.dbName}`)
+        .createConnection(stationUri)
         .asPromise();
 
       // Create alerts collection with schema validation

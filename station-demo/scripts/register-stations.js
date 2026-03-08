@@ -9,9 +9,19 @@ import dotenv from "dotenv";
 dotenv.config();
 
 const MAIN_PLATFORM_URL =
-  process.env.MAIN_PLATFORM_URL || "http://localhost:3000";
+  process.env.MAIN_PLATFORM_URL || "https://disaster-resource-optimizer-ai-1.onrender.com";
 
 // Demo station configurations
+// Use environment variables for deployed URLs; fall back to localhost for local dev
+const STATION_URL_FIRE =
+  process.env.STATION_URL_FIRE || "http://localhost:4001";
+const STATION_URL_HOSPITAL =
+  process.env.STATION_URL_HOSPITAL || "http://localhost:4002";
+const STATION_URL_POLICE =
+  process.env.STATION_URL_POLICE || "http://localhost:4003";
+const STATION_URL_RESCUE =
+  process.env.STATION_URL_RESCUE || "http://localhost:4004";
+
 const DEMO_STATIONS = [
   {
     stationId: "FIRE-STATION-001",
@@ -23,9 +33,9 @@ const DEMO_STATIONS = [
       address: "Swargate, Pune",
     },
     apiConfig: {
-      baseUrl: "http://localhost:4001",
+      baseUrl: STATION_URL_FIRE,
       alertEndpoint: "/api/alerts/receive",
-      apiKey: "fire-station-demo-key-2024",
+      apiKey: process.env.STATION_API_KEY_FIRE || "fire-station-demo-key-2024",
     },
     capabilities: ["fire", "hazmat", "rescue", "general"],
     contact: {
@@ -45,9 +55,9 @@ const DEMO_STATIONS = [
       address: "Wakad, Pune",
     },
     apiConfig: {
-      baseUrl: "http://localhost:4002",
+      baseUrl: STATION_URL_HOSPITAL,
       alertEndpoint: "/api/alerts/receive",
-      apiKey: "hospital-station-demo-key-2024",
+      apiKey: process.env.STATION_API_KEY_HOSPITAL || "hospital-station-demo-key-2024",
     },
     capabilities: ["medical", "rescue", "traffic_accident", "general"],
     contact: {
@@ -67,9 +77,9 @@ const DEMO_STATIONS = [
       address: "Pimpri, Pune",
     },
     apiConfig: {
-      baseUrl: "http://localhost:4003",
+      baseUrl: STATION_URL_POLICE,
       alertEndpoint: "/api/alerts/receive",
-      apiKey: "police-station-demo-key-2024",
+      apiKey: process.env.STATION_API_KEY_POLICE || "police-station-demo-key-2024",
     },
     capabilities: ["traffic_accident", "general", "rescue"],
     contact: {
@@ -89,9 +99,9 @@ const DEMO_STATIONS = [
       address: "Shivajinagar, Pune",
     },
     apiConfig: {
-      baseUrl: "http://localhost:4004",
+      baseUrl: STATION_URL_RESCUE,
       alertEndpoint: "/api/alerts/receive",
-      apiKey: "rescue-station-demo-key-2024",
+      apiKey: process.env.STATION_API_KEY_RESCUE || "rescue-station-demo-key-2024",
     },
     capabilities: [
       "rescue",
@@ -121,15 +131,17 @@ async function registerStations() {
     "╚══════════════════════════════════════════════════════════════╝\n",
   );
 
-  // First, authenticate (you may need to adjust this based on your auth setup)
+  // Authenticate using PIN header (works reliably with deployed backends)
+  const AUTH_PIN = process.env.MANAGER_PIN || "0000";
   let authCookie = "";
+  let authPin = "";
 
   try {
     console.log("Attempting to authenticate with main platform...");
     const loginResponse = await axios.post(
       `${MAIN_PLATFORM_URL}/api/auth/login`,
       {
-        pin: "0000", // Default manager PIN
+        pin: AUTH_PIN,
       },
       {
         withCredentials: true,
@@ -142,11 +154,15 @@ async function registerStations() {
       authCookie = cookies[0].split(";")[0];
     }
 
+    // Also use PIN header as fallback (more reliable for cross-origin scripts)
+    authPin = AUTH_PIN;
+
     console.log("✅ Authenticated successfully\n");
   } catch (error) {
     console.log(
-      "⚠️  Could not authenticate. Proceeding without auth (may fail if auth required).\n",
+      "⚠️  Could not authenticate via session. Will use PIN header.\n",
     );
+    authPin = AUTH_PIN;
   }
 
   const results = {
@@ -168,6 +184,7 @@ async function registerStations() {
           headers: {
             "Content-Type": "application/json",
             Cookie: authCookie,
+            "X-Auth-Pin": authPin,
           },
         },
       );

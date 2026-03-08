@@ -77,8 +77,9 @@ const STATION_CONFIGS = {
  */
 export function getStationConfig() {
   const stationType = process.env.STATION_TYPE || "fire";
+  // On Render, PORT is set automatically; STATION_PORT is for local dev
   const port =
-    process.env.STATION_PORT || STATION_CONFIGS[stationType]?.port || 4001;
+    process.env.PORT || process.env.STATION_PORT || STATION_CONFIGS[stationType]?.port || 4001;
 
   const config = STATION_CONFIGS[stationType];
 
