@@ -624,4 +624,4 @@ This project is licensed under the MIT License.
 
 ---
 
-**Built for disaster response teams worldwide — by Omkar Kale**
+**Built for disaster response teams worldwide — by Team Legacy(Omkar Kale,Nitin Chauhan,Arham Kelkar)**
