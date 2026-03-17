@@ -119,6 +119,24 @@
   white-space: nowrap;
 }
 
+.report-source--whatsapp {
+  background: #25d366;
+  color: white;
+  font-weight: 600;
+}
+
+.report-source--sms {
+  background: #3b82f6;
+  color: white;
+  font-weight: 600;
+}
+
+.report-source--audio {
+  background: #8b5cf6;
+  color: white;
+  font-weight: 600;
+}
+
 .report-time {
   font-size: 0.7rem;
   color: var(--text-muted);

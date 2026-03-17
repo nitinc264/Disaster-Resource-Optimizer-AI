@@ -132,7 +132,12 @@ function ReportsList({
               </div>
               {!isExpanded && (
                 <div className="report-preview">
-                  <span className="report-source">{report.source}</span>
+                <span className={`report-source ${report.source === "WhatsApp" ? "report-source--whatsapp" : report.source === "SMS" ? "report-source--sms" : report.source === "Audio" ? "report-source--audio" : ""}`}>
+                    {report.source === "WhatsApp" && "💬 "}
+                    {report.source === "SMS" && "📱 "}
+                    {report.source === "Audio" && "🎤 "}
+                    {report.source}
+                  </span>
                   <span className="report-preview-text">
                     {report.text
                       ? report.text.substring(0, 40) +
@@ -150,7 +155,12 @@ function ReportsList({
             {isExpanded && (
               <div className="report-body">
                 <div className="report-meta-row">
-                  <span className="report-source">{report.source}</span>
+                  <span className={`report-source ${report.source === "WhatsApp" ? "report-source--whatsapp" : report.source === "SMS" ? "report-source--sms" : report.source === "Audio" ? "report-source--audio" : ""}`}>
+                    {report.source === "WhatsApp" && "💬 "}
+                    {report.source === "SMS" && "📱 "}
+                    {report.source === "Audio" && "🎤 "}
+                    {report.source}
+                  </span>
                 </div>
                 <div className="report-content">
                   {report.text ? (

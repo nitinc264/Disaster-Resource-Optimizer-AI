@@ -14,12 +14,14 @@ import volunteerMessageRoutes from "./volunteerMessageRoutes.js";
 import analyticsRoutes from "./analyticsRoutes.js";
 import resourceRoutes from "./resourceRoutes.js";
 import dispatchRoutes from "./dispatchRoutes.js";
+import whatsappRoutes from "./whatsappRoutes.js";
 
 const router = express.Router();
 
 // These route files define their own path prefixes internally
 router.use(authRoutes); // /auth/*
 router.use(smsWebhookRoutes); // /sms
+router.use(whatsappRoutes); // /whatsapp
 router.use(tasksRoutes); // /tasks/*, /needs/*
 router.use(missionRoutes); // /missions/*
 router.use(weatherRoutes); // /weather/*
