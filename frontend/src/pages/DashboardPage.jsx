@@ -35,6 +35,7 @@ import {
   Package,
   BarChart3,
   Users,
+  Car,
 } from "lucide-react";
 import "./DashboardPage.css";
 
@@ -471,6 +472,7 @@ function DashboardPage() {
     { id: "map", icon: MapIcon, label: t("nav.map") },
     { id: "roads", icon: Construction, label: t("nav.roads") },
     { id: "missing", icon: Search, label: t("nav.missing") },
+    { id: "rover", icon: Car, label: "Rover", href: "#" },
     ...(isManager
       ? [
           { id: "shelters", icon: Home, label: t("nav.shelters") },
@@ -549,19 +551,33 @@ function DashboardPage() {
       <div className="dash-body">
         {/* Vertical Sidebar Tab Navigation */}
         <nav className="dash-tabs" role="tablist">
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              className={`dash-tab ${activeTab === tab.id ? "dash-tab--active" : ""}`}
-              onClick={() => setActiveTab(tab.id)}
-              role="tab"
-              aria-selected={activeTab === tab.id}
-              title={tab.label}
-            >
-              <tab.icon size={17} className="dash-tab__icon" />
-              <span className="dash-tab__label">{tab.label}</span>
-            </button>
-          ))}
+          {tabs.map((tab) =>
+            tab.href ? (
+              <a
+                key={tab.id}
+                className="dash-tab"
+                href={tab.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                title={tab.label}
+              >
+                <tab.icon size={17} className="dash-tab__icon" />
+                <span className="dash-tab__label">{tab.label}</span>
+              </a>
+            ) : (
+              <button
+                key={tab.id}
+                className={`dash-tab ${activeTab === tab.id ? "dash-tab--active" : ""}`}
+                onClick={() => setActiveTab(tab.id)}
+                role="tab"
+                aria-selected={activeTab === tab.id}
+                title={tab.label}
+              >
+                <tab.icon size={17} className="dash-tab__icon" />
+                <span className="dash-tab__label">{tab.label}</span>
+              </button>
+            )
+          )}
         </nav>
 
         {/* Content Area */}
