@@ -1,27 +1,30 @@
-/* Triage Badge - Simple, clear priority indicators */
+/* ============================================================
+   TRIAGE BADGE — Severity indicators
+   ============================================================ */
+
 .triage-badge {
   display: inline-flex;
   align-items: center;
   gap: var(--space-1);
-  padding: var(--space-1) var(--space-2);
+  padding: 3px var(--space-2);
   border-radius: var(--radius-md);
-  font-size: 0.7rem;
+  font-size: 0.65rem;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.03em;
+  letter-spacing: 0.05em;
 }
 
 .triage-badge.size-small {
   padding: 2px var(--space-1);
-  font-size: 0.65rem;
+  font-size: 0.6rem;
 }
 
 .triage-badge.size-large {
   padding: var(--space-2) var(--space-3);
-  font-size: 0.75rem;
+  font-size: 0.72rem;
 }
 
-/* Triage Colors - Simple, direct */
+/* Colors */
 .triage-badge.triage-critical {
   background: var(--error);
   color: white;
@@ -29,47 +32,43 @@
 
 .triage-badge.triage-urgent,
 .triage-badge.triage-high {
-  background: var(--triage-high);
-  color: white;
+  background: var(--primary);
+  color: var(--text-inverse);
 }
 
 .triage-badge.triage-standard,
 .triage-badge.triage-medium {
   background: var(--triage-medium);
-  color: #1e293b;
+  color: var(--text-inverse);
 }
 
 .triage-badge.triage-low {
-  background: var(--triage-low);
+  background: var(--success);
   color: white;
 }
 
-/* Pulse animation for critical */
+/* Pulse for critical */
 .triage-badge.pulse {
   animation: triage-pulse 2s ease-in-out infinite;
 }
 
 @keyframes triage-pulse {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.7;
-  }
+  0%, 100% { opacity: 1;   }
+  50%      { opacity: 0.65; }
 }
 
-/* Triage Alert Banner */
+
+/* ── Alert Banner ── */
 .triage-alert-banner {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--space-4);
-  padding: var(--space-4);
+  padding: var(--space-3) var(--space-4);
   background: var(--error-light);
-  border: 1px solid var(--error);
-  border-radius: var(--radius-lg);
-  margin-bottom: var(--space-4);
+  border: 1px solid rgba(229, 78, 78, 0.2);
+  border-radius: var(--radius-xl);
+  margin-bottom: var(--space-3);
 }
 
 .triage-alert-content {
@@ -89,50 +88,60 @@
 }
 
 .triage-alert-text strong {
+  font-family: var(--font-display);
   color: var(--error);
-  font-size: 0.875rem;
+  font-size: 0.85rem;
 }
 
 .triage-alert-text span {
   color: var(--error);
-  font-size: 0.75rem;
-  opacity: 0.8;
+  font-size: 0.72rem;
+  opacity: 0.75;
 }
 
 .triage-alert-action {
   padding: var(--space-2) var(--space-4);
   background: var(--error);
   border: none;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
   color: white;
   font-weight: 600;
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   cursor: pointer;
-  min-height: 40px;
+  min-height: 38px;
+  transition: all var(--transition-base);
+  box-shadow: 0 2px 8px rgba(229, 78, 78, 0.25);
 }
 
 .triage-alert-action:hover {
   background: var(--triage-critical-dark);
+  transform: translateY(-1px);
 }
 
-/* Dismiss button */
 .triage-alert-dismiss {
   background: transparent;
   border: none;
   color: var(--error);
   cursor: pointer;
   padding: var(--space-2);
+  opacity: 0.6;
+  transition: opacity var(--transition-fast);
 }
 
 .triage-alert-dismiss:hover {
-  opacity: 0.7;
+  opacity: 1;
 }
 
-/* Mobile */
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+
 @media (max-width: 640px) {
   .triage-alert-banner {
     flex-direction: column;
     align-items: flex-start;
+    padding: var(--space-3);
   }
 
   .triage-alert-action {

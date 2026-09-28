@@ -123,7 +123,7 @@
 
 .resource-card-icon.blue {
   background: rgba(59, 130, 246, 0.15);
-  color: #3b82f6;
+  color: var(--accent);
 }
 
 .resource-card-icon.purple {
@@ -133,7 +133,7 @@
 
 .resource-card-icon.green {
   background: rgba(34, 197, 94, 0.15);
-  color: #22c55e;
+  color: var(--success);
 }
 
 .resource-card-title {
@@ -173,15 +173,15 @@
 }
 
 .resource-card-percentage.good {
-  color: #22c55e;
+  color: var(--success);
 }
 
 .resource-card-percentage.warning {
-  color: #eab308;
+  color: var(--primary);
 }
 
 .resource-card-percentage.critical {
-  color: #ef4444;
+  color: var(--error);
 }
 
 /* Resource Items List */
@@ -248,15 +248,15 @@
 }
 
 .progress-bar-fill.good {
-  background: linear-gradient(90deg, #22c55e, #4ade80);
+  background: linear-gradient(90deg, var(--success), #4ade80);
 }
 
 .progress-bar-fill.warning {
-  background: linear-gradient(90deg, #eab308, #facc15);
+  background: linear-gradient(90deg, var(--warning), #f0a040);
 }
 
 .progress-bar-fill.critical {
-  background: linear-gradient(90deg, #ef4444, #f87171);
+  background: linear-gradient(90deg, var(--error), #f87171);
 }
 
 /* Inventory Section */
@@ -327,7 +327,7 @@
 }
 
 .inventory-stock.low {
-  color: #ef4444;
+  color: var(--error);
 }
 
 .inventory-stock.normal {
@@ -351,13 +351,13 @@
 
 .status-badge.in-stock {
   background: rgba(34, 197, 94, 0.15);
-  color: #22c55e;
+  color: var(--success);
   border: 1px solid rgba(34, 197, 94, 0.3);
 }
 
 .status-badge.low-stock {
   background: rgba(239, 68, 68, 0.15);
-  color: #ef4444;
+  color: var(--error);
   border: 1px solid rgba(239, 68, 68, 0.3);
 }
 
@@ -484,7 +484,7 @@
   display: flex;
   align-items: center;
   gap: var(--space-3);
-  color: #ef4444;
+  color: var(--error);
   font-weight: 600;
   margin-bottom: var(--space-3);
 }
@@ -509,7 +509,7 @@
   margin-left: var(--space-2);
   padding: 2px var(--space-2);
   background: rgba(59, 130, 246, 0.12);
-  color: #3b82f6;
+  color: var(--accent);
   border-radius: var(--radius-md);
   font-size: 0.75rem;
   font-weight: 500;
@@ -577,7 +577,7 @@
 }
 
 .supply-card-header .alert-icon {
-  color: #ef4444;
+  color: var(--error);
 }
 
 .supply-card-body {
@@ -619,15 +619,15 @@
 }
 
 .supply-bar-fill.good {
-  background: linear-gradient(90deg, #22c55e, #4ade80);
+  background: linear-gradient(90deg, var(--success), #4ade80);
 }
 
 .supply-bar-fill.warning {
-  background: linear-gradient(90deg, #eab308, #facc15);
+  background: linear-gradient(90deg, var(--warning), #f0a040);
 }
 
 .supply-bar-fill.critical {
-  background: linear-gradient(90deg, #ef4444, #f87171);
+  background: linear-gradient(90deg, var(--error), #f87171);
 }
 
 .supply-minimum-marker {
@@ -656,6 +656,6 @@
   background: rgba(239, 68, 68, 0.08);
   border-radius: var(--radius-md);
   font-size: 0.8125rem;
-  color: #ef4444;
+  color: var(--error);
   font-weight: 500;
 }

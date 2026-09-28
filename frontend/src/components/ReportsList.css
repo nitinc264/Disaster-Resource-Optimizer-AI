@@ -1,24 +1,19 @@
-/* Reports List - Clean, scannable design */
+/* ============================================================
+   REPORTS LIST — Feed of submitted reports
+   ============================================================ */
+
 .reports-list {
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
 }
 
-.reports-list::-webkit-scrollbar {
-  width: 6px;
-}
+.reports-list::-webkit-scrollbar       { width: 4px; }
+.reports-list::-webkit-scrollbar-track  { background: transparent; }
+.reports-list::-webkit-scrollbar-thumb  { background: rgba(255,255,255,0.06); border-radius: 2px; }
 
-.reports-list::-webkit-scrollbar-track {
-  background: var(--background);
-}
 
-.reports-list::-webkit-scrollbar-thumb {
-  background: var(--border-color);
-  border-radius: 3px;
-}
-
-/* Empty State */
+/* ── Empty State ── */
 .reports-list-empty {
   display: flex;
   flex-direction: column;
@@ -32,7 +27,7 @@
 .reports-list-empty .empty-icon {
   font-size: 2rem;
   margin-bottom: var(--space-3);
-  opacity: 0.5;
+  opacity: 0.4;
 }
 
 .reports-list-empty p {
@@ -42,36 +37,38 @@
 }
 
 .reports-list-empty span {
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   color: var(--text-muted);
 }
 
-/* Report Card */
+
+/* ── Report Card ── */
 .report-card {
-  background: var(--background);
+  background: rgba(255, 255, 255, 0.02);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-lg);
   padding: var(--space-3);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
 }
 
 .report-card:hover {
-  background: var(--surface-elevated);
-  border-color: var(--accent);
+  background: rgba(255, 255, 255, 0.04);
+  border-color: var(--border-strong);
 }
 
 .report-card.expanded {
-  border-color: var(--accent);
-  background: var(--surface-elevated);
+  border-color: var(--border-strong);
+  background: rgba(255, 255, 255, 0.04);
 }
 
 .report-card.selected {
-  background: var(--accent-contrast);
-  border-color: var(--accent);
+  background: var(--accent-subtle);
+  border-color: rgba(26, 175, 168, 0.35);
 }
 
-/* Report Header */
+
+/* ── Header ── */
 .report-header {
   display: flex;
   flex-direction: column;
@@ -89,7 +86,7 @@
   display: flex;
   align-items: center;
   gap: var(--space-2);
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   color: var(--text-secondary);
 }
 
@@ -101,64 +98,49 @@
 }
 
 .report-status {
-  font-size: 0.7rem;
-  font-weight: 600;
-  padding: var(--space-1) var(--space-2);
-  border-radius: var(--radius-sm);
+  font-size: 0.62rem;
+  font-weight: 700;
+  padding: 3px var(--space-2);
+  border-radius: var(--radius-md);
   color: white;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.report-source {
+  font-size: 0.62rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  background: var(--surface-elevated);
+  padding: 3px var(--space-2);
+  border-radius: var(--radius-md);
+  white-space: nowrap;
   text-transform: uppercase;
   letter-spacing: 0.03em;
 }
 
-.report-source {
-  font-size: 0.7rem;
-  color: var(--text-muted);
-  background: var(--surface-elevated);
-  padding: var(--space-1) var(--space-2);
-  border-radius: var(--radius-sm);
-  white-space: nowrap;
-}
-
-.report-source--whatsapp {
-  background: #25d366;
-  color: white;
-  font-weight: 600;
-}
-
-.report-source--sms {
-  background: #3b82f6;
-  color: white;
-  font-weight: 600;
-}
-
-.report-source--audio {
-  background: #8b5cf6;
-  color: white;
-  font-weight: 600;
-}
+.report-source--whatsapp { background: rgba(37, 211, 102, 0.15); color: #3dd97a; }
+.report-source--sms      { background: rgba(77, 140, 217, 0.15); color: #6ba3e0; }
+.report-source--audio    { background: rgba(124, 92, 201, 0.15); color: #9b7de0; }
 
 .report-time {
-  font-size: 0.7rem;
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
   color: var(--text-muted);
 }
 
-/* Report Body (Expanded) */
+
+/* ── Body (Expanded) ── */
 .report-body {
   margin-top: var(--space-3);
   padding-top: var(--space-2);
-  border-top: 1px solid var(--border-color);
-  animation: slideDown 0.2s ease-out;
+  border-top: 1px solid var(--border-subtle);
+  animation: reportSlide 0.2s var(--ease-out-expo);
 }
 
-@keyframes slideDown {
-  from {
-    opacity: 0;
-    transform: translateY(-5px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+@keyframes reportSlide {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0);    }
 }
 
 .report-meta-row {
@@ -167,77 +149,57 @@
   margin-bottom: var(--space-2);
 }
 
-/* Report Content */
 .report-content {
   margin-bottom: var(--space-2);
 }
 
 .report-text {
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   color: var(--text-primary);
-  line-height: 1.4;
+  line-height: 1.45;
   margin: 0;
 }
 
-.report-text.transcription {
-  font-style: italic;
-}
+.report-text.transcription { font-style: italic; }
+.report-text.pending       { color: var(--text-muted); }
+.transcription-label       { font-style: normal; }
 
-.report-text.pending {
-  color: var(--text-muted);
-}
 
-.transcription-label {
-  font-style: normal;
-}
-
-/* Report Analysis */
+/* ── Analysis Tags ── */
 .report-analysis {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-2);
   margin-top: var(--space-2);
   padding-top: var(--space-2);
-  border-top: 1px solid var(--border-color);
+  border-top: 1px solid var(--border-subtle);
 }
 
 .report-tag {
-  font-size: 0.7rem;
-  font-weight: 500;
-  padding: var(--space-1) var(--space-2);
-  border-radius: var(--radius-sm);
-  background: var(--accent-contrast);
+  font-size: 0.65rem;
+  font-weight: 600;
+  padding: 3px var(--space-2);
+  border-radius: var(--radius-md);
+  background: var(--accent-subtle);
   color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
 }
 
 .report-severity {
-  font-size: 0.7rem;
-  font-weight: 600;
-  padding: var(--space-1) var(--space-2);
-  border-radius: var(--radius-sm);
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 3px var(--space-2);
+  border-radius: var(--radius-md);
 }
 
-.report-severity.severity-low {
-  background: var(--success-light);
-  color: var(--success);
-}
+.report-severity.severity-low      { background: var(--triage-low-light);    color: var(--success); }
+.report-severity.severity-medium   { background: var(--triage-medium-light); color: var(--triage-medium); }
+.report-severity.severity-high     { background: var(--triage-high-light);   color: var(--primary); }
+.report-severity.severity-critical { background: var(--error-light);         color: var(--error); }
 
-.report-severity.severity-medium {
-  background: var(--warning-light);
-  color: var(--warning);
-}
 
-.report-severity.severity-high {
-  background: var(--triage-high-light);
-  color: var(--triage-high);
-}
-
-.report-severity.severity-critical {
-  background: var(--error-light);
-  color: var(--error);
-}
-
-/* Report Needs */
+/* ── Needs Badges ── */
 .report-needs {
   display: flex;
   flex-wrap: wrap;
@@ -247,174 +209,106 @@
 }
 
 .need-badge {
-  font-size: 0.65rem;
-  padding: var(--space-1) var(--space-2);
-  border-radius: var(--radius-sm);
-  background: var(--surface-elevated);
+  font-size: 0.62rem;
+  font-weight: 500;
+  padding: 3px var(--space-2);
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.04);
   color: var(--text-secondary);
 }
 
-/* Report Location */
+
+/* ── Location ── */
 .report-location {
   display: flex;
   align-items: center;
   gap: var(--space-1);
   margin-top: var(--space-2);
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   color: var(--text-muted);
 }
 
-.location-icon {
-  font-size: 0.75rem;
-}
+.location-icon  { font-size: 0.72rem; }
+.location-coords { font-family: var(--font-mono); }
 
-.location-coords {
-  font-family: var(--font-mono);
-}
 
-/* Mobile Responsive */
-@media (max-width: 640px) {
-  .report-card {
-    padding: var(--space-2);
-  }
-
-  .report-header {
-    gap: var(--space-1);
-    margin-bottom: var(--space-1);
-  }
-
-  .report-status {
-    font-size: 0.6rem;
-    padding: 2px var(--space-1);
-  }
-
-  .report-source {
-    font-size: 0.6rem;
-    padding: 2px var(--space-1);
-  }
-
-  .report-time {
-    font-size: 0.6rem;
-  }
-
-  .report-content {
-    font-size: 0.8rem;
-    -webkit-line-clamp: 2;
-  }
-
-  .need-badge {
-    font-size: 0.6rem;
-    padding: 2px 4px;
-  }
-
-  .report-location {
-    font-size: 0.6rem;
-  }
-}
-
-/* Extra small mobile */
-@media (max-width: 380px) {
-  .report-card {
-    padding: var(--space-1);
-  }
-
-  .report-header {
-    flex-wrap: nowrap;
-    gap: 2px;
-  }
-
-  .report-status {
-    font-size: 0.55rem;
-    padding: 1px 3px;
-  }
-
-  .report-source {
-    font-size: 0.55rem;
-    padding: 1px 3px;
-  }
-
-  .report-time {
-    font-size: 0.55rem;
-  }
-
-  .report-text {
-    font-size: 0.75rem;
-    -webkit-line-clamp: 2;
-    line-clamp: 2;
-  }
-
-  .report-tag {
-    font-size: 0.6rem;
-    padding: 1px 3px;
-  }
-
-  .need-badge {
-    font-size: 0.55rem;
-    padding: 1px 3px;
-  }
-}
-
-/* Emergency Status Section */
+/* ── Emergency Status ── */
 .report-emergency-status {
   display: flex;
   flex-direction: column;
   gap: var(--space-1);
   margin-top: var(--space-2);
   padding: var(--space-2);
-  background: rgba(239, 68, 68, 0.06);
-  border-radius: var(--radius-sm);
-  border-left: 3px solid #ef4444;
+  background: var(--error-light);
+  border-radius: var(--radius-md);
+  border-left: 3px solid var(--error);
 }
 
-.emergency-status-badge {
-  font-size: 0.8rem;
-  font-weight: 600;
-}
+.emergency-status-badge    { font-size: 0.78rem; font-weight: 600; }
+.emergency-station-name    { font-size: 0.72rem; color: var(--text-secondary); }
+.emergency-rejection-reason { font-size: 0.72rem; font-style: italic; }
 
-.emergency-station-name {
-  font-size: 0.75rem;
-  color: var(--text-secondary);
-}
-
-.emergency-rejection-reason {
-  font-size: 0.75rem;
-  font-style: italic;
-}
-
-/* Rejected status badge in header */
 .report-status--rejected {
   animation: pulse-rejected 2s ease-in-out infinite;
 }
 
 @keyframes pulse-rejected {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.6; }
+  0%, 100% { opacity: 1;   }
+  50%      { opacity: 0.55; }
 }
 
-/* Reroute button for rejected reports */
+
+/* ── Reroute Button ── */
 .btn-reroute-report {
   display: block;
   width: 100%;
   margin-top: var(--space-2);
   padding: var(--space-2) var(--space-3);
-  border: 1px solid #ef4444;
-  border-radius: var(--radius-sm);
+  border: 1px solid var(--error);
+  border-radius: var(--radius-md);
   background: transparent;
-  color: #ef4444;
-  font-size: 0.8rem;
-  font-weight: 500;
+  color: var(--error);
+  font-size: 0.78rem;
+  font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
 }
 
 .btn-reroute-report:hover {
-  background: #ef4444;
+  background: var(--error);
   color: white;
 }
 
 .btn-reroute-report.active {
-  background: #f97316;
-  border-color: #f97316;
-  color: white;
+  background: var(--primary);
+  border-color: var(--primary);
+  color: var(--text-inverse);
   animation: pulse-rejected 1.5s ease-in-out infinite;
+}
+
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+
+@media (max-width: 640px) {
+  .report-card    { padding: var(--space-2); }
+  .report-header  { gap: var(--space-1); margin-bottom: var(--space-1); }
+  .report-status  { font-size: 0.58rem; padding: 2px var(--space-1); }
+  .report-source  { font-size: 0.58rem; padding: 2px var(--space-1); }
+  .report-time    { font-size: 0.58rem; }
+  .report-content { font-size: 0.78rem; }
+  .need-badge     { font-size: 0.58rem; padding: 2px 4px; }
+  .report-location { font-size: 0.58rem; }
+}
+
+@media (max-width: 380px) {
+  .report-card     { padding: var(--space-1); }
+  .report-header   { flex-wrap: nowrap; gap: 2px; }
+  .report-status   { font-size: 0.52rem; padding: 1px 3px; }
+  .report-source   { font-size: 0.52rem; padding: 1px 3px; }
+  .report-time     { font-size: 0.52rem; }
+  .report-text     { font-size: 0.72rem; }
+  .report-tag      { font-size: 0.58rem; padding: 1px 3px; }
+  .need-badge      { font-size: 0.52rem; padding: 1px 3px; }
 }

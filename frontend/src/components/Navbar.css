@@ -1,6 +1,9 @@
-/* ==========================================
-   NAVBAR COMPONENT
-   ========================================== */
+/* ============================================================
+   NAVBAR — Top navigation bar
+   Clean, quiet, functional. The chrome shouldn't compete
+   with the operational content below.
+   ============================================================ */
+
 .Navbar {
   position: sticky;
   top: 0;
@@ -8,13 +11,16 @@
   display: flex;
   flex-direction: row;
   align-items: center;
-  background: var(--surface);
-  border-bottom: 1px solid var(--border-color);
-  height: 60px;
-  padding: 0 24px;
+  background: rgba(16, 19, 26, 0.85);
+  backdrop-filter: blur(16px) saturate(1.4);
+  -webkit-backdrop-filter: blur(16px) saturate(1.4);
+  border-bottom: 1px solid var(--border-subtle);
+  height: 56px;
+  padding: 0 20px;
 }
 
-/* ---- Left: brand ---- */
+
+/* ── Brand (left) ── */
 .Navbar-brand {
   display: flex;
   align-items: center;
@@ -29,38 +35,40 @@
 }
 
 .Navbar-brandName {
+  font-family: var(--font-display);
   font-weight: 800;
-  font-size: 1.25rem;
+  font-size: 1.15rem;
   color: var(--text-primary);
-  letter-spacing: 0.02em;
+  letter-spacing: 0.06em;
 }
 
 .Navbar-role {
-  padding: 4px 10px;
-  border-radius: 999px;
-  font-size: 0.7rem;
+  padding: 3px 10px;
+  border-radius: var(--radius-full);
+  font-size: 0.6rem;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.08em;
   line-height: 1;
 }
 
 .Navbar-role--mgr {
-  background: var(--primary);
-  color: #fff;
+  background: var(--primary-subtle);
+  color: var(--primary);
 }
 
 .Navbar-role--vol {
-  background: #3b82f6;
-  color: #fff;
+  background: rgba(26, 175, 168, 0.18);
+  color: #2dd4bf;
 }
 
-/* ---- Nav links (center) ---- */
+
+/* ── Nav Links (center) ── */
 .Navbar-links {
   display: flex;
   align-items: center;
   flex: 1;
-  gap: 6px;
+  gap: 2px;
   justify-content: center;
 }
 
@@ -70,44 +78,43 @@
   align-items: center;
   justify-content: center;
   padding: 8px 16px;
-  color: var(--text-secondary);
+  color: var(--text-muted);
   text-decoration: none;
   font-weight: 500;
-  font-size: 0.95rem;
-  border-radius: 6px;
-  transition:
-    color 0.15s,
-    background 0.15s;
+  font-size: 0.875rem;
+  border-radius: var(--radius-lg);
+  transition: all var(--transition-base);
   white-space: nowrap;
 }
 
 .Navbar-link:hover {
-  color: var(--text-primary);
-  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-secondary);
+  background: rgba(255, 255, 255, 0.04);
 }
 
 .Navbar-link--active {
-  color: var(--primary) !important;
+  color: var(--text-primary) !important;
   font-weight: 600;
-  background: rgba(249, 115, 22, 0.1) !important;
+  background: rgba(255, 255, 255, 0.05) !important;
 }
 
 .Navbar-link--active::after {
   content: "";
   position: absolute;
   bottom: 0;
-  left: 12px;
-  right: 12px;
+  left: 14px;
+  right: 14px;
   height: 2px;
   background: var(--primary);
   border-radius: 1px;
 }
 
-/* ---- Right: actions ---- */
+
+/* ── Actions (right) ── */
 .Navbar-actions {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 6px;
   flex-shrink: 0;
 }
 
@@ -116,17 +123,18 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 0 14px;
-  height: 36px;
+  padding: 0 12px;
+  height: 34px;
   background: transparent;
   border: 1px solid var(--border-color);
-  border-radius: 999px;
-  color: var(--text-secondary);
-  transition: border-color 0.15s;
+  border-radius: var(--radius-full);
+  color: var(--text-muted);
+  transition: all var(--transition-base);
 }
 
 .Navbar-lang:hover {
-  border-color: var(--text-secondary);
+  border-color: var(--border-strong);
+  background: var(--surface);
 }
 
 .Navbar-langIcon {
@@ -137,16 +145,16 @@
 .Navbar-lang .Navbar-langSelect {
   all: unset;
   font-family: inherit;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   font-weight: 500;
-  color: var(--text-primary);
+  color: var(--text-secondary);
   cursor: pointer;
   appearance: none;
   -webkit-appearance: none;
 }
 
 .Navbar-lang .Navbar-langSelect option {
-  background: var(--surface);
+  background: var(--surface-solid);
   color: var(--text-primary);
 }
 
@@ -157,26 +165,26 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 38px;
-  height: 38px;
+  width: 34px;
+  height: 34px;
   border: 1px solid var(--border-color);
-  border-radius: 999px;
-  color: var(--text-secondary);
+  border-radius: var(--radius-full);
+  color: var(--text-muted);
   cursor: pointer;
-  transition: all 0.15s;
+  transition: all var(--transition-base);
   box-sizing: border-box;
 }
 
 .Navbar-iconBtn:hover {
   color: var(--text-primary);
-  border-color: var(--text-secondary);
-  background: rgba(255, 255, 255, 0.05);
+  border-color: var(--border-strong);
+  background: rgba(255, 255, 255, 0.04);
 }
 
 .Navbar-iconBtn--logout:hover {
-  background: #ef4444;
-  border-color: #ef4444;
-  color: #fff;
+  background: var(--error-light);
+  border-color: rgba(229, 78, 78, 0.3);
+  color: var(--error);
 }
 
 /* Unread badge */
@@ -190,23 +198,26 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #ef4444;
+  background: var(--error);
   color: #fff;
-  font-size: 0.58rem;
+  font-size: 0.55rem;
   font-weight: 700;
-  border-radius: 999px;
+  border-radius: var(--radius-full);
   line-height: 1;
+  box-shadow: 0 2px 6px rgba(229, 78, 78, 0.35);
 }
 
-/* ==========================================
+
+/* ============================================================
    RESPONSIVE — Tablet (two rows)
-   ========================================== */
+   ============================================================ */
+
 @media (max-width: 768px) {
   .Navbar {
     flex-direction: row;
     flex-wrap: wrap;
     height: auto;
-    padding: 8px 16px;
+    padding: 8px 14px;
     gap: 0;
   }
 
@@ -224,40 +235,42 @@
     order: 3;
     width: 100%;
     display: flex;
-    gap: 4px;
+    gap: 2px;
     padding: 8px 0 2px;
     margin-top: 6px;
-    border-top: 1px solid var(--border-color);
+    border-top: 1px solid var(--border-subtle);
     justify-content: center;
   }
 
   .Navbar-brandName {
-    font-size: 1.1rem;
+    font-size: 1.05rem;
   }
 
   .Navbar-link {
     padding: 7px 14px;
-    font-size: 0.88rem;
+    font-size: 0.85rem;
   }
 
   .Navbar-lang {
     padding: 0 10px;
-    height: 34px;
+    height: 32px;
   }
 
   .Navbar-lang .Navbar-langSelect {
-    font-size: 0.8rem;
+    font-size: 0.78rem;
   }
 
   .Navbar-iconBtn {
-    width: 34px;
-    height: 34px;
+    width: 32px;
+    height: 32px;
   }
 }
 
-/* ==========================================
+
+/* ============================================================
    RESPONSIVE — Mobile
-   ========================================== */
+   ============================================================ */
+
 @media (max-width: 480px) {
   .Navbar {
     padding: 6px 10px;
@@ -268,7 +281,7 @@
   }
 
   .Navbar-brandName {
-    font-size: 0.95rem;
+    font-size: 0.9rem;
   }
 
   .Navbar-role {
@@ -278,12 +291,12 @@
   .Navbar-links {
     padding: 6px 0 0;
     margin-top: 4px;
-    gap: 4px;
+    gap: 2px;
   }
 
   .Navbar-link {
     padding: 6px 12px;
-    font-size: 0.82rem;
+    font-size: 0.8rem;
   }
 
   .Navbar-link--active::after {
@@ -292,7 +305,7 @@
   }
 
   .Navbar-actions {
-    gap: 5px;
+    gap: 4px;
   }
 
   .Navbar-lang {
@@ -300,8 +313,8 @@
   }
 
   .Navbar-iconBtn {
-    width: 32px;
-    height: 32px;
+    width: 30px;
+    height: 30px;
   }
 }
 
@@ -313,11 +326,11 @@
 
   .Navbar-link {
     padding: 6px 8px;
-    font-size: 0.78rem;
+    font-size: 0.76rem;
   }
 
   .Navbar-iconBtn {
-    width: 30px;
-    height: 30px;
+    width: 28px;
+    height: 28px;
   }
 }

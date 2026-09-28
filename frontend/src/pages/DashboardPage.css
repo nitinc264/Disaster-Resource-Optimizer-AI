@@ -1,807 +1,723 @@
-/* ================================================
-   DASHBOARD PAGE — Clean, Simple Redesign
-   ================================================ */
+/* ============================================================
+   COMMAND CENTER — Immersive Dashboard Layout
+   Map fills the viewport. Everything else floats on top.
+   ============================================================ */
+
+/* ── Base ── */
 .dashboard-page {
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 60px);
-  gap: var(--space-3);
-}
-
-/* Sidebar + Content wrapper */
-.dash-body {
-  display: flex;
-  flex: 1;
-  min-height: 0;
-  gap: var(--space-3);
-}
-
-/* ================================================
-   TOP BAR — single-row header
-   ================================================ */
-.dash-topbar {
-  display: flex;
-  align-items: center;
-  gap: var(--space-4);
-  padding: var(--space-3) var(--space-4);
-  background: var(--surface);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-xl);
-}
-
-.topbar-left {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  flex-shrink: 0;
-}
-
-.topbar-title {
-  margin: 0;
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: var(--text-primary);
-  white-space: nowrap;
-}
-
-.topbar-badge {
-  display: inline-flex;
-  align-items: center;
-  padding: 4px 10px;
-  border-radius: var(--radius-full);
-  font-size: 0.75rem;
-  font-weight: 700;
-}
-
-.topbar-badge--danger {
-  background: rgba(239, 68, 68, 0.15);
-  color: #f87171;
-}
-
-/* Stats — inline pills */
-.topbar-stats {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  flex: 1;
-  justify-content: center;
-  flex-wrap: wrap;
-}
-
-.topbar-stat {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 14px;
-  background: var(--background);
-  border-radius: var(--radius-full);
-  border: 1px solid var(--border-color);
-  white-space: nowrap;
-}
-
-.topbar-stat__value {
-  font-size: 1rem;
-  font-weight: 800;
-  color: var(--text-primary);
-  font-feature-settings: "tnum";
-}
-
-.topbar-stat__label {
-  font-size: 0.7rem;
-  font-weight: 600;
-  color: var(--text-secondary);
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-}
-
-/* Color accents on stat pills */
-.topbar-stat--pending {
-  border-color: var(--primary);
-  border-left-width: 3px;
-}
-.topbar-stat--active {
-  border-color: var(--accent, #22d3ee);
-  border-left-width: 3px;
-}
-.topbar-stat--missions {
-  border-color: var(--success, #22c55e);
-  border-left-width: 3px;
-}
-
-/* Refresh button */
-.topbar-refresh {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 16px;
-  background: var(--primary);
-  color: white;
-  border: none;
-  border-radius: var(--radius-full);
-  font-weight: 600;
-  font-size: 0.8rem;
-  cursor: pointer;
-  transition:
-    opacity 0.15s,
-    transform 0.15s;
-  flex-shrink: 0;
-  white-space: nowrap;
-}
-
-.topbar-refresh:hover:not(:disabled) {
-  opacity: 0.9;
-  transform: translateY(-1px);
-}
-
-.topbar-refresh:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.topbar-refresh__icon {
-  display: inline-block;
-  width: 12px;
-  height: 12px;
-  border: 2px solid currentColor;
-  border-top-color: transparent;
-  border-radius: 50%;
-}
-
-.topbar-refresh__icon.spinning {
-  animation: spin 0.8s linear infinite;
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-/* ================================================
-   VERTICAL SIDEBAR TAB BAR
-   ================================================ */
-.dash-tabs {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-  padding: 12px 0;
-  background: var(--surface);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-xl);
-  flex-shrink: 0;
-  overflow-y: auto;
-  scrollbar-width: none;
-  width: 72px;
-}
-
-.dash-tabs::-webkit-scrollbar {
-  display: none;
-}
-
-.dash-tab {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 3px;
-  padding: 10px 4px 8px;
-  width: 64px;
-  border: none;
-  background: transparent;
-  border-radius: var(--radius-lg);
-  cursor: pointer;
-  font-weight: 600;
-  color: var(--text-secondary);
-  transition: all 0.15s ease;
-}
-
-.dash-tab:hover {
-  background: rgba(255, 255, 255, 0.06);
-  color: var(--text-primary);
-}
-
-.dash-tab--active {
-  background: rgba(249, 115, 22, 0.12);
-  color: var(--primary);
-}
-
-.dash-tab--active:hover {
-  background: rgba(249, 115, 22, 0.18);
-  color: var(--primary);
-}
-
-.dash-tab__icon {
-  flex-shrink: 0;
-}
-
-.dash-tab__label {
-  display: block;
-  font-size: 0.6rem;
-  line-height: 1;
-  letter-spacing: 0.01em;
-  white-space: nowrap;
-}
-
-/* No tooltip needed — labels are visible */
-.dash-tab::after {
-  display: none;
-}
-
-/* ================================================
-   CONTENT AREA
-   ================================================ */
-.dash-content {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-  min-width: 0;
+  height: calc(100vh - 56px);
   overflow: hidden;
 }
 
-/* ================================================
-   MAP LAYOUT — map + side panel
-   ================================================ */
-.dash-map-layout {
-  display: flex;
-  flex: 1;
-  gap: var(--space-3);
-  min-height: 0;
-  overflow: hidden;
+.dashboard-page--immersive {
+  gap: 0;
 }
 
-.dash-map {
+
+/* ============================================================
+   CANVAS — Full-bleed map container
+   ============================================================ */
+
+.cc-canvas {
   position: relative;
   flex: 1;
-  background: var(--surface);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-xl);
   overflow: hidden;
-  min-height: 0;
 }
 
-.dash-map__loading {
+.cc-map {
   position: absolute;
   inset: 0;
-  background: rgba(15, 23, 42, 0.85);
+}
+
+.cc-map__loading {
+  position: absolute;
+  inset: 0;
+  background: rgba(16, 19, 26, 0.88);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: var(--space-2);
-  color: var(--text-secondary);
-  font-size: 0.85rem;
+  color: var(--text-muted);
+  font-size: 0.82rem;
   z-index: 1000;
+  backdrop-filter: blur(4px);
 }
 
 .spinner {
-  width: 24px;
-  height: 24px;
+  width: 22px;
+  height: 22px;
   border: 2px solid var(--border-color);
   border-top-color: var(--primary);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
 
-/* ================================================
-   REROUTE BANNER
-   ================================================ */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
 
-.dash-reroute-banner {
+
+/* ============================================================
+   HUD STATS — Floating stat badges, top-left
+   ============================================================ */
+
+.cc-hud-stats {
   position: absolute;
-  top: var(--space-3);
+  top: 14px;
+  left: 80px;
+  z-index: 1100;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.cc-stat {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 14px;
+  background: rgba(10, 12, 18, 0.92);
+  backdrop-filter: blur(20px) saturate(1.4);
+  -webkit-backdrop-filter: blur(20px) saturate(1.4);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: var(--radius-full);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
+  color: var(--text-primary);
+}
+
+.cc-stat__num {
+  font-family: var(--font-mono);
+  font-size: 0.88rem;
+  font-weight: 700;
+  font-feature-settings: "tnum";
+}
+
+.cc-stat__label {
+  font-size: 0.6rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* Colored left-border accents */
+.cc-stat--warning { border-left: 2px solid var(--primary); }
+.cc-stat--accent  { border-left: 2px solid var(--accent); }
+.cc-stat--success { border-left: 2px solid var(--success); }
+
+
+/* ── Refresh button ── */
+.cc-refresh {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  background: rgba(10, 12, 18, 0.92);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-base);
+}
+
+.cc-refresh:hover:not(:disabled) {
+  background: var(--primary);
+  color: var(--text-inverse);
+  border-color: var(--primary);
+}
+
+.cc-refresh:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.cc-refresh--spinning svg {
+  animation: spin 0.8s linear infinite;
+}
+
+
+/* ============================================================
+   SIDE NAV — Floating vertical pill, left side
+   ============================================================ */
+
+.cc-sidenav {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  z-index: 1100;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px;
+  background: rgba(10, 12, 18, 0.94);
+  backdrop-filter: blur(20px) saturate(1.3);
+  -webkit-backdrop-filter: blur(20px) saturate(1.3);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: var(--radius-xl);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.5);
+}
+
+.cc-sidenav__btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  width: 48px;
+  padding: 8px 4px 6px;
+  border: none;
+  background: transparent;
+  border-radius: var(--radius-lg);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all var(--transition-base);
+  text-decoration: none;
+}
+
+.cc-sidenav__btn span {
+  font-size: 0.5rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.cc-sidenav__btn:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-secondary);
+}
+
+.cc-sidenav__btn--active {
+  background: var(--primary);
+  color: var(--text-inverse);
+  box-shadow: var(--shadow-glow-primary);
+}
+
+.cc-sidenav__btn--active:hover {
+  background: var(--primary-hover);
+  color: var(--text-inverse);
+}
+
+
+/* ============================================================
+   PANEL TOGGLE — Floating button, top-right
+   ============================================================ */
+
+.cc-panel-toggle {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 1200;
+  width: 38px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: var(--radius-lg);
+  background: rgba(10, 12, 18, 0.92);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-base);
+  box-shadow: var(--shadow-md);
+}
+
+.cc-panel-toggle:hover {
+  background: rgba(16, 19, 26, 0.95);
+  color: var(--text-primary);
+}
+
+
+/* ============================================================
+   REROUTE BANNER
+   ============================================================ */
+
+.cc-reroute-banner {
+  position: absolute;
+  top: 14px;
   left: 50%;
   transform: translateX(-50%);
-  z-index: 1001;
+  z-index: 1300;
   display: flex;
   align-items: center;
   gap: var(--space-3);
-  padding: var(--space-2) var(--space-4);
-  background: rgba(249, 115, 22, 0.95);
-  color: white;
-  border-radius: var(--radius-md);
-  font-size: 0.85rem;
+  padding: var(--space-2) var(--space-5);
+  background: rgba(232, 135, 30, 0.92);
+  color: var(--text-inverse);
+  border-radius: var(--radius-full);
+  font-size: 0.8rem;
   font-weight: 500;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  box-shadow: var(--shadow-lg), var(--shadow-glow-primary);
   backdrop-filter: blur(8px);
 }
 
-.dash-reroute-banner button {
-  background: rgba(255, 255, 255, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  color: white;
-  padding: var(--space-1) var(--space-2);
-  border-radius: var(--radius-sm);
-  font-size: 0.8rem;
+.cc-reroute-banner button {
+  background: rgba(0, 0, 0, 0.15);
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  color: var(--text-inverse);
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-full);
+  font-size: 0.75rem;
+  font-weight: 600;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: background var(--transition-fast);
 }
 
-.dash-reroute-banner button:hover {
-  background: rgba(255, 255, 255, 0.35);
+.cc-reroute-banner button:hover {
+  background: rgba(0, 0, 0, 0.3);
 }
 
-/* ================================================
-   SIDE PANEL — Missions & Reports
-   ================================================ */
-.dash-panel {
+
+/* ============================================================
+   FLOATING PANEL — Missions & Reports
+   ============================================================ */
+
+.cc-panel {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  bottom: 14px;
+  width: 320px;
+  z-index: 1100;
   display: flex;
   flex-direction: column;
-  width: 320px;
-  background: var(--surface);
-  border: 1px solid var(--border-color);
+  background: rgba(10, 12, 18, 0.94);
+  backdrop-filter: blur(24px) saturate(1.4);
+  -webkit-backdrop-filter: blur(24px) saturate(1.4);
+  border: 1px solid rgba(255, 255, 255, 0.10);
   border-radius: var(--radius-xl);
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.5);
   overflow: hidden;
-  flex-shrink: 0;
+  animation: panelSlideIn 0.25s var(--ease-out-expo);
 }
 
-.dash-panel__handle {
-  display: none; /* Only shown on mobile */
+@keyframes panelSlideIn {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
-.dash-panel__tabs {
+/* Move toggle when panel is open */
+.cc-panel ~ .cc-panel-toggle {
+  right: 348px;
+}
+
+.cc-panel__tabs {
   display: flex;
-  padding: 6px;
+  padding: 8px;
   gap: 4px;
-  background: var(--background);
-  border-bottom: 1px solid var(--border-color);
+  flex-shrink: 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
 }
 
-.dash-panel__tab {
+.cc-panel__tab {
   flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
-  padding: 8px;
+  padding: 9px 8px;
   border: none;
   background: transparent;
-  border-radius: var(--radius-md);
-  font-size: 0.8rem;
+  border-radius: var(--radius-lg);
+  font-size: 0.78rem;
   font-weight: 600;
-  color: var(--text-secondary);
+  color: var(--text-muted);
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all var(--transition-base);
 }
 
-.dash-panel__tab:hover {
-  background: var(--surface-elevated);
+.cc-panel__tab:hover {
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-secondary);
+}
+
+.cc-panel__tab--active {
+  background: rgba(255, 255, 255, 0.07);
   color: var(--text-primary);
 }
 
-.dash-panel__tab--active {
-  background: var(--surface);
-  color: var(--primary);
-  box-shadow: var(--shadow-sm);
-}
-
-.dash-panel__badge {
-  font-size: 0.65rem;
+.cc-panel__badge {
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
   font-weight: 700;
   padding: 2px 7px;
   border-radius: var(--radius-full);
   min-width: 18px;
   text-align: center;
-  background: var(--surface-elevated);
-  color: var(--text-secondary);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-muted);
 }
 
-.dash-panel__tab--active .dash-panel__badge {
+.cc-panel__tab--active .cc-panel__badge {
   background: var(--primary);
-  color: white;
+  color: var(--text-inverse);
 }
 
-.dash-panel__body {
+.cc-panel__body {
   flex: 1;
   overflow-y: auto;
   padding: var(--space-3);
 }
 
-.dash-panel__body::-webkit-scrollbar {
-  width: 4px;
+.cc-panel__body::-webkit-scrollbar {
+  width: 3px;
 }
 
-.dash-panel__body::-webkit-scrollbar-track {
+.cc-panel__body::-webkit-scrollbar-track {
   background: transparent;
 }
 
-.dash-panel__body::-webkit-scrollbar-thumb {
-  background: var(--border-color);
+.cc-panel__body::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.06);
   border-radius: 2px;
 }
 
-/* ================================================
-   FULL-PAGE CONTENT (non-map tabs)
-   ================================================ */
-.dash-fullpage {
+
+/* ============================================================
+   PAGE VIEW — Non-map tabs (Roads, Missing, etc.)
+   ============================================================ */
+
+.cc-page-view {
   flex: 1;
-  overflow-y: auto;
-  background: var(--surface);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-xl);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
 }
 
-/* ================================================
+.cc-page-tabs {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 8px var(--space-4);
+  border-bottom: 1px solid var(--border-subtle);
+  flex-shrink: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.cc-page-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.cc-page-tab {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border: none;
+  background: transparent;
+  border-radius: var(--radius-full);
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all var(--transition-base);
+  white-space: nowrap;
+  text-decoration: none;
+}
+
+.cc-page-tab:hover {
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-secondary);
+}
+
+.cc-page-tab--active {
+  background: var(--primary-subtle);
+  color: var(--primary);
+  font-weight: 600;
+}
+
+.cc-page-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--space-4);
+}
+
+
+/* ============================================================
    RESPONSIVE — Tablet
-   ================================================ */
-@media (max-width: 1024px) {
-  .dash-panel {
+   ============================================================ */
+
+@media (max-width: 1100px) {
+  .cc-panel {
     width: 280px;
   }
 
-  .topbar-stats {
-    gap: var(--space-1);
+  .cc-panel ~ .cc-panel-toggle {
+    right: 308px;
   }
 
-  .topbar-stat {
-    padding: 4px 10px;
+  .cc-hud-stats {
+    flex-wrap: wrap;
+    max-width: calc(100% - 110px - 350px);
   }
 
-  .topbar-stat__label {
+  .cc-stat__label {
     display: none;
   }
 }
 
+
+/* ============================================================
+   RESPONSIVE — Small Tablet / Large Phone
+   ============================================================ */
+
 @media (max-width: 900px) {
-  .dash-topbar {
-    flex-wrap: wrap;
-    gap: var(--space-2);
-    padding: var(--space-3);
+  .cc-hud-stats {
+    top: auto;
+    bottom: 70px;
+    left: 14px;
+    max-width: calc(100% - 28px);
   }
 
-  .topbar-stats {
-    order: 3;
+  .cc-stat__label {
+    display: none;
+  }
+
+  .cc-panel {
+    top: auto;
+    bottom: 0;
+    left: 0;
+    right: 0;
     width: 100%;
-    justify-content: flex-start;
+    height: 50vh;
+    border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+    animation: panelSlideUp 0.3s var(--ease-out-expo);
   }
 
-  .topbar-stat__label {
-    display: inline;
+  @keyframes panelSlideUp {
+    from {
+      opacity: 0;
+      transform: translateY(40px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 
-  .dash-map-layout {
-    flex-direction: column;
+  .cc-panel ~ .cc-panel-toggle {
+    right: 14px;
   }
 
-  .dash-panel {
-    width: 100%;
-    max-height: 260px;
-    order: -1;
-  }
-
-  .dash-map {
-    min-height: 50vh;
-    flex: 1;
-  }
-
-  /* Switch sidebar to horizontal top bar on tablet */
-  .dash-body {
-    flex-direction: column;
-  }
-
-  .dash-tabs {
-    flex-direction: row;
-    width: 100%;
-    height: auto;
-    border-right: none;
-    border-bottom: 1px solid var(--border-color);
-    overflow-x: auto;
-    overflow-y: hidden;
-    padding: 4px;
-    gap: var(--space-1);
-  }
-
-  .dash-tab {
-    flex-direction: row;
-    width: auto;
-    padding: 8px 14px;
-    font-size: 0.78rem;
-    gap: 6px;
+  .cc-panel-toggle {
+    top: auto;
+    bottom: 14px;
   }
 }
 
-/* ================================================
+
+/* ============================================================
    RESPONSIVE — Mobile
-   ================================================ */
+   ============================================================ */
+
 @media (max-width: 640px) {
   .dashboard-page {
     height: 100vh;
     height: 100dvh;
-    gap: 0;
   }
 
-  .dash-body {
-    flex-direction: column;
-    padding: 0;
-    overflow: hidden;
-  }
-
-  /* Top bar becomes compact */
-  .dash-topbar {
+  /* Side nav becomes bottom nav */
+  .cc-sidenav {
+    position: fixed;
+    top: auto;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 2000;
+    flex-direction: row;
+    justify-content: space-around;
     border-radius: 0;
-    padding: var(--space-2) var(--space-3);
-    gap: var(--space-2);
+    padding: 4px 2px;
+    gap: 0;
+    border: none;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    background: rgba(16, 19, 26, 0.94);
   }
 
-  .topbar-title {
-    font-size: 1rem;
+  .cc-sidenav__btn {
+    width: auto;
+    flex: 1;
+    max-width: 68px;
+    padding: 6px 4px;
+    border-radius: var(--radius-md);
   }
 
-  .topbar-stats {
+  .cc-sidenav__btn span {
+    font-size: 0.48rem;
+  }
+
+  .cc-sidenav__btn svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  /* Stats move above bottom nav */
+  .cc-hud-stats {
+    bottom: 62px;
+    left: 8px;
+    right: 8px;
     gap: 4px;
-  }
-
-  .topbar-stat {
-    padding: 3px 8px;
-    font-size: 0.7rem;
-  }
-
-  .topbar-stat__value {
-    font-size: 0.85rem;
-  }
-
-  .topbar-stat__label {
-    display: none;
-  }
-
-  .topbar-refresh__text {
-    display: none;
-  }
-
-  .topbar-refresh {
-    padding: 8px;
-    border-radius: 50%;
-    width: 36px;
-    height: 36px;
     justify-content: center;
+    flex-wrap: nowrap;
+    overflow-x: auto;
   }
 
-  /* Tabs become bottom nav */
-  .dash-tabs {
+  .cc-stat {
+    padding: 4px 8px;
+    font-size: 0.72rem;
+  }
+
+  .cc-stat__num {
+    font-size: 0.78rem;
+  }
+
+  /* Panel becomes bottom sheet */
+  .cc-panel {
+    top: auto;
+    bottom: 56px;
+    left: 0;
+    right: 0;
+    width: 100%;
+    height: 55vh;
+    border-radius: 16px 16px 0 0;
+  }
+
+  .cc-panel-toggle {
+    top: 14px;
+    bottom: auto;
+    right: 14px;
+  }
+
+  .cc-panel ~ .cc-panel-toggle {
+    right: 14px;
+    top: 14px;
+  }
+
+  /* Page view on mobile */
+  .cc-page-tabs {
     position: fixed;
     bottom: 0;
     left: 0;
     right: 0;
     z-index: 2000;
-    border-radius: 0;
     border: none;
-    border-right: none;
-    border-top: 1px solid var(--border-color);
-    background: var(--surface);
-    flex-direction: row;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    background: rgba(16, 19, 26, 0.94);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
     justify-content: space-around;
     padding: 4px 2px;
     gap: 0;
-    width: 100%;
-    height: auto;
-    overflow-x: auto;
-    overflow-y: hidden;
   }
 
-  .dash-tab {
+  .cc-page-tab {
     flex-direction: column;
     gap: 2px;
     padding: 6px 4px;
-    min-width: 48px;
-    width: auto;
     flex: 1;
-    max-width: 72px;
+    max-width: 68px;
+    font-size: 0.48rem;
     border-radius: var(--radius-md);
-    font-size: 0.55rem;
   }
 
-  .dash-tab__icon {
-    width: 20px;
-    height: 20px;
-  }
-
-  .dash-tab--active {
-    box-shadow: none;
-  }
-
-  /* Content fills viewport */
-  .dash-content {
-    flex: 1;
-    overflow: hidden;
-  }
-
-  .dash-map-layout {
-    flex-direction: column;
-    height: calc(100vh - 48px);
-    gap: 0;
-    position: relative;
-    padding-bottom: 120px;
-  }
-
-  .dash-map {
-    flex: 1;
-    height: 100%;
-    border-radius: 0;
-    border: none;
-  }
-
-  /* Panel slides up on mobile */
-  .dash-panel {
-    position: fixed;
-    bottom: 56px;
-    left: 0;
-    right: 0;
-    width: 100%;
-    height: 80px;
-    max-height: 80px;
-    z-index: 1900;
-    border-radius: 14px 14px 0 0;
-    border: none;
-    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.4);
-    transition:
-      height 0.3s ease,
-      max-height 0.3s ease;
-    overflow: hidden;
-  }
-
-  .dash-panel--open {
-    height: 50vh;
-    max-height: 50vh;
-  }
-
-  .dash-panel__handle {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    height: 20px;
-    cursor: pointer;
-    flex-shrink: 0;
-    padding: 6px 0;
-  }
-
-  .handle-bar {
-    width: 36px;
-    height: 4px;
-    background: var(--border-color);
-    border-radius: 2px;
-  }
-
-  .dash-panel__tabs {
-    padding: 6px 12px;
-    border-bottom: none;
-  }
-
-  .dash-panel__tab {
-    padding: 8px 12px;
-    font-size: 0.85rem;
-    border-radius: var(--radius-full);
-  }
-
-  .dash-panel__tab--active {
-    background: var(--primary);
-    color: white;
-    box-shadow: 0 2px 8px rgba(249, 115, 22, 0.35);
-  }
-
-  .dash-panel__tab--active .dash-panel__badge {
-    background: rgba(255, 255, 255, 0.25);
-  }
-
-  .dash-panel__body {
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.2s ease;
-    padding: 12px 16px;
-  }
-
-  .dash-panel--open .dash-panel__body {
-    opacity: 1;
-    pointer-events: auto;
-  }
-
-  /* Full-page tabs on mobile */
-  .dash-fullpage {
-    border-radius: 0;
-    border: none;
-    height: 100%;
+  .cc-page-content {
     padding: 12px;
-    padding-bottom: 80px;
-    overflow-y: auto;
+    padding-bottom: 72px;
   }
 }
 
-/* Extra small screens */
+
+/* ============================================================
+   RESPONSIVE — Extra Small
+   ============================================================ */
+
 @media (max-width: 380px) {
-  .dash-tab {
-    min-width: 42px;
+  .cc-sidenav__btn {
+    max-width: 56px;
     padding: 5px 3px;
-    font-size: 0.5rem;
   }
 
-  .dash-tab__icon {
-    width: 18px;
-    height: 18px;
+  .cc-sidenav__btn span {
+    font-size: 0.44rem;
   }
 
-  .dash-panel {
-    bottom: 52px;
-    height: 72px;
-    max-height: 72px;
+  .cc-sidenav__btn svg {
+    width: 16px;
+    height: 16px;
   }
 
-  .dash-panel--open {
-    height: 55vh;
-    max-height: 55vh;
+  .cc-stat {
+    padding: 3px 6px;
   }
 }
 
-/* Landscape mobile */
+
+/* ============================================================
+   RESPONSIVE — Landscape Mobile
+   ============================================================ */
+
 @media (max-width: 900px) and (orientation: landscape) {
   .dashboard-page {
     height: 100vh;
     height: 100dvh;
   }
 
-  .dash-body {
-    flex-direction: row;
-  }
-
-  .dash-tabs {
-    position: relative;
-    left: auto;
-    top: auto;
+  .cc-sidenav {
+    position: absolute;
+    top: 14px;
+    left: 14px;
+    right: auto;
     bottom: auto;
-    width: 56px;
-    height: auto;
-    border-radius: 0;
     flex-direction: column;
-    justify-content: flex-start;
-    padding: 6px 4px;
+    border-radius: var(--radius-xl);
+    padding: 6px;
     border-top: none;
-    border-right: 1px solid var(--border-color);
+    gap: 2px;
   }
 
-  .dash-tab {
-    flex-direction: column;
-    min-width: auto;
+  .cc-sidenav__btn {
+    width: 40px;
     max-width: none;
-    padding: 8px;
-    width: 36px;
-    height: 36px;
+    flex: none;
+    padding: 6px;
   }
 
-  .dash-tab__label {
+  .cc-sidenav__btn span {
     display: none;
   }
 
-  .dash-tab::after {
-    display: none;
-  }
-
-  .dash-content {
-    margin-left: 0;
-    height: auto;
-    padding-top: 0;
-  }
-
-  .dash-panel {
-    position: relative;
+  .cc-hud-stats {
+    top: 14px;
+    left: 72px;
     bottom: auto;
-    max-height: none;
+  }
+
+  .cc-panel {
+    top: 14px;
+    right: 14px;
+    bottom: 14px;
+    left: auto;
+    width: 260px;
     height: auto;
     border-radius: var(--radius-xl);
-    margin: 8px;
-  }
-
-  .dash-panel--open {
-    max-height: 40vh;
-  }
-
-  .dash-panel__body {
-    opacity: 1;
-    pointer-events: auto;
-    max-height: 30vh;
-  }
-
-  .dash-map {
-    min-height: 50vh;
+    animation: panelSlideIn 0.25s var(--ease-out-expo);
   }
 }

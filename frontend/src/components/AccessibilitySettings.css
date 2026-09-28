@@ -242,7 +242,7 @@
 }
 
 .toggle.on {
-  background: #10b981;
+  background: var(--success);
 }
 
 .toggle-thumb {
@@ -304,8 +304,8 @@
 /* Dark Mode (default) */
 .dark-mode {
   --background: #0f172a;
-  --background-subtle: #1e293b;
-  --surface: #1e293b;
+  --background-subtle: var(--text-inverse);
+  --surface: var(--text-inverse);
   --surface-elevated: #334155;
   --surface-muted: #0f172a;
   --surface-hover: #334155;
