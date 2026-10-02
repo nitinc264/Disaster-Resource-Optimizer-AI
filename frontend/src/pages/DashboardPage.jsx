@@ -36,6 +36,9 @@ import {
   BarChart3,
   Users,
   Car,
+  PanelRightOpen,
+  PanelRightClose,
+  RefreshCw,
 } from "lucide-react";
 import "./DashboardPage.css";
 
@@ -57,9 +60,10 @@ function DashboardPage() {
   const [selectedReportId, setSelectedReportId] = useState(null);
   const [reroutingMissionId, setReroutingMissionId] = useState(null);
   const [reroutingReportId, setReroutingReportId] = useState(null);
-  const [activeTab, setActiveTab] = useState("map"); // "map" | "analytics" | "resources"
-  const [activePanel, setActivePanel] = useState("missions"); // "missions" | "reports"
-  const [isPanelOpen, setIsPanelOpen] = useState(false); // Mobile panel state
+  const [activeTab, setActiveTab] = useState("map");
+  const [activePanel, setActivePanel] = useState("missions");
+  const [isPanelOpen, setIsPanelOpen] = useState(false);
+  const [isPanelVisible, setIsPanelVisible] = useState(true);
   const [sosAlerts, setSosAlerts] = useState([]);
   const [currentLocation, setCurrentLocation] = useState(null);
   const queryClient = useQueryClient();
@@ -483,258 +487,215 @@ function DashboardPage() {
       : []),
   ];
 
+  // Determine if we're in map view (immersive mode)
+  const isMapView = activeTab === "map";
+
   return (
-    <div className="dashboard-page">
+    <div className={`dashboard-page ${isMapView ? "dashboard-page--immersive" : ""}`}>
       {/* Critical Triage Alert Banner */}
       {criticalItems.length > 0 && (
         <TriageAlertBanner criticalCount={criticalItems.length} />
       )}
 
-      {/* Clean Top Bar — title + stats + refresh */}
-      {isManager && (
-        <header className="dash-topbar">
-          <div className="topbar-left">
-            <h1 className="topbar-title">{t("dashboard.title")}</h1>
-            {criticalItems.length > 0 && (
-              <span className="topbar-badge topbar-badge--danger">
-                {criticalItems.length} {t("triage.critical").toLowerCase()}
-              </span>
-            )}
-          </div>
-
-          <div className="topbar-stats">
-            <div className="topbar-stat">
-              <span className="topbar-stat__value">{allMapItems.length}</span>
-              <span className="topbar-stat__label">
-                {t("dashboard.totalIncidents")}
-              </span>
-            </div>
-            <div className="topbar-stat topbar-stat--pending">
-              <span className="topbar-stat__value">{pendingCount}</span>
-              <span className="topbar-stat__label">
-                {t("dashboard.pending")}
-              </span>
-            </div>
-            <div className="topbar-stat topbar-stat--active">
-              <span className="topbar-stat__value">{inProgressCount}</span>
-              <span className="topbar-stat__label">
-                {t("dashboard.inProgress")}
-              </span>
-            </div>
-            <div className="topbar-stat topbar-stat--missions">
-              <span className="topbar-stat__value">
-                {missionsData?.length || 0}
-              </span>
-              <span className="topbar-stat__label">{t("missions.title")}</span>
-            </div>
-          </div>
-
-          <button
-            className="topbar-refresh"
-            onClick={handleRefreshAll}
-            disabled={isFetching || isReportsLoading}
-            title={t("dashboard.refresh")}
-          >
-            <span
-              className={`topbar-refresh__icon ${isFetching || isReportsLoading ? "spinning" : ""}`}
+      {/* ═══ IMMERSIVE MAP VIEW ═══ */}
+      {isMapView && (
+        <div className="cc-canvas">
+          {/* Full-bleed map */}
+          <div className="cc-map">
+            <MapComponent
+              needs={allMapItems}
+              selectedNeedIds={new Set()}
+              onPinClick={handlePinClick}
+              missionRoutes={missionRoutes}
+              isRerouteMode={!!reroutingMissionId || !!reroutingReportId}
+              onStationClick={handleStationClick}
+              volunteerMode={isVolunteer}
+              volunteerLocation={volunteerLocation}
+              volunteerRoute={activeRoute}
+              isRouteFallback={routeInfo?.isFallback || false}
+              shelters={sheltersData}
             />
-            <span className="topbar-refresh__text">
-              {isFetching || isReportsLoading
-                ? t("dashboard.syncing")
-                : t("dashboard.refresh")}
-            </span>
-          </button>
-        </header>
-      )}
-
-      {/* Sidebar + Content wrapper */}
-      <div className="dash-body">
-        {/* Vertical Sidebar Tab Navigation */}
-        <nav className="dash-tabs" role="tablist">
-          {tabs.map((tab) =>
-            tab.href ? (
-              <a
-                key={tab.id}
-                className="dash-tab"
-                href={tab.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                title={tab.label}
-              >
-                <tab.icon size={17} className="dash-tab__icon" />
-                <span className="dash-tab__label">{tab.label}</span>
-              </a>
-            ) : (
-              <button
-                key={tab.id}
-                className={`dash-tab ${activeTab === tab.id ? "dash-tab--active" : ""}`}
-                onClick={() => setActiveTab(tab.id)}
-                role="tab"
-                aria-selected={activeTab === tab.id}
-                title={tab.label}
-              >
-                <tab.icon size={17} className="dash-tab__icon" />
-                <span className="dash-tab__label">{tab.label}</span>
-              </button>
-            )
-          )}
-        </nav>
-
-        {/* Content Area */}
-        <div className="dash-content">
-          {/* Map View */}
-          {activeTab === "map" && (
-            <div className="dash-map-layout">
-              <main className="dash-map">
-                <MapComponent
-                  needs={allMapItems}
-                  selectedNeedIds={new Set()}
-                  onPinClick={handlePinClick}
-                  missionRoutes={missionRoutes}
-                  isRerouteMode={!!reroutingMissionId || !!reroutingReportId}
-                  onStationClick={handleStationClick}
-                  volunteerMode={isVolunteer}
-                  volunteerLocation={volunteerLocation}
-                  volunteerRoute={activeRoute}
-                  isRouteFallback={routeInfo?.isFallback || false}
-                  shelters={sheltersData}
-                />
-                {/* Reroute mode banner for rejected reports */}
-                {reroutingReportId && (
-                  <div className="dash-reroute-banner">
-                    <span>
-                      🔄{" "}
-                      {t(
-                        "reports.rerouteMode",
-                        "Click a station on the map to reroute this rejected alert",
-                      )}
-                    </span>
-                    <button onClick={handleCancelReroute}>
-                      ✕ {t("common.cancel", "Cancel")}
-                    </button>
-                  </div>
-                )}
-                {(isNeedsLoading ||
-                  isReportsLoading ||
-                  isRoadConditionsLoading) &&
-                  !isVolunteer && (
-                    <div className="dash-map__loading">
-                      <div className="spinner" />
-                      <span>{t("common.loading")}</span>
-                    </div>
-                  )}
-              </main>
-
-              {/* Side Panel — Missions & Reports (managers only) */}
-              {isManager && (
-                <aside
-                  className={`dash-panel ${isPanelOpen ? "dash-panel--open" : ""}`}
-                >
-                  <div
-                    className="dash-panel__handle"
-                    onClick={() => setIsPanelOpen(!isPanelOpen)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" || e.key === " ") {
-                        e.preventDefault();
-                        setIsPanelOpen(!isPanelOpen);
-                      }
-                    }}
-                    role="button"
-                    tabIndex={0}
-                    aria-label="Toggle panel"
-                  >
-                    <span className="handle-bar" />
-                  </div>
-
-                  <div className="dash-panel__tabs">
-                    <button
-                      className={`dash-panel__tab ${activePanel === "missions" ? "dash-panel__tab--active" : ""}`}
-                      onClick={() => {
-                        setActivePanel("missions");
-                        setIsPanelOpen(true);
-                      }}
-                    >
-                      {t("missions.title")}
-                      <span className="dash-panel__badge">
-                        {missionsData?.length || 0}
-                      </span>
-                    </button>
-                    <button
-                      className={`dash-panel__tab ${activePanel === "reports" ? "dash-panel__tab--active" : ""}`}
-                      onClick={() => {
-                        setActivePanel("reports");
-                        setIsPanelOpen(true);
-                      }}
-                    >
-                      {t("missions.reports")}
-                      <span className="dash-panel__badge">
-                        {unroutedReports?.length || 0}
-                      </span>
-                    </button>
-                  </div>
-
-                  <div className="dash-panel__body">
-                    {activePanel === "missions" ? (
-                      <MissionPanel
-                        missions={missionsData || []}
-                        missionRoutes={missionRoutes}
-                        onCompleteMission={handleCompleteMission}
-                        onStartReroute={handleStartReroute}
-                        reroutingMissionId={reroutingMissionId}
-                        onCancelReroute={handleCancelReroute}
-                      />
-                    ) : (
-                      <ReportsList
-                        reports={unroutedReports}
-                        onReportClick={handleReportClick}
-                        selectedReportId={selectedReportId}
-                        onRerouteReport={handleStartReportReroute}
-                        reroutingReportId={reroutingReportId}
-                      />
-                    )}
-                  </div>
-                </aside>
+            {(isNeedsLoading || isReportsLoading || isRoadConditionsLoading) &&
+              !isVolunteer && (
+                <div className="cc-map__loading">
+                  <div className="spinner" />
+                  <span>{t("common.loading")}</span>
+                </div>
               )}
+          </div>
+
+          {/* ── Floating HUD overlays ── */}
+
+          {/* Stats bar — top-left */}
+          {isManager && (
+            <div className="cc-hud-stats">
+              <div className="cc-stat">
+                <span className="cc-stat__num">{allMapItems.length}</span>
+                <span className="cc-stat__label">{t("dashboard.totalIncidents")}</span>
+              </div>
+              <div className="cc-stat cc-stat--warning">
+                <span className="cc-stat__num">{pendingCount}</span>
+                <span className="cc-stat__label">{t("dashboard.pending")}</span>
+              </div>
+              <div className="cc-stat cc-stat--accent">
+                <span className="cc-stat__num">{inProgressCount}</span>
+                <span className="cc-stat__label">{t("dashboard.inProgress")}</span>
+              </div>
+              <div className="cc-stat cc-stat--success">
+                <span className="cc-stat__num">{missionsData?.length || 0}</span>
+                <span className="cc-stat__label">{t("missions.title")}</span>
+              </div>
+              <button
+                className={`cc-refresh ${isFetching || isReportsLoading ? "cc-refresh--spinning" : ""}`}
+                onClick={handleRefreshAll}
+                disabled={isFetching || isReportsLoading}
+                title={t("dashboard.refresh")}
+              >
+                <RefreshCw size={14} />
+              </button>
             </div>
           )}
 
-          {activeTab === "roads" && (
-            <div className="dash-fullpage">
-              <RoadConditions currentLocation={currentLocation} />
+          {/* Vertical nav — left side */}
+          <nav className="cc-sidenav" role="tablist">
+            {tabs.map((tab) =>
+              tab.href ? (
+                <a
+                  key={tab.id}
+                  className="cc-sidenav__btn"
+                  href={tab.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title={tab.label}
+                >
+                  <tab.icon size={18} />
+                  <span>{tab.label}</span>
+                </a>
+              ) : (
+                <button
+                  key={tab.id}
+                  className={`cc-sidenav__btn ${activeTab === tab.id ? "cc-sidenav__btn--active" : ""}`}
+                  onClick={() => setActiveTab(tab.id)}
+                  role="tab"
+                  aria-selected={activeTab === tab.id}
+                  title={tab.label}
+                >
+                  <tab.icon size={18} />
+                  <span>{tab.label}</span>
+                </button>
+              )
+            )}
+          </nav>
+
+          {/* Panel toggle — right side */}
+          {isManager && (
+            <button
+              className="cc-panel-toggle"
+              onClick={() => setIsPanelVisible(!isPanelVisible)}
+              title={isPanelVisible ? "Hide panel" : "Show panel"}
+            >
+              {isPanelVisible ? <PanelRightClose size={18} /> : <PanelRightOpen size={18} />}
+            </button>
+          )}
+
+          {/* Reroute banner */}
+          {reroutingReportId && (
+            <div className="cc-reroute-banner">
+              <span>
+                🔄 {t("reports.rerouteMode", "Click a station on the map to reroute this rejected alert")}
+              </span>
+              <button onClick={handleCancelReroute}>
+                ✕ {t("common.cancel", "Cancel")}
+              </button>
             </div>
           )}
 
-          {activeTab === "missing" && (
-            <div className="dash-fullpage">
-              <MissingPersons currentLocation={currentLocation} />
-            </div>
-          )}
-
-          {activeTab === "shelters" && isManager && (
-            <div className="dash-fullpage">
-              <ShelterManagement currentLocation={currentLocation} />
-            </div>
-          )}
-
-          {activeTab === "resources" && isManager && (
-            <div className="dash-fullpage" style={{ padding: 0 }}>
-              <ResourcesPage />
-            </div>
-          )}
-
-          {activeTab === "analytics" && isManager && (
-            <div className="dash-fullpage">
-              <AnalyticsDashboard />
-            </div>
-          )}
-
-          {activeTab === "volunteers" && isManager && (
-            <div className="dash-fullpage">
-              <VolunteerManagement />
-            </div>
+          {/* Floating panel — right */}
+          {isManager && isPanelVisible && (
+            <aside className="cc-panel">
+              <div className="cc-panel__tabs">
+                <button
+                  className={`cc-panel__tab ${activePanel === "missions" ? "cc-panel__tab--active" : ""}`}
+                  onClick={() => setActivePanel("missions")}
+                >
+                  {t("missions.title")}
+                  <span className="cc-panel__badge">{missionsData?.length || 0}</span>
+                </button>
+                <button
+                  className={`cc-panel__tab ${activePanel === "reports" ? "cc-panel__tab--active" : ""}`}
+                  onClick={() => setActivePanel("reports")}
+                >
+                  {t("missions.reports")}
+                  <span className="cc-panel__badge">{unroutedReports?.length || 0}</span>
+                </button>
+              </div>
+              <div className="cc-panel__body">
+                {activePanel === "missions" ? (
+                  <MissionPanel
+                    missions={missionsData || []}
+                    missionRoutes={missionRoutes}
+                    onCompleteMission={handleCompleteMission}
+                    onStartReroute={handleStartReroute}
+                    reroutingMissionId={reroutingMissionId}
+                    onCancelReroute={handleCancelReroute}
+                  />
+                ) : (
+                  <ReportsList
+                    reports={unroutedReports}
+                    onReportClick={handleReportClick}
+                    selectedReportId={selectedReportId}
+                    onRerouteReport={handleStartReportReroute}
+                    reroutingReportId={reroutingReportId}
+                  />
+                )}
+              </div>
+            </aside>
           )}
         </div>
-      </div>
+      )}
+
+      {/* ═══ NON-MAP VIEWS (full-page content) ═══ */}
+      {!isMapView && (
+        <div className="cc-page-view">
+          {/* Horizontal tab bar for non-map views */}
+          <nav className="cc-page-tabs" role="tablist">
+            {tabs.map((tab) =>
+              tab.href ? (
+                <a
+                  key={tab.id}
+                  className="cc-page-tab"
+                  href={tab.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <tab.icon size={15} />
+                  <span>{tab.label}</span>
+                </a>
+              ) : (
+                <button
+                  key={tab.id}
+                  className={`cc-page-tab ${activeTab === tab.id ? "cc-page-tab--active" : ""}`}
+                  onClick={() => setActiveTab(tab.id)}
+                  role="tab"
+                  aria-selected={activeTab === tab.id}
+                >
+                  <tab.icon size={15} />
+                  <span>{tab.label}</span>
+                </button>
+              )
+            )}
+          </nav>
+
+          <div className="cc-page-content">
+            {activeTab === "roads" && <RoadConditions currentLocation={currentLocation} />}
+            {activeTab === "missing" && <MissingPersons currentLocation={currentLocation} />}
+            {activeTab === "shelters" && isManager && <ShelterManagement currentLocation={currentLocation} />}
+            {activeTab === "resources" && isManager && <ResourcesPage />}
+            {activeTab === "analytics" && isManager && <AnalyticsDashboard />}
+            {activeTab === "volunteers" && isManager && <VolunteerManagement />}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

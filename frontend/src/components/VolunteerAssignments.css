@@ -12,11 +12,11 @@
   justify-content: center;
   gap: 0.5rem;
   padding: 2rem;
-  color: var(--text-secondary, #6b7280);
+  color: var(--text-secondary, var(--neutral-500));
 }
 
 .assignments-error {
-  color: var(--danger, #ef4444);
+  color: var(--danger, var(--error));
 }
 
 .assignments-header {
@@ -33,7 +33,7 @@
 }
 
 .assignments-count {
-  background: var(--primary, #3b82f6);
+  background: var(--primary, var(--accent));
   color: white;
   font-size: 0.75rem;
   font-weight: 600;
@@ -47,7 +47,7 @@
   align-items: center;
   gap: 0.5rem;
   padding: 3rem 1rem;
-  color: var(--text-secondary, #6b7280);
+  color: var(--text-secondary, var(--neutral-500));
   text-align: center;
 }
 
@@ -85,7 +85,7 @@
 }
 
 .assignment-card.status-accepted {
-  border-left: 3px solid var(--success, #10b981);
+  border-left: 3px solid var(--success, var(--success));
 }
 
 .assignment-card-main {
@@ -117,7 +117,7 @@
 }
 
 .badge-type {
-  background: #e0e7ff;
+  background: rgba(77, 140, 217, 0.12);
   color: #3730a3;
 }
 .badge-medical {
@@ -138,12 +138,12 @@
 }
 .badge-other {
   background: #f3f4f6;
-  color: #374151;
+  color: var(--text-secondary);
 }
 
 .badge-urgency {
   background: #f3f4f6;
-  color: #374151;
+  color: var(--text-secondary);
 }
 .urgency-high {
   background: #fee2e2;
@@ -160,7 +160,7 @@
 
 .badge-status {
   background: #f3f4f6;
-  color: #374151;
+  color: var(--text-secondary);
 }
 .badge-assigned {
   background: #fef3c7;
@@ -194,12 +194,12 @@
   align-items: center;
   gap: 0.25rem;
   font-size: 0.78rem;
-  color: var(--text-secondary, #6b7280);
+  color: var(--text-secondary, var(--neutral-500));
 }
 
 .expand-icon {
   flex-shrink: 0;
-  color: var(--text-secondary, #9ca3af);
+  color: var(--text-secondary, var(--neutral-400));
   transition: transform 0.2s;
   margin-top: 0.25rem;
 }
@@ -223,7 +223,7 @@
 }
 
 .assignment-phone a {
-  color: var(--primary, #3b82f6);
+  color: var(--primary, var(--accent));
   text-decoration: none;
   font-weight: 500;
 }
@@ -253,17 +253,17 @@
 }
 
 .btn-accept {
-  background: #10b981;
+  background: var(--success);
   color: white;
 }
 
 .btn-decline {
-  background: #6b7280;
+  background: var(--neutral-500);
   color: white;
 }
 
 .btn-complete {
-  background: #3b82f6;
+  background: var(--accent);
   color: white;
 }
 

@@ -25,7 +25,7 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.625rem 1rem;
-  background: var(--primary-color, #3b82f6);
+  background: var(--primary-color, var(--accent));
   color: white;
   border: none;
   border-radius: 8px;
@@ -47,7 +47,7 @@
   justify-content: center;
   padding: 0.625rem;
   background: var(--surface-color, #f9fafb);
-  color: var(--text-secondary, #6b7280);
+  color: var(--text-secondary, var(--neutral-500));
   border: 1px solid var(--border-color, #e5e7eb);
   border-radius: 8px;
   cursor: pointer;
@@ -56,7 +56,7 @@
 
 .btn-refresh:hover {
   background: var(--border-color, #e5e7eb);
-  color: var(--text-primary, #1f2937);
+  color: var(--text-primary, var(--text-primary));
 }
 
 .empty-conversations {
@@ -66,7 +66,7 @@
   justify-content: center;
   padding: 3rem 1rem;
   text-align: center;
-  color: var(--text-secondary, #6b7280);
+  color: var(--text-secondary, var(--neutral-500));
 }
 
 .empty-conversations svg {
@@ -112,7 +112,7 @@
   width: 48px;
   height: 48px;
   border-radius: 50%;
-  background: var(--primary-color, #3b82f6);
+  background: var(--primary-color, var(--accent));
   color: white;
   display: flex;
   align-items: center;
@@ -136,12 +136,12 @@
 
 .conversation-name {
   font-weight: 600;
-  color: var(--text-primary, #1f2937);
+  color: var(--text-primary, var(--text-primary));
 }
 
 .conversation-time {
   font-size: 0.75rem;
-  color: var(--text-secondary, #6b7280);
+  color: var(--text-secondary, var(--neutral-500));
 }
 
 .conversation-preview {
@@ -152,7 +152,7 @@
 
 .preview-text {
   font-size: 0.875rem;
-  color: var(--text-secondary, #6b7280);
+  color: var(--text-secondary, var(--neutral-500));
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -164,7 +164,7 @@
 }
 
 .unread-badge {
-  background: var(--primary-color, #3b82f6);
+  background: var(--primary-color, var(--accent));
   color: white;
   font-size: 0.75rem;
   font-weight: 600;
@@ -199,21 +199,21 @@
   background: transparent;
   border: none;
   border-radius: 8px;
-  color: var(--text-secondary, #6b7280);
+  color: var(--text-secondary, var(--neutral-500));
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .btn-back:hover {
   background: var(--border-color, #e5e7eb);
-  color: var(--text-primary, #1f2937);
+  color: var(--text-primary, var(--text-primary));
 }
 
 .chat-partner-avatar {
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: var(--primary-color, #3b82f6);
+  background: var(--primary-color, var(--accent));
   color: white;
   display: flex;
   align-items: center;
@@ -229,12 +229,12 @@
 
 .partner-name {
   font-weight: 600;
-  color: var(--text-primary, #1f2937);
+  color: var(--text-primary, var(--text-primary));
 }
 
 .partner-role {
   font-size: 0.75rem;
-  color: var(--text-secondary, #6b7280);
+  color: var(--text-secondary, var(--neutral-500));
 }
 
 .chat-messages {
@@ -254,7 +254,7 @@
   align-items: center;
   justify-content: center;
   height: 100%;
-  color: var(--text-secondary, #6b7280);
+  color: var(--text-secondary, var(--neutral-500));
 }
 
 .chat-message {
@@ -277,35 +277,35 @@
 }
 
 .chat-message.sent .message-bubble {
-  background: var(--primary-color, #3b82f6);
+  background: var(--primary-color, var(--accent));
   color: white;
   border-bottom-right-radius: 4px;
 }
 
 .chat-message.received .message-bubble {
   background: var(--surface-color, #f3f4f6);
-  color: var(--text-primary, #1f2937);
+  color: var(--text-primary, var(--text-primary));
   border-bottom-left-radius: 4px;
 }
 
 /* Role-based message styling for received messages */
 .chat-message.received.role-manager .message-bubble {
-  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-  border-left: 3px solid #f59e0b;
+  background: linear-gradient(135deg, rgba(232, 135, 30, 0.15) 0%, rgba(232, 135, 30, 0.08) 100%);
+  border-left: 3px solid var(--warning);
 }
 
 .chat-message.received.role-volunteer .message-bubble {
-  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
-  border-left: 3px solid #3b82f6;
+  background: linear-gradient(135deg, rgba(26, 175, 168, 0.15) 0%, rgba(26, 175, 168, 0.08) 100%);
+  border-left: 3px solid var(--accent);
 }
 
 /* Role-based message styling for sent messages */
 .chat-message.sent.role-manager .message-bubble {
-  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  background: linear-gradient(135deg, var(--warning) 0%, #c06e12 100%);
 }
 
 .chat-message.sent.role-volunteer .message-bubble {
-  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  background: linear-gradient(135deg, var(--accent) 0%, #0F6E6A 100%);
 }
 
 /* Sender role label */
@@ -378,7 +378,7 @@
 }
 
 .chat-input textarea:focus {
-  border-color: var(--primary-color, #3b82f6);
+  border-color: var(--primary-color, var(--accent));
 }
 
 .btn-send {
@@ -387,7 +387,7 @@
   justify-content: center;
   width: 42px;
   height: 42px;
-  background: var(--primary-color, #3b82f6);
+  background: var(--primary-color, var(--accent));
   color: white;
   border: none;
   border-radius: 50%;
@@ -434,7 +434,7 @@
   align-items: center;
   justify-content: center;
   padding: 3rem 1rem;
-  color: var(--text-secondary, #6b7280);
+  color: var(--text-secondary, var(--neutral-500));
 }
 
 .no-contacts svg {
@@ -467,7 +467,7 @@
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: var(--primary-color, #3b82f6);
+  background: var(--primary-color, var(--accent));
   color: white;
   display: flex;
   align-items: center;
@@ -485,16 +485,16 @@
 
 .contact-name {
   font-weight: 600;
-  color: var(--text-primary, #1f2937);
+  color: var(--text-primary, var(--text-primary));
 }
 
 .contact-phone {
   font-size: 0.75rem;
-  color: var(--text-secondary, #6b7280);
+  color: var(--text-secondary, var(--neutral-500));
 }
 
 .contact-action {
-  color: var(--primary-color, #3b82f6);
+  color: var(--primary-color, var(--accent));
 }
 
 /* Animations */
@@ -544,7 +544,7 @@
 
   .chat-message.received.role-volunteer .message-bubble {
     background: linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(37, 99, 235, 0.3) 100%);
-    border-left: 3px solid #3b82f6;
+    border-left: 3px solid var(--accent);
   }
 
   .sender-role-label.manager {

@@ -42,7 +42,7 @@
 }
 
 .SyncStatusBar--syncing {
-  background: var(--primary, #3b82f6);
+  background: var(--primary, var(--accent));
 }
 
 .SyncStatusBar--success {

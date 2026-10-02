@@ -175,7 +175,7 @@
   position: absolute;
   top: var(--space-2);
   right: var(--space-2);
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(0, 0, 0, 0.65);
   color: white;
   border: none;
   border-radius: 50%;
@@ -201,7 +201,7 @@
 }
 
 .photo-caption-label .required-indicator {
-  color: #ef4444;
+  color: var(--error);
   font-weight: 700;
 }
 
@@ -219,7 +219,7 @@
 }
 
 .photo-caption-input.input-required {
-  border-color: #f97316;
+  border-color: var(--primary);
 }
 
 .photo-caption-input:focus {
